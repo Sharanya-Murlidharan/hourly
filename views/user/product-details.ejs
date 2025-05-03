@@ -1,0 +1,812 @@
+<%- include('../../views/partials/user/header') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product?.productName || 'Acer NITRO V 15' %> - Product Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        html, body {
+            height: 100%; /* Ensure full height for the page */
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #fff !important;
+            color: #333 !important;
+            line-height: 1.6;
+            padding-top: 3px !important;
+            padding-bottom: 0 !important; /* Remove padding-bottom to avoid extra gap */
+            min-height: 100vh;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        main {
+            flex: 1 0 auto !important; /* Ensure main takes up remaining space, but doesn't shrink */
+        }
+
+        footer {
+            flex-shrink: 0 !important; /* Prevent footer from shrinking */
+            width: 100%;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            width: 100%;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 15px 0;
+            background-color: #fff !important;
+            border-bottom: 1px solid #e0e0e0 !important;
+            font-size: 14px;
+        }
+
+        .breadcrumb ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb li {
+            display: inline;
+            color: #666 !important;
+        }
+
+        .breadcrumb li:not(:last-child)::after {
+            content: '/';
+            margin: 0 8px;
+            color: #999 !important;
+        }
+
+        .breadcrumb a {
+            text-decoration: none;
+            color: #d32f2f !important;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Product Card */
+        .product-card {
+            background-color: #fff !important;
+            border: none !important;
+            margin: 20px 0;
+            padding: 30px;
+            width: 100%;
+        }
+
+        .product-container {
+            display: flex !important;
+            flex-wrap: wrap;
+            gap: 30px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        /* Product Images */
+        .product-images {
+            flex: 1 1 300px;
+            max-width: 400px;
+            min-width: 300px;
+        }
+
+        .main-image {
+            border: 1px solid #e0e0e0 !important;
+            padding: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            background-color: #fff !important;
+            border-radius: 5px;
+        }
+
+        .main-image img {
+            max-width: 100%;
+            height: 300px;
+            object-fit: contain;
+        }
+
+        .thumbnails {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #e0e0e0 !important;
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 5px;
+            transition: border-color 0.3s;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail.active {
+            border-color: #d32f2f !important;
+        }
+
+        .thumbnail:hover {
+            border-color: #ff5722;
+        }
+
+        /* Zoom Styles */
+        .zoom-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .zoom-image {
+            transition: transform 0.5s ease;
+        }
+
+        .zoom-lens {
+            position: absolute;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: crosshair;
+            width: 150px; /* Adjusted to a smaller size for better usability */
+            height: 150px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .zoom-container:hover .zoom-lens {
+            opacity: 1;
+        }
+
+        /* Product Info */
+        .product-info {
+            flex: 2 1 300px;
+            min-width: 300px;
+            padding-top: 0;
+        }
+
+        .product-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333 !important;
+            display: inline;
+        }
+
+        .discount-badge {
+            background-color: #d32f2f !important;
+            color: #fff !important;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .product-description {
+            margin-bottom: 20px;
+            color: #666 !important;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .product-meta {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .meta-title {
+            width: 100px;
+            font-weight: bold;
+            color: #555 !important;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .quantity-label {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #555 !important;
+            font-size: 14px;
+        }
+
+        .quantity-input {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd !important;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            background-color: #f5f5f5 !important;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .quantity-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .quantity-value {
+            width: 50px;
+            height: 30px;
+            border: none;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .add-to-cart-button {
+            flex: 2;
+            background-color: #03384d !important;
+            color: #fff !important;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .add-to-cart-button:hover {
+            background-color: #1565C0 !important;
+        }
+
+        .add-to-cart-button:disabled {
+            background-color: #90CAF9 !important;
+            cursor: not-allowed;
+        }
+
+        .wishlist-button {
+            flex: 1;
+            background-color: #fff !important;
+            color: #333 !important;
+            border: 1px solid #ddd !important;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .wishlist-button:hover {
+            background-color: #f5f5f5 !important;
+        }
+
+        /* Product Tabs */
+        .product-tabs {
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .tabs-nav {
+            display: flex;
+            border-bottom: 1px solid #ddd !important;
+            margin-bottom: 10px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666 !important;
+            margin-right: 10px;
+            transition: color 0.3s;
+        }
+
+        .tab-button.active {
+            color: #d32f2f !important;
+            border-bottom: 2px solid #d32f2f !important;
+        }
+
+        .tab-button:hover {
+            color: #ff5722;
+        }
+
+        .tab-content {
+            padding: 20px 0;
+            border: none;
+            background: none;
+        }
+
+        .tab-pane {
+            display: none;
+            color: #666 !important;
+            font-size: 14px;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .out-of-stock {
+            color: #dc3545 !important;
+            font-weight: bold;
+        }
+
+        /* Related Products */
+        .zz-related-products {
+            padding: 30px 0;
+            overflow-x: auto; /* Enable horizontal scrolling */
+        }
+
+        .zz-section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333 !important;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .zz-related-products .row {
+            display: flex;
+            flex-wrap: nowrap; /* Prevent wrapping to ensure horizontal layout */
+            overflow-x: auto; /* Enable horizontal scrolling if items overflow */
+            gap: 20px; /* Space between product items */
+            padding-bottom: 10px; /* Space for scrollbar */
+            -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+        }
+
+        .zz-related-products .row::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+        }
+
+        .zz-related-products .col-lg-3 {
+            flex: 0 0 250px; /* Fixed width for each product item */
+            max-width: 250px; /* Ensure consistent width */
+        }
+
+        .product-item {
+            background-color: #fff !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 5px;
+            padding: 15px;
+            transition: box-shadow 0.3s;
+        }
+
+        .product-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-img-wrap {
+            position: relative;
+            text-align: center;
+        }
+
+        .product-img-wrap img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: contain;
+        }
+
+        .wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .wishlist-btn a {
+            color: #666 !important;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+
+        .wishlist-btn a:hover {
+            color: #d32f2f !important;
+        }
+
+        .product-details {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .product-details h6 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .product-details h6 a {
+            color: #333 !important;
+        }
+
+        .product-details h6 a:hover {
+            color: #d32f2f !important;
+        }
+
+        .price-box {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000d1 !important;
+            margin-bottom: 15px;
+        }
+
+        .cart-btn {
+            display: inline-block;
+            background-color: #03384d !important;
+            color: #fff !important;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .cart-btn:hover {
+            background-color: #1565C0 !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 0 !important; /* Adjusted for mobile to avoid gap */
+            }
+
+            .product-card {
+                padding: 15px;
+            }
+
+            .product-container {
+                flex-direction: column !important;
+            }
+
+            .product-images {
+                max-width: 100%;
+            }
+
+            .main-image img {
+                height: 200px;
+            }
+
+            .thumbnails {
+                flex-wrap: wrap;
+            }
+
+            .thumbnail {
+                width: 50px;
+                height: 50px;
+            }
+
+            .product-info {
+                padding-top: 20px;
+            }
+
+            .product-title {
+                font-size: 18px;
+            }
+
+            .current-price {
+                font-size: 18px;
+            }
+
+            .original-price {
+                font-size: 14px;
+            }
+
+            .add-to-cart-button, .wishlist-button {
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            .meta-title {
+                width: 80px;
+            }
+
+            .zz-section-title {
+                font-size: 20px;
+            }
+
+            .product-img-wrap img {
+                height: 150px;
+            }
+
+            .product-details h6 {
+                font-size: 14px;
+            }
+
+            .price-box {
+                font-size: 16px;
+            }
+
+            .cart-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <!-- Breadcrumb Navigation -->
+        <div class="breadcrumb">
+            <div class="container">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/shop">Shop</a></li>
+                    <li><%= product?.productName || 'Acer NITRO V 15' %></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Product Section -->
+        <div class="container">
+            <div class="product-card">
+                <div class="product-container">
+                    <!-- Product Images -->
+                    <div class="product-images">
+                        <div class="main-image zoom-container" id="prod-image">
+                            <% if (product?.productImage && product.productImage.length > 0) { %>
+                                <a href="/<%= product.productImage[0] %>" class="image-popup prod-img-bg">
+                                    <img src="/<%= product.productImage[0] %>" class="img-fluid w-100 mb-2 zoom-image" style="height: 300px; object-fit: contain;" alt="<%= product.productName %>" id="mainImage">
+                                </a>
+                                <div class="zoom-lens"></div>
+                            <% } else { %>
+                                <img src="/images/no-image.jpg" class="img-fluid w-100" style="height: 300px; object-fit: contain;" alt="No Image Available">
+                            <% } %>
+                        </div>
+                        <div class="thumbnails">
+                            <% if (product?.productImage && product.productImage.length > 0) { %>
+                                <% product.productImage.forEach((image, index) => { %>
+                                    <div class="thumbnail <%= index === 0 ? 'active' : '' %>" data-image="/<%= image %>">
+                                        <img src="/<%= image %>" alt="<%= product.productName %>">
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="thumbnail active" data-image="/images/no-image.jpg">
+                                    <img src="/images/no-image.jpg" alt="No Image">
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="product-info">
+                        <h1 class="product-title">
+                            <%= product?.productName %>
+                            <% if (product?.productOffer && product.productOffer > 0) { %>
+                                <span class="discount-badge"><%= product.productOffer %>% OFF</span>
+                            <% } %>
+                        </h1>
+                        <div class="price-container">
+                            <span class="current-price">₹<%= (product?.salePrice || product?.regularPrice || 0).toLocaleString('en-IN') %></span>
+                            <% if (product?.regularPrice && product?.salePrice && product.salePrice < product.regularPrice) { %>
+                                <span class="original-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+                            <% } %>
+                        </div>
+                        <div class="product-description">
+                            <p><%= product?.description %></p>
+                        </div>
+                        <div class="product-meta">
+                            <div class="meta-item">
+                                <div class="meta-title">Category:</div>
+                                <div><%= product?.category?.name %></div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-title">Brand:</div>
+                                <div><%= product?.brand?.name || 'acer' %></div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-title">SKU:</div>
+                                <div><%= product?._id || 'N/A' %></div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-title">Availability:</div>
+                                <div class="<%= product?.quantity > 0 ? '' : 'out-of-stock' %>">
+                                    <%= product?.quantity > 0 ? 'In Stock' : 'Out of Stock' %>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quantity-control">
+                            <span class="quantity-label">Quantity:</span>
+                            <div class="quantity-input">
+                                <span class="quantity-btn decrease">-</span>
+                                <input type="text" class="quantity-value" id="quantity" value="1" readonly>
+                                <span class="quantity-btn increase">+</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="add-to-cart-button" onclick="addToCart('<%= product?._id %>')" <%= product?.quantity > 0 ? '' : 'disabled' %>>Add to Cart</button>
+                            <button class="wishlist-button" onclick="addToWishlist('<%= product?._id %>')">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Tabs -->
+                <div class="product-tabs">
+                    <div class="tabs-nav">
+                        <button class="tab-button active" data-tab="description">Description</button>
+                        <button class="tab-button" data-tab="reviews">Reviews</button>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="description">
+                            <p><%= product?.description %></p>
+                        </div>
+                        <div class="tab-pane" id="reviews">
+                            <p>No reviews yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            <div class="zz-related-products">
+                <h2 class="zz-section-title">Related Products</h2>
+                <div class="row">
+                    <% if (relatedProducts && relatedProducts.length > 0) { %>
+                        <% relatedProducts.forEach(relatedProduct => { %>
+                            <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
+                                <div class="product-item">
+                                    <div class="product-img-wrap">
+                                        <a href="/productDetails?id=<%= relatedProduct._id %>">
+                                            <img src="/<%= relatedProduct.productImage[0] %>" alt="<%= relatedProduct.productName %>">
+                                        </a>
+                                        <div class="wishlist-btn">
+                                            <a href="/addToWishlist?id=<%= relatedProduct._id %>" aria-label="Add to wishlist">
+                                                <i class="fa fa-heart"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="product-details">
+                                        <h6><a href="/productDetails?id=<%= relatedProduct._id %>" class="text-dark text-decoration-none"><%= relatedProduct.productName %></a></h6>
+                                        <div class="price-box">₹ <%= relatedProduct.salePrice %></div>
+                                        <a href="/addToCart?id=<%= relatedProduct._id %>" class="cart-btn">ADD TO CART</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="col-12 text-center py-3">
+                            <p>No related products found</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Thumbnail click handler
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            const mainImage = document.getElementById('mainImage');
+
+            thumbnails.forEach(thumbnail => {
+                thumbnail.addEventListener('click', function() {
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    mainImage.src = this.getAttribute('data-image');
+                });
+            });
+
+            // Quantity controls
+            const decreaseBtn = document.querySelector('.decrease');
+            const increaseBtn = document.querySelector('.increase');
+            const quantityInput = document.getElementById('quantity');
+            const maxQuantity = <%= product?.quantity || 0 %>;
+
+            decreaseBtn.addEventListener('click', function() {
+                let value = parseInt(quantityInput.value);
+                if (value > 1) quantityInput.value = value - 1;
+            });
+
+            increaseBtn.addEventListener('click', function() {
+                let value = parseInt(quantityInput.value);
+                if (value < maxQuantity) quantityInput.value = value + 1;
+            });
+
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    tabPanes.forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+                });
+            });
+
+            // Add to Cart
+            window.addToCart = function(productId) {
+                if (<%= product?.quantity > 0 %>) {
+                    console.log('Added to cart:', productId);
+                    alert('Product added to cart!');
+                    // Add AJAX or redirect logic here
+                } else {
+                    alert('Product is out of stock!');
+                }
+            };
+
+            // Add to Wishlist
+            window.addToWishlist = function(productId) {
+                console.log('Added to wishlist:', productId);
+                alert('Product added to wishlist!');
+                // Add AJAX or redirect logic here
+            };
+
+            // Zoom functionality
+            document.querySelectorAll('.zoom-container').forEach(container => {
+                const img = container.querySelector('.zoom-image');
+                const lens = container.querySelector('.zoom-lens');
+
+                container.addEventListener('mousemove', (e) => {
+                    const { left, top, width, height } = container.getBoundingClientRect();
+
+                    const posX = e.clientX - left;
+                    const posY = e.clientY - top;
+
+                    const lensX = posX - (lens.offsetWidth / 2);
+                    const lensY = posY - (lens.offsetHeight / 2);
+                    lens.style.left = `${lensX}px`;
+                    lens.style.top = `${lensY}px`;
+
+                    const zoomedImgUrl = img.src;
+                    lens.style.backgroundImage = `url(${zoomedImgUrl})`;
+                    lens.style.backgroundSize = `${img.width * 2}px ${img.height * 2}px`;
+                    lens.style.backgroundPosition = `-${posX * 2}px -${posY * 2}px`;
+                });
+
+                // Optional: Hide lens when mouse leaves the container
+                container.addEventListener('mouseleave', () => {
+                    lens.style.opacity = '0';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+<%- include('../../views/partials/user/footer') %>

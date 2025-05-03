@@ -1,0 +1,201 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e9ecef;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+.container {
+    display: flex;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Reduced from 800px */
+    width: 100%;
+    min-height: 600px; /* Reduced from 600px */
+}
+
+.image-section, .form-section {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-section {
+    background-color: #fff;
+}
+
+.watch-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.form-section {
+    padding: 20px; /* Reduced from 30px */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Reduced from 15px */
+}
+
+.form-section h2 {
+    font-family: 'Amarante', cursive;
+    font-size: 1.5rem; /* Reduced from 2rem */
+    color: #333;
+    text-align: center;
+    margin-bottom: 5px; /* Reduced from 10px */
+}
+
+.form-section p {
+    font-size: 0.8rem; /* Reduced from 0.9rem */
+    color: #666;
+    text-align: center;
+}
+
+.sign-in a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Reduced from 5px */
+}
+
+.form-group label {
+    font-size: 0.8rem; /* Reduced from 0.9rem */
+    color: #666;
+}
+
+.form-group input {
+    padding: 6px; /* Reduced from 10px */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    font-size: 0.8rem; /* Reduced from 0.9rem */
+    width: 100%;
+    justify-content: space-between;
+}
+
+.password-note {
+    font-size: 0.7rem; /* Reduced from 0.75rem */
+    color: #666;
+    margin-bottom: 5px; /* Reduced from 10px */
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.create-btn {
+    background-color: #04364A;
+    color: white;
+    padding: 8px; /* Reduced from 10px */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 0.8rem; /* Reduced from 0.9rem */
+}
+
+.create-btn:hover {
+    background-color: #032c3d;
+}
+
+.google-btn {
+    background-color: #fff;
+    color: #666;
+    padding: 8px; /* Reduced from 10px */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Reduced from 10px */
+    font-size: 0.8rem; /* Reduced from 0.9rem */
+}
+
+.google-btn i {
+    color: #4285f4;
+}
+
+.need-help {
+    font-size: 0.7rem; /* Reduced from 0.8rem */
+    color: #007bff;
+    text-align: center;
+    margin-top: 5px; /* Reduced from 10px */
+}
+
+.error-message{
+    color: red;
+    font-size: 0.75em;
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        max-width: 300px; /* Reduced from 400px */
+        min-height: auto;
+    }
+
+    .image-section, .form-section {
+        width: 100%;
+    }
+
+    .image-section {
+        height: 200px; /* Reduced from 300px */
+    }
+
+    .watch-img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .form-section {
+        padding: 15px; /* Reduced from 20px */
+    }
+}
+
+@media (max-width: 480px) {
+    .image-section {
+        height: 150px; /* Reduced from 200px */
+    }
+
+    .form-section h2 {
+        font-size: 1.2rem; /* Reduced from 1.5rem */
+    }
+
+    .form-group input {
+        font-size: 0.7rem; /* Reduced from 0.8rem */
+    }
+
+    .create-btn, .google-btn {
+        font-size: 0.7rem; /* Reduced from 0.8rem */
+    }
+}

@@ -1,0 +1,84 @@
+<%-include('../../views/partials/user/header')%>
+<!-- header end -->
+    <section class="hero">
+        <img src="/image/watch2.png" alt="Hero Watch" class="hero-img">
+        <div class="hero-text">
+            <h2>LATEST WATCH COLLECTIONS</h2>
+            <p>Unlock the ultimate connectivity experience! The mobile phone of your dreams is now just a tap away.</p>
+            <button class="discover-btn">Discover Now</button>
+        </div>
+    </section>
+
+    <section class="categories">
+        <button class="category-btn">TISSOT</button>
+        <button class="category-btn">RADO</button>
+        <button class="category-btn">ROLEX</button>
+        <button class="category-btn">CASIO</button>
+        <button class="category-btn">CARTIER</button>
+        <button class="category-btn all-btn">All brands</button>
+    </section>
+
+    <section class="new-arrivals">
+        <h3>New arrivals</h3>
+        <div class="products">
+            <div class="product-card">
+                <%for(let i=0;i<products.length;i++){%>
+                    <a href="/addToWishlist?id=<%products[i]._id%>" class="wishlist-btn">
+                        <!-- <i class="fas fa-heart"></i> -->
+                    </a>
+                </div>
+
+
+                <div class="product-content-wrap">
+                    <h6><%=products[i].productName%></h6>
+                    <h5><%=products[i].salePrice%></h5>
+                    <a href="/addToCart?id=<%=products[i]._id%>">Add To Cart</a>
+                </div>
+            </div>
+        </div>
+        <%}%>
+            </div>
+            <div class="product-card">
+               
+            </div>
+            <div class="product-card">
+               
+            </div>
+            <div class="product-card">
+               
+            </div>
+        </div>
+    </section>
+
+    <section class="trending-products">
+        <h3>Trending products</h3>
+        <div class="products">
+            <div class="product-card">
+                <img src="https://via.placeholder.com/150" alt="Watch 5">
+                <p>Best Dial Black Luxury Watch</p>
+                <p>₹3340.99 <span>-21%</span></p>
+                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
+            </div>
+            <div class="product-card">
+                <img src="https://via.placeholder.com/150" alt="Watch 6">
+                <p>Carlington Analog Sports Watch</p>
+                <p>₹1899.00</p>
+                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
+            </div>
+            <div class="product-card">
+                <img src="https://via.placeholder.com/150" alt="Watch 7">
+                <p>Smart Series 7 White</p>
+                <p>₹1429.00</p>
+                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
+            </div>
+            <div class="product-card">
+                <img src="https://via.placeholder.com/150" alt="Watch 8">
+                <p>Aura Luxury & Sporty Unisex Watch</p>
+                <p>₹1200.00</p>
+                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
+            </div>
+        </div>
+        <button class="view-all-btn">View all</button>
+    </section>
+<!-- footer begins -->
+<%-include('../../views/partials/user/footer')%>

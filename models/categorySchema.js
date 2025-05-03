@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const {Schema} = mongoose
 
-const categorySchema = new mongoose.Schema({
+const categorySchema = new Schema({
     name:{
         type:String,
         required:true,
@@ -18,6 +18,10 @@ const categorySchema = new mongoose.Schema({
     categoryOffer:{
         type:Number,
         default:0
+    },
+    isDeleted:{
+        type:Boolean,
+        default:false
     },
     createdAt:{
         type:Date,

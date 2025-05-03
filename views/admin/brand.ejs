@@ -1,0 +1,623 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+  .content {
+    margin-left: 250px;
+    padding: 20px;
+  }
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .header-left {
+    flex: 1;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .content-title {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+  }
+  .search-bar form {
+    display: flex;
+    align-items: center;
+  }
+  .search-bar input {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px 0 0 20px;
+    width: 200px;
+    outline: none;
+  }
+  .search-bar button {
+    padding: 8px 15px;
+    border: none;
+    background-color: #3D639E;
+    color: #fff;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+  }
+  .search-bar button:hover {
+    background-color: #2d4d79;
+  }
+  .add-category-btn {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+  }
+  .add-category-btn:hover {
+    background-color: #218838;
+  }
+  .table-container {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background-color: #f8f9fa;
+  }
+  td.text-start {
+    text-align: left;
+  }
+  .actions a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .actions .edit {
+    background-color: #17a2b8;
+  }
+  .actions .edit:hover {
+    background-color: #138496;
+  }
+  .actions .delete {
+    background-color: #dc3545;
+  }
+  .actions .delete:hover {
+    background-color: #c82333;
+  }
+  td:nth-child(3) {
+    padding: 5px;
+  }
+  .action-btn {
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+  }
+  .list-btn {
+    background-color: #28a745;
+  }
+  .list-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+  }
+  .unlist-btn {
+    background-color: #dc3545;
+  }
+  .unlist-btn:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+  }
+  .text-white {
+    color: #fff !important;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    width: 500px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+  }
+  .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+    text-align: left;
+  }
+  .modal-content form div {
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  .modal-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+  }
+  .modal-input {
+    width: 100%;
+    padding: 12px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    outline: none;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  textarea.modal-input {
+    resize: vertical;
+    min-height: 100px;
+  }
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  .modal-btn {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease;
+    flex: 1;
+    max-width: 150px;
+  }
+  .modal-btn:hover {
+    background-color: #218838;
+  }
+  .cancel-btn {
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease;
+    flex: 1;
+    max-width: 150px;
+  }
+  .cancel-btn:hover {
+    background-color: #5a6268;
+  }
+  .close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+  }
+  .close:hover {
+    color: #000;
+  }
+  .error-message {
+    color: red;
+    font-size: 12px;
+    display: none;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+  <div class="content">
+    <div class="content-header">
+      <div class="header-left">
+        <h2 class="content-title">Brands</h2>
+      </div>
+      <div class="header-right">
+        <div class="search-bar">
+          <form action="/admin/addBrand" method="post">
+            <input type="text" name="search" placeholder="Search brand">
+            <button type="submit">Search</button>
+          </form>
+        </div>
+        <button class="add-category-btn">ADD Brands +</button>
+      </div>
+    </div>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>NAME</th>
+            <th>DESCRIPTION</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% brands.filter(brand => !brand.isDeleted).forEach((brand) => { %>
+           
+            <tr>
+              <td><%= brand.name %></td>
+              <td><%= brand.description %></td>
+              <td>
+                <% if (brand.isListed) { %>
+                  <button class="action-btn unlist-btn">
+                    <a href="/admin/unlistBrand?id=<%= brand._id %>" class="text-white" style="text-decoration: none;">UNLIST</a>
+                  </button>
+                <% } else { %>
+                  <button class="action-btn list-btn">
+                    <a href="/admin/listBrand?id=<%= brand._id %>" class="text-white" style="text-decoration: none;">LIST</a>
+                  </button>
+                <% } %>
+              </td>
+              <td class="actions">
+                <a class="edit" onclick='openEditModal(<%- JSON.stringify(brand).replace(/'/g, "\\") %>)'><i class="fas fa-edit"></i></a>
+                <a class="delete" onclick="confirmDeleteCategory('<%= brand._id %>')"><i class="fas fa-trash"></i></a>
+              </td>
+              <% }) %>
+
+        </tbody>
+      </table>
+  </div>
+
+  <!-- Add Category Modal -->
+  <div id="addCategoryModal" class="modal">
+    <div class="modal-content">
+      <span class="close">x</span>
+      <h2>Add Brand</h2>
+      <form action="/admin/addBrand" method="post" onsubmit="return handleAddFormSubmit(event)">
+        <div>
+          <label for="addCategoryName">Brand Name:</label>
+          <input type="text" id="addCategoryName" name="brandName" class="modal-input" >
+          <div id="add-name-error" class="error-message"></div>
+        </div>
+        <div>
+          <label for="addDescription">Description:</label>
+          <textarea id="addDescription" name="description" class="modal-input" rows="4" ></textarea>
+          <div id="add-description-error" class="error-message"></div>
+        </div>
+        <div class="button-group">
+          <button type="button" class="cancel-btn">CANCEL</button>
+          <button type="submit" class="modal-btn">ADD</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Category Modal -->
+  <div id="editCategoryModal" class="modal">
+    <div class="modal-content">
+      <span class="close">x</span>
+      <h2>Edit Brand</h2>
+      <form action="/admin/editBrand" id="editCategoryForm" method="post" onsubmit="return handleEditFormSubmit(event)">
+        <input type="hidden" id="categoryId" name="categoryId">
+        <div>
+          <label for="editCategoryName">Brand Name:</label>
+          <input type="text" id="editCategoryName" name="brandName" class="modal-input" >
+          <div id="edit-name-error" class="error-message"></div>
+        </div>
+        <div>
+          <label for="editDescription">Description:</label>
+          <textarea id="editDescription" name="description" class="modal-input" rows="4" ></textarea>
+          <div id="edit-description-error" class="error-message"></div>
+        </div>
+        <div class="button-group">
+          <button type="button" class="cancel-btn">CANCEL</button>
+          <button type="submit" class="modal-btn">UPDATE</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // Add Category Modal
+    const addModal = document.getElementById("addCategoryModal");
+    const addBtn = document.querySelector(".add-category-btn");
+    const addSpan = document.querySelector("#addCategoryModal .close");
+    const addCancelBtn = document.querySelector("#addCategoryModal .cancel-btn");
+
+    addBtn.addEventListener("click", function() {
+      addModal.style.display = "flex";
+    });
+
+    addSpan.addEventListener("click", function() {
+      addModal.style.display = "none";
+    });
+
+    addCancelBtn.addEventListener("click", function() {
+      addModal.style.display = "none";
+    });
+
+    window.addEventListener("click", function(event) {
+      if (event.target == addModal) {
+        addModal.style.display = "none";
+      }
+    });
+
+    function handleAddFormSubmit(event) {
+  event.preventDefault();
+  if (!validateAddForm()) {
+    return;
+  }
+
+  const name = document.getElementById("addCategoryName").value.trim();
+  const description = document.getElementById("addDescription").value.trim();
+
+  fetch('/admin/addBrand', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ name, description })
+  })
+  .then(async response => {
+    const data = await response.json(); // always parse JSON first
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Unknown error');
+    }
+
+    addModal.style.display = "none";
+    location.reload();
+  })
+  .catch(error => {
+    console.error("Add brand error:", error.message); // <-- helpful during debugging
+
+    if (error.message === "Brand already exists") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops",
+        text: "Brand already exists"
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Oops",
+        text: "An error occurred while adding the brand"
+      });
+    }
+  });
+}
+
+
+    function validateAddForm() {
+      clearAddErrorMessages();
+      const name = document.getElementById("addCategoryName").value.trim();
+      const description = document.getElementById("addDescription").value.trim();
+      let isValid = true;
+
+      if (name === "") {
+        displayAddErrorMessage("add-name-error", "Please enter a name");
+        isValid = false;
+      } else if (!/^[a-zA-Z\s-']+$/.test(name)) {
+        displayAddErrorMessage("add-name-error", "Brand name should contain only alphabetic characters");
+        isValid = false;
+      }
+      if (description === "") {
+        displayAddErrorMessage("add-description-error", "Please enter a description");
+        isValid = false;
+      }
+      return isValid;
+    }
+
+    // Edit Category Modal
+    const editModal = document.getElementById("editCategoryModal");
+    const editSpan = document.querySelector("#editCategoryModal .close");
+    const editCancelBtn = document.querySelector("#editCategoryModal .cancel-btn");
+
+    function openEditModal(brand) {
+
+  // Assuming your modal input fields have these IDs:
+  document.getElementById("categoryId").value = brand._id || brand.id;
+  document.getElementById("editCategoryName").value = brand.name;
+  document.getElementById("editDescription").value = brand.description;
+
+    editModal.style.display = "flex";
+}
+
+    editSpan.addEventListener("click", function() {
+      editModal.style.display = "none";
+    });
+
+    editCancelBtn.addEventListener("click", function() {
+      editModal.style.display = "none";
+    });
+
+    window.addEventListener("click", function(event) {
+      if (event.target == editModal) {
+        editModal.style.display = "none";
+      }
+    });
+
+    function handleEditFormSubmit(event) {
+      event.preventDefault();
+      if (!validateEditForm()) {
+        return;
+      }
+      const form = document.getElementById("editCategoryForm");
+      const formData = new FormData(form);
+
+      fetch('/admin/editBrand', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          brandId: formData.get('categoryId'),
+          name: formData.get('brandName'),
+          description: formData.get('description')
+        })
+      })
+      .then(response => response.json()) //editModal.style.display = "none";
+      .then(data=>{
+        if(data.success){
+          Swal.fire({
+            icon: "success",
+            text: data.message || "Brand updated successfully",
+            timer:1500,
+            showConfirmButton:false
+          }).then(()=>{
+            editModal.style.display = "none";
+            location.reload()
+          })
+        }else{
+          Swal.fire({
+            icon: "error",
+            text: data.message || "An error occured",
+            timer:1500,
+            showConfirmButton:false
+          })
+        }
+      })
+    }
+
+    function validateEditForm() {
+      clearEditErrorMessages();
+      const name = document.getElementById("editCategoryName").value.trim();
+      const description = document.getElementById("editDescription").value.trim();
+      let isValid = true;
+
+      if (name === "") {
+        displayEditErrorMessage("edit-name-error", "Please enter a name");
+        isValid = false;
+      } else if (!/^[a-zA-Z\s-']+$/.test(name)) {
+        displayEditErrorMessage("edit-name-error", "Brand name should contain only alphabetic characters");
+        isValid = false;
+      }
+      if (description === "") {
+        displayEditErrorMessage("edit-description-error", "Please enter a description");
+        isValid = false;
+      }
+      return isValid;
+    }
+
+    function displayAddErrorMessage(elementId, message) {
+      const errorElement = document.getElementById(elementId);
+      errorElement.innerText = message;
+      errorElement.style.display = "block";
+    }
+
+    function displayEditErrorMessage(elementId, message) {
+      const errorElement = document.getElementById(elementId);
+      errorElement.innerText = message;
+      errorElement.style.display = "block";
+    }
+
+    function clearAddErrorMessages() {
+      const errorElements = document.querySelectorAll("#addCategoryModal .error-message");
+      Array.from(errorElements).forEach((element) => {
+        element.innerText = "";
+        element.style.display = "none";
+      });
+    }
+
+    function clearEditErrorMessages() {
+      const errorElements = document.querySelectorAll("#editCategoryModal .error-message");
+      Array.from(errorElements).forEach((element) => {
+        element.innerText = "";
+        element.style.display = "none";
+      });
+    }
+
+    // delte button
+    function confirmDeleteCategory(brandId) {
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, delete it!"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const data = {
+        brandId: brandId
+      };
+
+      const requestData = new Request('/admin/deleteBrand', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      fetch(requestData)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire({
+              icon: "success",
+              title: "Deleted!",
+              text: data.message || "Brand deleted successfully",
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: data.message || "Failed to delete brand"
+            });
+          }
+        })
+        .catch(() => {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Something went wrong!"
+          });
+        });
+    }
+  });
+}
+
+
+
+  </script>
+
+<%- include("../../views/partials/admin/footer") %>
+  

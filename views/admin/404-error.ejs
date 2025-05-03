@@ -1,0 +1,53 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh; /* Ensures the body takes full viewport height */
+        margin: 0; /* Removes default margin */
+        background-color: var(--background-light); /* Matches your existing theme */
+    }
+
+    .container {
+        text-align: center;
+    }
+
+    .sad-face {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+    }
+
+    .error-code {
+        font-size: 72px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .error-title {
+        font-size: 24px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .error-message {
+        font-size: 16px;
+        color: #999;
+        margin-bottom: 20px; /* Added space for the button */
+    }
+</style>
+<div class="container">
+    <div class="sad-face">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#333" stroke-width="5"/>
+            <circle cx="35" cy="35" r="5" fill="#333"/>
+            <circle cx="65" cy="35" r="5" fill="#333"/>
+            <path d="M35 70 Q50 50 65 70" fill="none" stroke="#333" stroke-width="5"/>
+        </svg>
+    </div>
+    <div class="error-code">404</div>
+    <div class="error-title">Page Not Found</div>
+    <div class="error-message">Check the address or go back </div>
+</div>

@@ -1,0 +1,290 @@
+<%- include("../../views/partials/admin/header") %>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" /> <!-- Add SweetAlert CSS -->
+<style>
+  .content {
+    margin-left: 250px;
+    padding: 20px;
+  }
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .header-left {
+    flex: 1;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .content-title {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+  }
+  .search-bar form {
+    display: flex;
+    align-items: center;
+  }
+  .search-bar input {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px 0 0 20px;
+    width: 200px;
+    outline: none;
+  }
+  .search-bar button {
+    padding: 8px 15px;
+    border: none;
+    background-color: #3D639E;
+    color: #fff;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+  }
+  .search-bar button:hover {
+    background-color: #2d4d79;
+  }
+   .clear-btn {
+    background-color: #d3d3d3; /* Light gray from image */
+      color: #333;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .clear-btn:hover {
+      background-color: #bbb; /* Darker gray on hover */
+    }
+  .table-container {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background-color: #f8f9fa;
+  }
+  td.text-start {
+    text-align: left;
+  }
+  .user-img {
+      width: 40px;
+      height: 40px;
+      background-color: #f8f9fa;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    .user-img i {
+      font-size: 20px;
+      color: #333;
+    }
+    .action-btn {
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .block-btn {
+      background-color: #dc3545; /* Red for block */
+    }
+    .block-btn:hover {
+      background-color: #c82333;
+    }
+    .unlock-btn {
+      background-color: #28a745; /* Green for unblock */
+    }
+    .unlock-btn:hover {
+      background-color: #218838;
+    }
+    .action-btn a {
+      color: #fff;
+      text-decoration: none;
+      display: block; /* Ensure the link fills the button */
+    }
+    /* Modal CSS */
+    .modal-button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .modal-btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .modal-btn-cancel {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    .modal-btn-cancel:hover {
+      background-color: #5a6268;
+    }
+    .modal-btn-confirm {
+      background-color: #dc3545;
+      color: #fff;
+    }
+    .modal-btn-confirm:hover {
+      background-color: #c82333;
+    }
+</style>
+</head>
+<body>
+<div class="content">
+  <div class="content-header">
+    <div class="header-left">
+      <h2 class="content-title">Users</h2>
+    </div>
+    <div class="header-right">
+      <div class="search-bar">
+        <form action="/admin/users" class="search-form">
+          <input type="text" name="search" placeholder="Search users by name or email...">
+          <button type="submit">Search</button>
+        </form>
+      </div>
+      <button type="button" class="clear-btn">Clear</button>
+    </div>
+  </div>
+  
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+            <th>USER IMAGE</th>
+            <th>USER NAME</th>
+            <th>EMAIL</th>
+            <th>PHONE</th>
+            <th>DATE OF CREATION</th>
+            <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for(let i=0; i<users.length; i++) { %>
+            <tr>
+                <td>
+                  <div class="user-img">
+                    <i class="fas fa-user"></i>
+                  </div>
+                </td>
+                <td><%= users[i].name %></td>
+                <td><%= users[i].email %></td>
+                <td><%= users[i].phone %></td>
+                <td><%= users[i].createdOn.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
+                <td>
+                    <% if(users[i].isBlocked === false) { %>
+                        <button class="action-btn block-btn" onclick="confirmAction('<%= users[i]._id %>', 'block')">
+                            BLOCK
+                        </button>
+                    <% } else { %>
+                        <button class="action-btn unlock-btn" onclick="confirmAction('<%= users[i]._id %>', 'unblock')">
+                            UNBLOCK
+                        </button>
+                    <% } %>
+                </td>
+            </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="userAction" tabindex="-1" aria-labelledby="userActionLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userActionLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modalMessage"></p>
+        <form id="actionForm" method="GET">
+          <input type="hidden" id="user_actionID" name="id">
+          <div class="modal-button-group">
+            <button type="button" class="modal-btn modal-btn-cancel" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" class="modal-btn modal-btn-confirm">
+              <i class="fas fa-ban"></i> <span id="confirmAction"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script> <!-- Add SweetAlert JS -->
+<script>
+  // SweetAlert confirmation for block/unblock actions
+  function confirmAction(userID, action) {
+    const actionText = action === 'block' ? 'block' : 'unblock';
+    const actionTitle = action === 'block' ? 'Block User' : 'Unblock User';
+    const actionMessage = `Are you sure you want to ${actionText} this user?`;
+    const confirmButtonColor = action === 'block' ? '#dc3545' : '#28a745'; // Red for block, green for unblock
+
+    Swal.fire({
+      title: actionTitle,
+      text: actionMessage,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: confirmButtonColor,
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: `Yes, ${actionText}!`,
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirect to the appropriate route based on the action
+        const url = action === 'block' ? `/admin/blockCustomer?id=${userID}` : `/admin/unblockCustomer?id=${userID}`;
+        window.location.href = url;
+      }
+    });
+  }
+
+  function actionValidate(userID, action) {
+    console.log("Validating action for userID:", userID, "Action:", action); // Debug log
+    document.getElementById('user_actionID').value = userID;
+
+    // Dynamically set modal content based on action
+    const modalTitle = document.getElementById('userActionLabel');
+    const modalMessage = document.getElementById('modalMessage');
+    const confirmAction = document.getElementById('confirmAction');
+    const form = document.getElementById('actionForm');
+
+    if (action === 'block') {
+      modalTitle.textContent = 'Block User';
+      modalMessage.textContent = 'Are you sure you want to block this user?';
+      confirmAction.textContent = 'Block User';
+      form.action = '/admin/blockCustomer';
+    } else if (action === 'unblock') {
+      modalTitle.textContent = 'Unblock User';
+      modalMessage.textContent = 'Are you sure you want to unblock this user?';
+      confirmAction.textContent = 'Unblock User';
+      form.action = '/admin/unblockCustomer';
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('userAction'));
+    modal.show();
+  }
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

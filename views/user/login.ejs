@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zxx">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>HOURLY - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link rel="stylesheet" href="/css/login.css">
+    <style>
+        /* Custom style to ensure the blocked message text is red */
+        .alert-danger {
+            color: #721c24; /* Default Bootstrap alert-danger text color (dark red) */
+        }
+
+        .alert-danger.blocked-message {
+            color: red; /* Bright red for the blocked message */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-form">
+            <h2>Welcome back!</h2>
+            <p>Enter your Credentials to access your account</p>
+            <form id="loginForm" method="post" action="/login">
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required />
+                    <div id="error1" class="error-message"></div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required />
+                    <div id="error2" class="error-message"></div>
+                </div>
+                <% if (locals.message && message.length > 0) { %>
+                    <div class="alert alert-danger text-center <%= message.toLowerCase() === 'user is blocked by admin' ? 'blocked-message' : '' %>">
+                        <%= message %>
+                    </div>
+                <% } %>
+                <a href="/forgot-password" class="forgot-password">Forgot password</a>
+                <button type="submit" class="btn btn-login">Login</button>
+            </form>
+            <div>Or</div>
+            <button type="button" class="btn btn-google" onclick="handleGoogleLogin()">
+                <img src="https://www.google.com/favicon.ico" alt="Google Icon" /> Sign in with Google
+            </button>
+            <p class="signup-text">Don't have an account? <a href="/signup" class="signup-link">Sign Up</a></p>
+        </div>
+        <div class="image-section">
+            <img src="/image/watch.png" alt="watch-image">
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = $('#email').val();
+            const password = $('#password').val();
+
+            $.ajax({
+                type: 'POST',
+                url: '/login',
+                data: { email, password },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Login Successful',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            window.location.href = response.redirectUrl || '/';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Invalid credentials'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Login failed. Please try again.'
+                    });
+                    console.error('AJAX Error:', status, error);
+                }
+            });
+            return false;
+        }
+
+        function handleGoogleLogin() {
+            window.location.href = '/auth/google';
+        }
+    </script>
+</body>
+</html>

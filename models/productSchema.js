@@ -11,7 +11,8 @@ const productSchema = new Schema({
         required:true
     },
     brand:{
-        type:String,
+        type:Schema.Types.ObjectId,
+        ref:"Brand",
         required:true
     },
     category:{
@@ -33,15 +34,17 @@ const productSchema = new Schema({
     },
     quantity:{
         type:Number,
-        default:true
+        default:true, // Changed to required to match frontend
+        default: 0 // Fixed default to a number
     },
-    color:{
-        type:String,
-        required:true
-    },
+   
     productImage:{
         type:[String],
         required:true
+    },
+    croppedImages: {
+        type: [String],
+        default: []
     },
     isBlocked:{
         type:Boolean,
@@ -52,8 +55,12 @@ const productSchema = new Schema({
         enum:["Available","out of stock","Discountinued"],
         required:true,
         default:"Available"
+    },
+    isDeleted: { 
+        type: Boolean,
+         default: false
     }
 },{timestamps:true})
 
-const Product = mongoose.modelodel("Product",productSchema)
+const Product = mongoose.model("Product",productSchema)
 module.exports = Product
