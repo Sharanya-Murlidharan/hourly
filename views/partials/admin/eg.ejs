@@ -1,84 +1,533 @@
-<%-include('../../views/partials/user/header')%>
-<!-- header end -->
-    <section class="hero">
-        <img src="/image/watch2.png" alt="Hero Watch" class="hero-img">
-        <div class="hero-text">
-            <h2>LATEST WATCH COLLECTIONS</h2>
-            <p>Unlock the ultimate connectivity experience! The mobile phone of your dreams is now just a tap away.</p>
-            <button class="discover-btn">Discover Now</button>
+<%- include("../partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    main, main * {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Main container padding */
+    .main {
+        padding: 30px 0;
+        min-height: calc(100vh - 150px); /* Adjust for header and footer */
+    }
+
+    /* Container for Main Content */
+    .account-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Main Content */
+    .main-content {
+        padding: 40px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Greeting */
+    .greeting {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* Cart Table */
+    .cart-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .cart-table th, .cart-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .cart-table th {
+        background-color: #05445E;
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+
+    .cart-table td {
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .cart-table .product-cell {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .cart-table .product-cell img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    .cart-table .product-cell h3 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quantity-selector button {
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .quantity-selector button:hover {
+        background-color: #043b52;
+    }
+
+    .quantity-selector input {
+        width: 40px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 5px;
+        font-size: 0.9rem;
+    }
+
+    .remove-btn {
+        background-color: #ff3b30;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+        text-decoration: none;
+    }
+
+    .remove-btn:hover {
+        background-color: #e6392f;
+    }
+
+    /* Cart Summary */
+    .cart-summary {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .cart-summary h3 {
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+
+    .cart-summary p {
+        font-size: 1rem;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .checkout-btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .checkout-btn:hover {
+        background-color: #043b52;
+    }
+
+    /* Empty Cart Message */
+    .empty-cart {
+        font-size: 1rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .main-content {
+            padding: 20px;
+        }
+
+        .cart-table th, .cart-table td {
+            padding: 10px;
+        }
+
+        .cart-table .product-cell img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .cart-table .product-cell h3 {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .greeting {
+            font-size: 1.5rem;
+        }
+
+        .cart-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .cart-table th, .cart-table td {
+            font-size: 0.8rem;
+            padding: 8px;
+        }
+
+        .cart-table .product-cell h3 {
+            font-size: 0.8rem;
+        }
+
+        .quantity-selector button {
+            padding: 3px 8px;
+            font-size: 0.8rem;
+        }
+
+        .quantity-selector input {
+            width: 30px;
+            font-size: 0.8rem;
+        }
+
+        .remove-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .cart-summary h3 {
+            font-size: 1rem;
+        }
+
+        .cart-summary p {
+            font-size: 0.9rem;
+        }
+
+        .checkout-btn {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+    }
+</style>
+
+<!-- Main Content -->
+<main class="main">
+    <section class="pt-10 pb-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="account-container">
+                        <div class="main-content">
+                            <div class="greeting">
+                                My Cart
+                            </div>
+                            <!-- Cart Table -->
+                            <div class="cart-items" id="cart-items">
+                                <table class="cart-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Price</th>
+                                            <th>Quantity</th>
+                                            <th>Subtotal</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-table-body">
+                                        <!-- Sample cart items (to be populated dynamically) -->
+                                        <tr class="cart-item" data-id="1">
+                                            <td class="product-cell">
+                                                <img src="https://via.placeholder.com/60" alt="Product 1">
+                                                <h3>Product 1</h3>
+                                            </td>
+                                            <td>₹<span class="item-price">2499</span></td>
+                                            <td>
+                                                <div class="quantity-selector">
+                                                    <button class="decrease-quantity">-</button>
+                                                    <input type="number" class="quantity-input" value="2" min="1">
+                                                    <button class="increase-quantity">+</button>
+                                                </div>
+                                            </td>
+                                            <td>₹<span class="item-subtotal">4998</span></td>
+                                            <td>
+                                                <a href="#" class="remove-btn" data-href="/removeFromCart?id=1">
+                                                    <i class="fa-solid fa-trash"></i> Remove
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr class="cart-item" data-id="2">
+                                            <td class="product-cell">
+                                                <img src="https://via.placeholder.com/60" alt="Product 2">
+                                                <h3>Product 2</h3>
+                                            </td>
+                                            <td>₹<span class="item-price">4199</span></td>
+                                            <td>
+                                                <div class="quantity-selector">
+                                                    <button class="decrease-quantity">-</button>
+                                                    <input type="number" class="quantity-input" value="1" min="1">
+                                                    <button class="increase-quantity">+</button>
+                                                </div>
+                                            </td>
+                                            <td>₹<span class="item-subtotal">4199</span></td>
+                                            <td>
+                                                <a href="#" class="remove-btn" data-href="/removeFromCart?id=2">
+                                                    <i class="fa-solid fa-trash"></i> Remove
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <!-- End of sample cart items -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Cart Summary -->
+                            <div class="cart-summary" id="cart-summary">
+                                <h3>Cart Summary</h3>
+                                <p>Total: <span id="cart-total">₹9197</span></p>
+                                <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
+</main>
 
-    <section class="categories">
-        <button class="category-btn">TISSOT</button>
-        <button class="category-btn">RADO</button>
-        <button class="category-btn">ROLEX</button>
-        <button class="category-btn">CASIO</button>
-        <button class="category-btn">CARTIER</button>
-        <button class="category-btn all-btn">All brands</button>
-    </section>
+<script>
+    // Function to populate cart items dynamically (example)
+    async function loadCartItems() {
+        // Replace this with your API call to fetch cart items
+        // Example: const response = await fetch('/api/cart');
+        // const cartItems = await response.json();
+        const cartItems = [
+            { id: '1', name: 'Product 1', price: 2499, quantity: 2, image: 'https://via.placeholder.com/60' },
+            { id: '2', name: 'Product 2', price: 4199, quantity: 1, image: 'https://via.placeholder.com/60' }
+        ];
 
-    <section class="new-arrivals">
-        <h3>New arrivals</h3>
-        <div class="products">
-            <div class="product-card">
-                <%for(let i=0;i<products.length;i++){%>
-                    <a href="/addToWishlist?id=<%products[i]._id%>" class="wishlist-btn">
-                        <!-- <i class="fas fa-heart"></i> -->
+        const cartTableBody = document.getElementById('cart-table-body');
+        const cartSummary = document.getElementById('cart-summary');
+
+        if (cartItems.length === 0) {
+            cartTableBody.innerHTML = '<tr><td colspan="5" class="empty-cart">Your cart is empty.</td></tr>';
+            cartSummary.style.display = 'none';
+            return;
+        }
+
+        cartTableBody.innerHTML = '';
+        cartItems.forEach(item => {
+            const row = document.createElement('tr');
+            row.className = 'cart-item';
+            row.dataset.id = item.id;
+            row.innerHTML = `
+                <td class="product-cell">
+                    <img src="${item.image}" alt="${item.name}">
+                    <h3>${item.name}</h3>
+                </td>
+                <td>₹<span class="item-price">${item.price.toFixed(0)}</span></td>
+                <td>
+                    <div class="quantity-selector">
+                        <button class="decrease-quantity">-</button>
+                        <input type="number" class="quantity-input" value="${item.quantity}" min="1">
+                        <button class="increase-quantity">+</button>
+                    </div>
+                </td>
+                <td>₹<span class="item-subtotal">${(item.price * item.quantity).toFixed(0)}</span></td>
+                <td>
+                    <a href="#" class="remove-btn" data-href="/removeFromCart?id=${item.id}">
+                        <i class="fa-solid fa-trash"></i> Remove
                     </a>
-                </div>
+                </td>
+            `;
+            cartTableBody.appendChild(row);
+        });
 
+        // Reattach event listeners after dynamically adding items
+        attachEventListeners();
+        updateCartTotal();
+    }
 
-                <div class="product-content-wrap">
-                    <h6><%=products[i].productName%></h6>
-                    <h5><%=products[i].salePrice%></h5>
-                    <a href="/addToCart?id=<%=products[i]._id%>">Add To Cart</a>
-                </div>
-            </div>
-        </div>
-        <%}%>
-            </div>
-            <div class="product-card">
-               
-            </div>
-            <div class="product-card">
-               
-            </div>
-            <div class="product-card">
-               
-            </div>
-        </div>
-    </section>
+    // Update total price dynamically
+    function updateCartTotal() {
+        let total = 0;
+        document.querySelectorAll('.cart-item').forEach(item => {
+            const price = parseFloat(item.querySelector('.item-price').textContent);
+            const quantity = parseInt(item.querySelector('.quantity-input').value);
+            const subtotal = price * quantity;
+            item.querySelector('.item-subtotal').textContent = subtotal.toFixed(0);
+            total += subtotal;
+        });
+        const cartTotalElement = document.getElementById('cart-total');
+        if (cartTotalElement) {
+            cartTotalElement.textContent = `₹${total.toFixed(0)}`;
+        }
+    }
 
-    <section class="trending-products">
-        <h3>Trending products</h3>
-        <div class="products">
-            <div class="product-card">
-                <img src="https://via.placeholder.com/150" alt="Watch 5">
-                <p>Best Dial Black Luxury Watch</p>
-                <p>₹3340.99 <span>-21%</span></p>
-                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
-            </div>
-            <div class="product-card">
-                <img src="https://via.placeholder.com/150" alt="Watch 6">
-                <p>Carlington Analog Sports Watch</p>
-                <p>₹1899.00</p>
-                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
-            </div>
-            <div class="product-card">
-                <img src="https://via.placeholder.com/150" alt="Watch 7">
-                <p>Smart Series 7 White</p>
-                <p>₹1429.00</p>
-                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
-            </div>
-            <div class="product-card">
-                <img src="https://via.placeholder.com/150" alt="Watch 8">
-                <p>Aura Luxury & Sporty Unisex Watch</p>
-                <p>₹1200.00</p>
-                <button class="wishlist-btn"><i class="fas fa-heart"></i></button>
-            </div>
-        </div>
-        <button class="view-all-btn">View all</button>
-    </section>
-<!-- footer begins -->
-<%-include('../../views/partials/user/footer')%>
+    // Attach event listeners to quantity selectors and remove buttons
+    function attachEventListeners() {
+        // Handle quantity changes
+        document.querySelectorAll('.quantity-selector').forEach(selector => {
+            const input = selector.querySelector('.quantity-input');
+            const decreaseBtn = selector.querySelector('.decrease-quantity');
+            const increaseBtn = selector.querySelector('.increase-quantity');
+            const itemId = selector.closest('.cart-item').dataset.id;
+
+            decreaseBtn.addEventListener('click', () => {
+                let quantity = parseInt(input.value);
+                if (quantity > 1) {
+                    quantity--;
+                    input.value = quantity;
+                    updateCartTotal();
+                    // Optionally send update to server
+                    fetch(`/updateCartQuantity?id=${itemId}&quantity=${quantity}`, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                console.error('Failed to update quantity on server');
+                            }
+                        });
+                }
+            });
+
+            increaseBtn.addEventListener('click', () => {
+                let quantity = parseInt(input.value);
+                quantity++;
+                input.value = quantity;
+                updateCartTotal();
+                // Optionally send update to server
+                fetch(`/updateCartQuantity?id=${itemId}&quantity=${quantity}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error('Failed to update quantity on server');
+                        }
+                    });
+            });
+
+            input.addEventListener('change', () => {
+                let quantity = parseInt(input.value);
+                if (quantity < 1 || isNaN(quantity)) {
+                    quantity = 1;
+                    input.value = quantity;
+                }
+                updateCartTotal();
+                // Optionally send update to server
+                fetch(`/updateCartQuantity?id=${itemId}&quantity=${quantity}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error('Failed to update quantity on server');
+                        }
+                    });
+            });
+        });
+
+        // Add SweetAlert confirmation for Remove buttons
+        document.querySelectorAll('.remove-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const removeUrl = this.getAttribute('data-href');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ff3b30',
+                    cancelButtonColor: '#666',
+                    confirmButtonText: 'Yes, remove it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = removeUrl;
+                    }
+                });
+            });
+        });
+    }
+
+    // Show SweetAlert for item removed (based on URL parameter)
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemRemoved = urlParams.get('itemRemoved') === 'true';
+
+        if (itemRemoved) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Item Removed',
+                text: 'The item has been successfully removed from your cart!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#05445E'
+            });
+        }
+
+        // Load cart items (uncomment to fetch dynamically)
+        // loadCartItems();
+
+        // Attach event listeners to static items and calculate initial total
+        attachEventListeners();
+        updateCartTotal();
+    });
+</script>
+<%- include("../partials/user/footer") %>

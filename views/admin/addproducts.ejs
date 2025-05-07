@@ -1,356 +1,596 @@
-<%- include("../../views/partials/admin/header") %>
+<%- include("../../views/partials/user/header") %>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Product - Hourly Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<!-- Add Cropper.js CSS (local) -->
+<link rel="stylesheet" href="/lib/cropperjs/cropper.min.css" onerror="console.error('Failed to load Cropper.js CSS. Check the file path at /lib/cropperjs/cropper.min.css');">
+<!-- Add Cropper.js Script (local) -->
+<script src="/lib/cropperjs/cropper.min.js" defer onerror="console.error('Failed to load Cropper.js script. Check the file path at /lib/cropperjs/cropper.min.js');"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    /* Apply Montserrat to main content */
+    main, main * {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Main container padding */
+    .main {
+        padding: 30px 0;
+    }
+
+    /* Container for Sidebar and Main Content */
+    .account-container {
+        display: flex;
+        max-width: 1200px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 20%;
+        background: #fff;
+        padding: 20px;
+        border-right: 1px solid #ddd;
+    }
+
+    .sidebar ul {
+        list-style: none;
+    }
+
+    .sidebar ul li {
+        margin-bottom: 10px;
+    }
+
+    .sidebar ul li a {
+        text-decoration: none;
+        color: #666;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 5px;
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+    }
+
+    .sidebar ul li a i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+        color: #666;
+        transition: color 0.3s;
+    }
+
+    .sidebar ul li a.active {
+        color: #05445E;
+        font-weight: 500;
+    }
+
+    .sidebar ul li a.active i {
+        color: #05445E;
+    }
+
+    .sidebar ul li a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 4px;
+        background-color: #05445E;
+        border-radius: 0 5px 5px 0;
+    }
+
+    /* Default hover behavior for non-logout links */
+    .sidebar ul li a:not(.menu-item.logout):hover {
+        background-color: #f5f5f5;
+        color: #05445E;
+    }
+
+    .sidebar ul li a:not(.menu-item.logout):hover i {
+        color: #05445E;
+    }
+
+    /* Specific styling for the SVG icon in the logout link */
+    .sidebar ul li a.menu-item.logout .icon {
+        margin-right: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar ul li a.menu-item.logout .icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Hover behavior for the logout link */
+    .sidebar ul li a.menu-item.logout:hover {
+        background-color: #f5f5f5;
+        color: #ff3b30;
+    }
+
+    .sidebar ul li a.menu-item.logout:hover .icon svg path {
+        stroke: #ff3b30;
+    }
+
+    /* Main Content */
+    .main-content {
+        width: 80%;
+        padding: 40px;
+    }
+
+    /* Greeting */
+    .greeting {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* Basic Info Section */
+    .basic-info {
+        margin-bottom: 40px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group.basic-info-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .form-group .input-field {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 20px;
+    }
+
+    .form-group.basic-info-group .input-field {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 5px;
+        letter-spacing: 1px;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f5f5f5;
+        color: #333;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #05445E;
+        box-shadow: 0 0 5px rgba(5, 68, 94, 0.2);
+        outline: none;
+    }
+
+    /* Disabled Input Styling */
+    .form-group input:disabled {
+        background: #e9ecef;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+    /* Login Details Section */
+    .login-details {
+        flex: 1 1 100%;
+        margin-top: 20px;
+    }
+
+    .login-details h2 {
+        font-size: 1.3rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .form-group.login-details-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .form-group.login-details-group .input-field {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    /* Change Button Styling */
+    .change-btn-container {
+        margin-top: 10px;
+    }
+
+    .change-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .change-btn:hover {
+        background-color: #043b52;
+    }
+
+    /* Image Upload Section */
+    .image-upload-container {
+        margin-bottom: 20px;
+    }
+
+    .image-upload {
+        border: 2px dashed #ddd;
+        padding: 20px;
+        text-align: center;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .image-upload i {
+        font-size: 30px;
+        color: #888;
+        margin-bottom: 10px;
+    }
+
+    .image-preview {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .preview-item {
+        width: 100px;
+        height: 100px;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .preview-item .remove-img {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ff5555;
+        cursor: pointer;
+    }
+
+    /* Crop Modal */
+    .crop-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .crop-modal.active {
+        display: flex;
+    }
+
+    .crop-container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .crop-preview {
+        max-width: 100%;
+        max-height: 70vh;
+        margin-bottom: 20px;
+    }
+
+    .crop-buttons {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .crop-apply, .crop-cancel {
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .crop-apply {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .crop-apply:hover {
+        background-color: #218838;
+    }
+
+    .crop-cancel {
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+
+    .crop-cancel:hover {
+        background-color: #e9e9e9;
+    }
+
+    /* Edit/Save Button Container */
+    .edit-btn-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    /* Save Button */
+    .edit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100px;
+        padding: 10px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .edit-btn i {
+        margin-right: 5px;
+    }
+
+    .edit-btn:hover {
+        background-color: #043b52;
+    }
+
+    .error-message {
+        color: red;
+        font-size: 12px;
+        display: none;
+        margin-top: 5px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .account-container {
+            flex-direction: column;
         }
 
-        body {
-            background-color: #f5f5f5;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .page-title {
-            font-size: 24px;
-            color: #333;
-            margin-left: 300px;
-        }
-
-        .card {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 25px;
+        .sidebar {
             width: 100%;
-            max-width: 1000px;
-            margin-left: 300px;
-            margin-right: auto;
+            border-right: none;
+            border-bottom: 1px solid #ddd;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / span 2;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .form-control {
+        .main-content {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 20px;
         }
 
-        textarea.form-control {
-            min-height: 120px;
-        }
-
-        .image-upload {
-            border: 2px dashed #ddd;
-            padding: 30px;
-            text-align: center;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .image-upload i {
-            font-size: 40px;
-            color: #888;
-            margin-bottom: 10px;
-        }
-
-        .image-preview {
-            margin-top: 15px;
-            display: flex;
+        .form-group.basic-info-group {
             flex-wrap: wrap;
-            gap: 10px;
         }
 
-        .preview-item {
-            width: 100px;
-            height: 100px;
-            border-radius: 5px;
-            overflow: hidden;
-            position: relative;
+        .form-group.login-details-group {
+            flex-wrap: wrap;
         }
 
-        .preview-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .form-group .input-field {
+            min-width: 0;
+            flex: 1;
         }
 
-        .preview-item .remove-img {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ff5555;
-            cursor: pointer;
+        .image-upload-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .greeting {
+            font-size: 1.5rem;
         }
 
-        .btn-group {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
+        .form-group input,
+        .form-group select {
+            font-size: 0.9rem;
         }
 
-        .btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
+        .edit-btn {
+            width: 80px;
+            font-size: 0.9rem;
         }
 
-        .btn-primary {
-            background-color: #28a745;
-            color: white;
+        .change-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
         }
 
-        .btn-primary:hover {
-            background-color: #218838;
-        }
-
-        .btn-secondary {
-            background-color: #f5f5f5;
-            color: #333;
-            border: 1px solid #ddd;
-        }
-
-        .btn-secondary:hover {
-            background-color: #e9e9e9;
-        }
-
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 15px;
-        }
-
-        #productImages {
-            display: none;
-        }
-
-        .crop-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .crop-modal.active {
-            display: flex;
+        .login-details h2 {
+            font-size: 1.2rem;
         }
 
         .crop-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 10px;
         }
 
-        .crop-preview {
-            max-width: 100%;
-            max-height: 70vh;
-            margin-bottom: 20px;
-        }
-
-        .crop-buttons {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .crop-apply, .crop-cancel {
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .crop-apply {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .crop-apply:hover {
-            background-color: #218838;
-        }
-
+        .crop-apply,
         .crop-cancel {
-            background-color: #f5f5f5;
-            color: #333;
-            border: 1px solid #ddd;
+            font-size: 0.8rem;
+            padding: 6px 12px;
         }
+    }
+</style>
 
-        .crop-cancel:hover {
-            background-color: #e9e9e9;
-        }
-
-        .error-message {
-            color: red;
-            font-size: 12px;
-            display: none;
-            margin-top: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="page-header">
-        <h1 class="page-title">Add Product</h1>
-    </div>
-
-    <div class="card">
-        <form id="addProductForm" method="post" action="/admin/addProducts" enctype="multipart/form-data" onsubmit="return validateAndSubmit(event)">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Product Name</label>
-                    <input type="text" class="form-control" id="productName" name="productName" placeholder="Enter product name">
-                    <div id="productName-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Brand</label>
-                    <select class="form-control" id="brand" name="brand">
-                        <option value="" disabled selected>Select Brand</option>
-                        <% for (let i = 0; i < brands.length; i++) { %>
-                            <option value="<%= brands[i]._id %>">
-                                <%= brands[i].name %>
-                            </option>
-                        <% } %>
-                    </select>
-                    <div id="brand-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <select class="form-control" id="category" name="category">
-                        <option value="" disabled selected>Select Category</option>
-                        <% for(let i = 0; i < cat.length; i++) { %>
-                            <option value="<%= cat[i].id %>">
-                                <%= cat[i].name %>
-                            </option>  
-                        <% } %>
-                    </select>
-                    <div id="category-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Regular Price</label>
-                    <input type="number" class="form-control" id="price" name="regularPrice" placeholder="Enter price" step="0.01" min="0">
-                    <div id="regularPrice-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Sale Price</label>
-                    <input type="number" class="form-control" id="salePrice" name="salePrice" placeholder="Enter sale price" step="0.01" min="0">
-                    <div id="salePrice-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Quantity</label>
-                    <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Enter quantity" step="1" min="1">
-                    <div id="quantity-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group full-width">
-                    <label class="form-label">Product Description</label>
-                    <textarea class="form-control" id="description" name="description" placeholder="Enter product description"></textarea>
-                    <div id="description-error" class="error-message"></div>
-                </div>
-
-                <div class="form-group full-width">
-                    <label class="form-label">Product Images</label>
-                    <input type="file" id="productImages" name="productImages" multiple accept="image/*" onchange="handleFileSelect()">
-                    <div class="image-upload" id="dropZone">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Drag & Drop your images here or click to browse (min 3, max 4)</p>
-                    </div>
-                    <div class="image-preview" id="imagePreview"></div>
-                    <div id="images-error" class="error-message"></div>
-                </div>
-            </div>
-
-            <div id="cropModal" class="crop-modal">
-                <div class="crop-container">
-                    <img id="cropImage" class="crop-preview" alt="Crop Preview" />
-                    <div class="crop-buttons">
-                        <button class="crop-cancel" onclick="cancelCrop()">Cancel</button>
-                        <button class="crop-apply" onclick="applyCrop()">Apply</button>
+<main class="main">
+    <section class="pt-10 pb-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="account-container">
+                        <div class="sidebar">
+                            <ul>
+                                <li><a href="/profile" class="active"><i class="fa-solid fa-user"></i> My Profile</a></li>
+                                <li><a href="#"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
+                                <li><a href="#"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
+                                <li><a href="#"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
+                                <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li>
+                                <li>
+                                    <a href="/logout" class="menu-item logout">
+                                        <i class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#666" width="20" height="20">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                        </i> 
+                                        <span>Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="main-content">
+                            <div class="greeting">
+                                Edit Profile
+                            </div>
+                            <div class="basic-info">
+                                <% if (!user) { %>
+                                    <p>Error: User data not available. Please <a href="/login">log in</a> again.</p>
+                                <% } else { %>
+                                    <form id="editProfileForm" method="post" action="/update-profile" enctype="multipart/form-data" onsubmit="return validateAndSubmit(event)">
+                                        <div class="image-upload-container">
+                                            <input type="file" id="profileImage" name="profileImage" accept="image/*" onchange="handleFileSelect()" style="display: none;">
+                                            <div class="image-upload" id="dropZone">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <p>Click to upload your profile image</p>
+                                            </div>
+                                            <div class="image-preview" id="imagePreview"></div>
+                                            <div id="image-error" class="error-message"></div>
+                                        </div>
+                                        <div class="form-group basic-info-group">
+                                            <div class="input-field">
+                                                <label for="username">Full Name</label>
+                                                <input type="text" id="username" name="name" value="<%= user.name || '' %>">
+                                            </div>
+                                            <div class="input-field">
+                                                <label for="phone">Phone Number</label>
+                                                <input type="text" id="phone" name="phone" value="<%= user.phone || '' %>">
+                                            </div>
+                                        </div>
+                                        <div class="login-details">
+                                            <h2>Login Details</h2>
+                                            <div class="form-group login-details-group">
+                                                <div class="input-field">
+                                                    <label for="username-login">Email</label>
+                                                    <input type="text" id="username-login" value="<%= user.email || 'Not available' %>" disabled>
+                                                    <div class="change-btn-container">
+                                                        <a href="/change-email" class="change-btn">Change Email</a>
+                                                    </div>
+                                                </div>
+                                                <div class="input-field">
+                                                    <label for="password">Password</label>
+                                                    <input type="password" id="password" value="••••••••••••" disabled>
+                                                    <div class="change-btn-container">
+                                                        <a href="/change-password" class="change-btn">Change Password</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="edit-btn-container">
+                                            <button type="submit" class="edit-btn">
+                                                <i class="fa-solid fa-save"></i> Save
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div id="cropModal" class="crop-modal">
+                                        <div class="crop-container">
+                                            <img id="cropImage" class="crop-preview" alt="Crop Preview" />
+                                            <div class="crop-buttons">
+                                                <button class="crop-cancel" onclick="cancelCrop()">Cancel</button>
+                                                <button class="crop-apply" onclick="applyCrop()">Apply</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+</main>
 
-            <div class="btn-group">
-                <button type="button" class="btn btn-secondary" onclick="cancelForm()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Add Product</button>
-            </div>
-        </form>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <script>
-       const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('productImages');
+<script>
+    // Elements
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('profileImage');
 const imagePreview = document.getElementById('imagePreview');
 let cropper;
 let currentPreviewItem;
@@ -360,138 +600,199 @@ dropZone.addEventListener('click', () => {
     fileInput.click();
 });
 
-// Cancel form
-function cancelForm() {
-    document.getElementById('addProductForm').reset();
-    imagePreview.innerHTML = '';
-    clearErrorMessages();
-}
-
 // Handle file selection
-function handleFileSelect(files) {
-    imagePreview.innerHTML = ''; // Clear previous previews
+function handleFileSelect() {
+    imagePreview.innerHTML = ''; // Clear previous preview
+    clearErrorMessages();
 
-    if (!files || files.length === 0) return;
-    if (files.length < 3 || files.length > 4) {
-        displayErrorMessage('images-error', 'Please select between 3 and 4 images.');
+    const files = fileInput.files;
+    if (!files || files.length === 0) {
+        displayErrorMessage('image-error', 'Please select an image.');
         return;
     }
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.match('image.*')) continue;
-
-        const reader = new FileReader();
-        reader.onload = (function(file) {
-            return function(e) {
-                const div = document.createElement('div');
-                div.className = 'preview-item';
-                div.innerHTML = `
-                    <img src="${e.target.result}" alt="${file.name}" onclick="showCropModal(this, '${e.target.result}')">
-                    <span class="remove-img"><i class="fas fa-times"></i></span> `;
-
-                div.querySelector('.remove-img').addEventListener('click', function() {
-                    div.remove();
-                    if (imagePreview.children.length < 3 && imagePreview.children.length > 0) {
-                        displayErrorMessage('images-error', 'Please select at least 3 images.');
-                    }
-                });
-
-                imagePreview.appendChild(div);
-            };
-        })(file);
-
-        reader.readAsDataURL(file);
+    if (files.length > 1) {
+        displayErrorMessage('image-error', 'Please select only one image.');
+        fileInput.value = '';
+        return;
     }
-    clearErrorMessages();
+
+    const file = files[0];
+    if (!file.type.match('image.*')) {
+        displayErrorMessage('image-error', 'Please select a valid image file.');
+        fileInput.value = '';
+        return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) { // Match Multer's 2MB limit
+        displayErrorMessage('image-error', 'File size exceeds 2MB. Please choose a smaller image.');
+        fileInput.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${e.target.result}" alt="${file.name}" onclick="showCropModal(this, '${e.target.result}')">
+                <span class="remove-img"><i class="fas fa-times"></i></span>`;
+
+            div.querySelector('.remove-img').addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent the click from bubbling up
+                div.remove();
+                fileInput.value = '';
+            });
+
+            // Make the entire div clickable to show crop modal
+            div.addEventListener('click', function() {
+                showCropModal(div.querySelector('img'), e.target.result);
+            });
+
+            imagePreview.appendChild(div);
+        } catch (error) {
+            console.error('Error creating preview:', error);
+            displayErrorMessage('image-error', 'Error creating image preview. Please try again.');
+        }
+    };
+
+    reader.onerror = function(error) {
+        console.error('FileReader error:', error);
+        displayErrorMessage('image-error', 'Error reading the image file. Please try again.');
+        fileInput.value = '';
+    };
+
+    reader.readAsDataURL(file);
 }
 
 // Handle file input change
-fileInput.addEventListener('change', () => {
-    handleFileSelect(fileInput.files);
-});
-
-// Handle drag and drop
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.style.backgroundColor = '#e9e9e9';
-});
-
-dropZone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    dropZone.style.backgroundColor = '#f9f9f9';
-});
-
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.style.backgroundColor = '#f9f9f9';
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        const dataTransfer = new DataTransfer();
-        for (let i = 0; i < files.length; i++) {
-            dataTransfer.items.add(files[i]);
-        }
-        fileInput.files = dataTransfer.files;
-        handleFileSelect(files);
-    }
-});
+fileInput.addEventListener('change', handleFileSelect);
 
 function showCropModal(imgElement, originalSrc) {
-    const cropModal = document.getElementById('cropModal');
-    const cropImage = document.getElementById('cropImage');
-    currentPreviewItem = imgElement.closest('.preview-item');
-    cropModal.classList.add('active');
-
-    cropImage.src = originalSrc;
-    if (cropper) cropper.destroy();
-    cropper = new Cropper(cropImage, {
-        aspectRatio: 1,
-        viewMode: 1,
-        guides: true,
-        background: false,
-        autoCropArea: 1,
-        zoomable: true
-    });
+    try {
+        const cropModal = document.getElementById('cropModal');
+        const cropImage = document.getElementById('cropImage');
+        
+        // Store the parent preview item for later use
+        currentPreviewItem = imgElement.closest('.preview-item');
+        
+        // Reset the crop image source
+        cropImage.src = '';
+        
+        // Show the modal
+        cropModal.classList.add('active');
+        
+        // Set the image source after a short delay to ensure the modal is visible
+        setTimeout(() => {
+            cropImage.src = originalSrc;
+            
+            // Destroy existing cropper instance if it exists
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            // Initialize the cropper with error handling
+            try {
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    guides: true,
+                    background: false,
+                    autoCropArea: 0.8,
+                    zoomable: true,
+                    checkOrientation: true,
+                    ready: function() {
+                        console.log('Cropper.js initialized successfully');
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing Cropper.js:', error);
+                displayErrorMessage('image-error', 'Failed to initialize image cropper. Please try again.');
+                cancelCrop();
+            }
+        }, 100);
+    } catch (error) {
+        console.error('Error showing crop modal:', error);
+        displayErrorMessage('image-error', 'An error occurred while preparing the image for cropping. Please try again.');
+    }
 }
 
 function cancelCrop() {
-    const cropModal = document.getElementById('cropModal');
-    cropModal.classList.remove('active');
-    if (cropper) cropper.destroy();
-    currentPreviewItem = null;
+    try {
+        const cropModal = document.getElementById('cropModal');
+        cropModal.classList.remove('active');
+        
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        
+        currentPreviewItem = null;
+    } catch (error) {
+        console.error('Error canceling crop:', error);
+    }
 }
 
 function applyCrop() {
-    if (!cropper || !currentPreviewItem) return;
-
-    console.log('Applying crop, not submitting form');
-
-    const cropModal = document.getElementById('cropModal');
-    const croppedCanvas = cropper.getCroppedCanvas({ width: 440, height: 440 });
-    const croppedImageSrc = croppedCanvas.toDataURL('image/jpeg', 0.9);
-
-    // Update the preview image with the cropped version
-    const imgElement = currentPreviewItem.querySelector('img');
-    imgElement.src = croppedImageSrc;
-    imgElement.classList.add('cropped-img');
-
-    // Mark the image as cropped
-    currentPreviewItem.setAttribute('data-cropped', 'true');
-
-    // Store the cropped image data for submission
-    currentPreviewItem.setAttribute('data-cropped-src', croppedImageSrc);
-
-    // Close crop modal
-    cropModal.classList.remove('active');
-
-    // Destroy cropper instance
-    cropper.destroy();
-    cropper = null;
-    currentPreviewItem = null;
-
-    // Clear any image-related error messages
-    clearErrorMessages();
+    try {
+        // Validate required elements exist
+        if (!cropper) {
+            throw new Error('Cropper instance not available');
+        }
+        
+        if (!currentPreviewItem) {
+            throw new Error('No preview item selected');
+        }
+        
+        const cropModal = document.getElementById('cropModal');
+        
+        // Create cropped canvas with error handling
+        try {
+            const croppedCanvas = cropper.getCroppedCanvas({ 
+                width: 300, 
+                height: 300,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+            
+            if (!croppedCanvas) {
+                throw new Error('Failed to generate cropped canvas');
+            }
+            
+            // Convert to JPEG format with quality setting
+            const croppedImageSrc = croppedCanvas.toDataURL('image/jpeg', 0.9);
+            
+            // Update the preview image with the cropped version
+            const imgElement = currentPreviewItem.querySelector('img');
+            imgElement.src = croppedImageSrc;
+            imgElement.classList.add('cropped-img');
+            
+            // Mark the image as cropped
+            currentPreviewItem.setAttribute('data-cropped', 'true');
+            currentPreviewItem.setAttribute('data-cropped-src', croppedImageSrc);
+            
+            // Close crop modal
+            cropModal.classList.remove('active');
+            
+            // Destroy cropper instance
+            cropper.destroy();
+            cropper = null;
+            currentPreviewItem = null;
+            
+            clearErrorMessages();
+        } catch (error) {
+            console.error('Error during image cropping:', error);
+            displayErrorMessage('image-error', 'An error occurred while cropping the image. Please try again.');
+            cancelCrop();
+        }
+    } catch (error) {
+        console.error('Error in applyCrop function:', error);
+        displayErrorMessage('image-error', 'An error occurred during the cropping process. Please try again.');
+        cancelCrop();
+    }
 }
 
 // Prevent form submission on Enter key in crop modal
@@ -503,57 +804,66 @@ document.getElementById('cropModal').addEventListener('keydown', (e) => {
 
 function validateAndSubmit(event) {
     event.preventDefault();
-
-    console.log('Form submission triggered', event);
+    clearErrorMessages();
 
     if (!validateForm()) {
-        return false; // Stop submission if validation fails
+        return false;
     }
 
-    const form = document.getElementById('addProductForm');
+    const form = document.getElementById('editProfileForm');
     const formData = new FormData(form);
-    const previewItems = document.querySelectorAll('.preview-item');
+    const previewItem = document.querySelector('.preview-item');
 
-    // Clear original productImages to avoid duplicates
-    formData.delete('productImages');
+    // Clear original profileImage to avoid duplicates
+    formData.delete('profileImage');
 
-    // Process cropped images
-    const promises = Array.from(previewItems).map((item, index) => {
-        const croppedSrc = item.getAttribute('data-cropped-src');
+    if (previewItem) {
+        const croppedSrc = previewItem.getAttribute('data-cropped-src');
         if (croppedSrc) {
-            return fetch(croppedSrc)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], `product-images-${index}.jpg`, { type: 'image/jpeg' });
-                    formData.append('productImages', file);
-                })
-                .catch(error => {
-                    console.error('Error fetching cropped image:', error);
-                    displayErrorMessage('images-error', 'Failed to process cropped images. Please try again.');
-                    throw new Error('Failed to process cropped image');
-                });
-        }
-        return Promise.resolve();
-    });
-
-    Promise.all(promises)
-        .then(() => {
-            console.log('Final FormData:');
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
+            try {
+                fetch(croppedSrc)
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`Failed to fetch cropped image: ${res.status} ${res.statusText}`);
+                        }
+                        return res.blob();
+                    })
+                    .then(blob => {
+                        try {
+                            const file = new File([blob], `profile-image-${Date.now()}.jpg`, { 
+                                type: 'image/jpeg',
+                                lastModified: new Date().getTime()
+                            });
+                            formData.append('profileImage', file);
+                            submitForm(formData);
+                        } catch (error) {
+                            console.error('Error creating File from Blob:', error);
+                            displayErrorMessage('image-error', 'Failed to process the cropped image. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching cropped image:', error);
+                        displayErrorMessage('image-error', 'Failed to process cropped image. Please try again.');
+                    });
+            } catch (error) {
+                console.error('Error in fetch operation:', error);
+                displayErrorMessage('image-error', 'An error occurred while processing the image. Please try again.');
             }
-            submitForm(formData);
-        })
-        .catch(error => {
-            console.error('Error processing images:', error);
-            // Error message is already displayed in the catch block above
-        });
+        } else {
+            displayErrorMessage('image-error', 'Please crop the selected image.');
+        }
+    } else {
+        // No image selected, proceed with form submission without image
+        submitForm(formData);
+    }
 
     return false;
 }
 
 function submitForm(formData) {
-    fetch('/admin/addProducts', {
+    // Show loading indicator if you have one
+    
+    fetch('/update-profile', {
         method: 'POST',
         body: formData
     })
@@ -567,34 +877,15 @@ function submitForm(formData) {
         })
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: 'Product added successfully!',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    window.location.href = '/admin/products'; // Redirect to products page
-                });
-                document.getElementById('addProductForm').reset();
-                imagePreview.innerHTML = '';
-                clearErrorMessages();
+                alert('Profile updated successfully!');
+                window.location.href = '/profile';
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: data.message || 'An error occurred on the server.',
-                    confirmButtonText: 'OK'
-                });
+                alert(data.message || 'An error occurred on the server.');
             }
         })
         .catch(error => {
             console.error('Fetch error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'An error occurred while adding the product: ' + error.message,
-                confirmButtonText: 'OK'
-            });
+            alert('An error occurred while updating the profile: ' + error.message);
         });
 }
 
@@ -602,82 +893,60 @@ function validateForm() {
     clearErrorMessages();
     let isValid = true;
 
-    const name = document.getElementById('productName').value.trim();
-    const description = document.getElementById('description').value.trim();
-    const brand = document.getElementById('brand').value.trim();
-    const category = document.getElementById('category').value.trim();
-    const price = document.getElementById('price').value;
-    const salePrice = document.getElementById('salePrice').value;
-    const quantity = document.getElementById('quantity').value;
-    const images = document.querySelectorAll('.preview-item');
+    const nameField = document.getElementById('username');
+    const phoneField = document.getElementById('phone');
+    const previewItem = document.querySelector('.preview-item');
+    
+    // Add error container if not present
+    if (!document.getElementById('username-error')) {
+        const usernameError = document.createElement('div');
+        usernameError.id = 'username-error';
+        usernameError.className = 'error-message';
+        nameField.parentNode.appendChild(usernameError);
+    }
+    
+    if (!document.getElementById('phone-error')) {
+        const phoneError = document.createElement('div');
+        phoneError.id = 'phone-error';
+        phoneError.className = 'error-message';
+        phoneField.parentNode.appendChild(phoneError);
+    }
 
-    console.log('Validating form:', { name, description, brand, category, price, salePrice, quantity, imageCount: images.length });
+    const name = nameField.value.trim();
+    const phone = phoneField.value.trim();
 
     if (!name) {
-        displayErrorMessage('productName-error', 'Please enter a product name.');
+        displayErrorMessage('username-error', 'Please enter your full name.');
         isValid = false;
-    } else if (!/^[a-zA-Z0-9\s\-]+$/.test(name)) {
-        displayErrorMessage('productName-error', 'Product name should contain only letters, numbers, spaces, or hyphens.');
-        isValid = false;
-    }
-
-    if (!description) {
-        displayErrorMessage('description-error', 'Please enter a product description.');
-        isValid = false;
-    } else if (!/^[a-zA-Z0-9\s\-\,\.]+$/.test(description)) {
-        displayErrorMessage('description-error', 'Description should contain only letters, numbers, spaces, hyphens, commas, or periods.');
+    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+        displayErrorMessage('username-error', 'Full name should contain only letters and spaces.');
         isValid = false;
     }
 
-    if (!brand) {
-        displayErrorMessage('brand-error', 'Please select a brand.');
+    if (!phone) {
+        displayErrorMessage('phone-error', 'Please enter your phone number.');
+        isValid = false;
+    } else if (!/^\d{10}$/.test(phone)) {
+        displayErrorMessage('phone-error', 'Phone number should be a 10-digit number.');
         isValid = false;
     }
 
-    if (!category) {
-        displayErrorMessage('category-error', 'Please select a category.');
+    if (previewItem && previewItem.getAttribute('data-cropped') !== 'true') {
+        displayErrorMessage('image-error', 'Please crop the selected image.');
         isValid = false;
     }
 
-    if (!price || isNaN(price) || parseFloat(price) <= 0) {
-        displayErrorMessage('regularPrice-error', 'Please enter a valid positive price.');
-        isValid = false;
-    }
-
-    if (!salePrice || isNaN(salePrice) || parseFloat(salePrice) <= 0) {
-        displayErrorMessage('salePrice-error', 'Please enter a valid positive sale price.');
-        isValid = false;
-    }
-
-    if (parseFloat(price) <= parseFloat(salePrice)) {
-        displayErrorMessage('regularPrice-error', 'Regular price must be greater than sale price.');
-        isValid = false;
-    }
-
-    if (!quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
-        displayErrorMessage('quantity-error', 'Please enter a valid positive quantity.');
-        isValid = false;
-    }
-
-    if (images.length < 3 || images.length > 4) {
-        displayErrorMessage('images-error', 'Please select between 3 and 4 images.');
-        isValid = false;
-    }
-
-    const allCropped = Array.from(images).every(item => item.getAttribute('data-cropped') === 'true');
-    if (!allCropped) {
-        displayErrorMessage('images-error', 'Please crop all selected images.');
-        isValid = false;
-    }
-
-    console.log('Validation result:', isValid);
     return isValid;
 }
 
 function displayErrorMessage(elementId, message) {
     const errorElement = document.getElementById(elementId);
-    errorElement.innerText = message;
-    errorElement.style.display = 'block';
+    if (errorElement) {
+        errorElement.innerText = message;
+        errorElement.style.display = 'block';
+    } else {
+        console.warn(`Error element with id '${elementId}' not found.`);
+    }
 }
 
 function clearErrorMessages() {
@@ -687,6 +956,25 @@ function clearErrorMessages() {
         element.style.display = 'none';
     });
 }
-    </script>
-</body>
-</html>
+
+// Initialize with existing profile image if available
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if Cropper.js is loaded
+    if (typeof Cropper === 'undefined') {
+        console.error('Cropper.js is not loaded. Please check the script inclusion.');
+        alert('Image cropping functionality is not available. Please ensure your internet connection is stable and refresh the page.');
+    }
+    
+    // Create error message containers if they don't exist
+    if (!document.getElementById('image-error')) {
+        const imageError = document.createElement('div');
+        imageError.id = 'image-error';
+        imageError.className = 'error-message';
+        if (imagePreview && imagePreview.parentNode) {
+            imagePreview.parentNode.appendChild(imageError);
+        }
+    }
+});
+</script>
+
+<%- include("../../views/partials/user/footer") %>

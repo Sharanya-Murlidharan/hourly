@@ -6,6 +6,66 @@
     <title>Hourly - Watch Collections</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
+    <style>
+        .search-bar {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .search-bar input[type="text"] {
+            padding: 8px 30px 8px 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            width: 200px;
+        }
+
+        .search-bar button[type="submit"] {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #05445E;
+            font-size: 1rem;
+            position: absolute;
+            right: 5px;
+        }
+
+        .search-bar .clear-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #666;
+            font-size: 0.9rem;
+            position: absolute;
+            right: 30px;
+            display: none;
+        }
+
+        .search-bar .clear-btn.show {
+            display: block;
+        }
+
+        .search-bar .clear-btn:hover {
+            color: #05445E;
+        }
+
+        @media (max-width: 768px) {
+            .search-bar input[type="text"] {
+                width: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -14,7 +74,8 @@
         </div>
         <div class="search-bar">
             <form action="/search" method="POST">
-                <input type="text" name="query" placeholder="Search">
+                <input type="text" name="query" id="searchInput" placeholder="Search" value="<%= locals.query || '' %>">
+                <button type="button" class="clear-btn" id="clearSearch"><i class="fas fa-times"></i></button>
                 <button type="submit"><i class="fas fa-search"></i></button>
             </form>
         </div>
@@ -27,9 +88,6 @@
                 <li><a href="/shop">Shop</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Contact</a></li>
-                <!-- <li><a href="#">Profile</a></li>
-                <li><a href="#">Wishlist</a></li>
-                <li><a href="#">Settings</a></li> -->
                 <%if(locals.user){%>
                     <div class="dropdown">
                         <a href="#" class="sign-in-link"><%=locals.user.name%></a>
@@ -38,18 +96,53 @@
                             <a href="/logout">Logout</a>
                         </div>
                     </div>
-                    <%}else{%>
-                        <li><a href="/login">Log in</a></li>
-                        <li><a href="/signup">Sign up</a></li>
-                    <%}%>
-                    <div class="offcanvas__nav__option">
-                        <a href="#"><img src="/image/heart.png" alt=""></a>
-                        <a href="#"><img src="/image/cart.png" alt=""> <span>0</span></a>
-                    </div>
+                <%}else{%>
+                    <li><a href="/login">Log in</a></li>
+                    <li><a href="/signup">Sign up</a></li>
+                <%}%>
+                <div class="offcanvas__nav__option">
+                    <a href="#"><img src="/image/heart.png" alt=""></a>
+                    <a href="cart"><img src="/image/cart.png" alt=""> </a>
                 </div>
-            </div>
-        </div>
-
             </ul>
         </nav>
     </header>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearch');
+
+            // Function to toggle clear button visibility
+            function toggleClearButton() {
+                if (searchInput.value.trim() !== '') {
+                    clearBtn.classList.add('show');
+                } else {
+                    clearBtn.classList.remove('show');
+                }
+            }
+
+            // Initial check for clear button visibility (e.g., after search submission)
+            toggleClearButton();
+
+            // Update clear button visibility on input change
+            searchInput.addEventListener('input', toggleClearButton);
+
+            // Clear input and redirect to /shop on clear button click
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                clearBtn.classList.remove('show');
+                window.location.href = '/shop';
+            });
+
+            // Prevent form submission if input is empty
+            searchInput.form.addEventListener('submit', function(event) {
+                if (searchInput.value.trim() === '') {
+                    event.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

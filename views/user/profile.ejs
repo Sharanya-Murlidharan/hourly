@@ -1,0 +1,322 @@
+<%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    /* Apply Montserrat to main content */
+    main, main * {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Main container padding from second code */
+    .main {
+        padding: 30px 0;
+    }
+
+    /* Container for Sidebar and Main Content */
+    .account-container {
+        display: flex;
+        max-width: 1200px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+
+    /* Default hover behavior for non-logout links */
+    .sidebar ul li a:not(.menu-item.logout):hover {
+        background-color: #f5f5f5;
+        color: #05445E;
+    }
+
+    .sidebar ul li a:not(.menu-item.logout):hover i {
+        color: #05445E;
+    }
+
+    /* Specific styling for the SVG icon in the logout link */
+    .sidebar ul li a.menu-item.logout .icon {
+        margin-right: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar ul li a.menu-item.logout .icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Hover behavior for the logout link */
+    .sidebar ul li a.menu-item.logout:hover {
+        background-color: #f5f5f5;
+        color: #ff3b30;
+    }
+
+    .sidebar ul li a.menu-item.logout:hover .icon svg path {
+        stroke: #ff3b30;
+    }
+
+    /* Main Content */
+    .main-content {
+        width: 80%;
+        padding: 40px;
+    }
+
+    /* Greeting */
+    .greeting {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* Basic Info Section */
+    .basic-info {
+        margin-bottom: 40px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group.basic-info-group {
+        display: flex; /* Side by side for Basic Info */
+        flex-wrap: nowrap; /* Prevent wrapping on smaller screens */
+        gap: 20px;
+    }
+
+    .form-group.login-details-group {
+        display: flex; /* Keep fields side by side in Login Details */
+        flex-wrap: nowrap; /* Prevent wrapping on smaller screens */
+        gap: 20px;
+    }
+
+    .form-group .input-field {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 20px; /* Add spacing between stacked fields */
+    }
+
+    .form-group.basic-info-group .input-field {
+        margin-bottom: 0; /* No margin for side-by-side fields in Basic Info */
+    }
+
+    .form-group.login-details-group .input-field {
+        margin-bottom: 0; /* No margin for side-by-side fields in Login Details */
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 5px;
+        letter-spacing: 1px;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f5f5f5;
+        color: #333;
+    }
+
+    .image-placeholder {
+        width: 100px;
+        height: 100px;
+        background: #ddd;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    /* Edit Button Container */
+    .edit-btn-container {
+        display: flex;
+        justify-content: center; /* Center the button horizontally */
+        margin-top: 20px; /* Add spacing above the button */
+    }
+
+    /* Login Details Section */
+    .login-details {
+        margin-bottom: 40px;
+    }
+
+    .login-details h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 500;
+        letter-spacing: 1px;
+    }
+
+    /* Change Username and Change Password Buttons */
+    .change-btn {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+        text-decoration: none;
+        margin-top: 10px;
+    }
+
+    .change-btn:hover {
+        background-color: #043b52; /* Darker teal on hover */
+    }
+
+    /* Edit Button */
+    .edit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100px;
+        padding: 10px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .edit-btn i {
+        margin-right: 5px;
+    }
+
+    .edit-btn:hover {
+        background-color: #043b52;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .account-container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .main-content {
+            width: 100%;
+            padding: 20px;
+        }
+
+        .form-group.basic-info-group,
+        .form-group.login-details-group {
+            flex-wrap: nowrap; /* Keep side by side even on smaller screens */
+        }
+
+        .form-group .input-field {
+            min-width: 0; /* Allow fields to shrink on smaller screens */
+            flex: 1;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .greeting {
+            font-size: 1.5rem;
+        }
+
+        .login-details h2 {
+            font-size: 1.2rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            width: 80px;
+            font-size: 0.9rem;
+        }
+
+        .change-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+    }
+</style>
+
+<main class="main">
+    <section class="pt-10 pb-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="account-container">
+                        <%- include("../../views/partials/user/sidebar") %>
+                        <div class="main-content">
+                            <div class="greeting">
+                                Hi <%=user.name%>
+                            </div>
+                            <div class="basic-info">
+                                <div class="image-placeholder"></div>
+                                <div class="form-group basic-info-group">
+                                    <div class="input-field">
+                                        <label for="username">Full Name</label>
+                                        <input type="text" id="username" value="<%=user.name%>" disabled>
+                                    </div>
+                                    <div class="input-field">
+                                        <label for="phone">Phone Number</label>
+                                        <input type="text" id="phone" value="<%=user.phone%>" disabled>
+                                    </div>
+                                    
+                                </div>
+                                <div class="form-group login-details-group">
+                                    <div class="input-field">
+                                        <label for="username-login">Email</label>
+                                        <input type="text" id="username-login" value="<%=user.email%>" disabled>
+                                        <!-- <a href="/change-email" class="change-btn">Change Email</a> -->
+                                    </div>
+                                    <div class="input-field">
+                                        <label for="password">Password</label>
+                                        <input type="password" id="password" value="••••••••••••" disabled>
+                                        <!-- <a href="/change-password" class="change-btn">Change Password</a> -->
+                                    </div>
+                                </div>
+                                <div class="edit-btn-container">
+                                    <a href="/editProfile" class="edit-btn">
+                                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- <div class="login-details">
+                                <h2>Login Details</h2>
+                                
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+<%- include("../../views/partials/user/footer") %>

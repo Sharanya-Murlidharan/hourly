@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= product?.productName || 'Acer NITRO V 15' %> - Product Details</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * {
             margin: 0;
@@ -15,7 +16,7 @@
         }
 
         html, body {
-            height: 100%; /* Ensure full height for the page */
+            height: 100%;
             margin: 0;
             padding: 0;
         }
@@ -25,18 +26,18 @@
             color: #333 !important;
             line-height: 1.6;
             padding-top: 3px !important;
-            padding-bottom: 0 !important; /* Remove padding-bottom to avoid extra gap */
+            padding-bottom: 0 !important;
             min-height: 100vh;
             display: flex !important;
             flex-direction: column !important;
         }
 
         main {
-            flex: 1 0 auto !important; /* Ensure main takes up remaining space, but doesn't shrink */
+            flex: 1 0 auto !important;
         }
 
         footer {
-            flex-shrink: 0 !important; /* Prevent footer from shrinking */
+            flex-shrink: 0 !important;
             width: 100%;
         }
 
@@ -47,7 +48,6 @@
             width: 100%;
         }
 
-        /* Breadcrumb */
         .breadcrumb {
             padding: 15px 0;
             background-color: #fff !important;
@@ -81,7 +81,6 @@
             text-decoration: underline;
         }
 
-        /* Product Card */
         .product-card {
             background-color: #fff !important;
             border: none !important;
@@ -98,7 +97,6 @@
             width: 100%;
         }
 
-        /* Product Images */
         .product-images {
             flex: 1 1 300px;
             max-width: 400px;
@@ -151,7 +149,6 @@
             border-color: #ff5722;
         }
 
-        /* Zoom Styles */
         .zoom-container {
             position: relative;
             display: inline-block;
@@ -166,7 +163,7 @@
             border: 2px solid #fff;
             border-radius: 50%;
             cursor: crosshair;
-            width: 150px; /* Adjusted to a smaller size for better usability */
+            width: 150px;
             height: 150px;
             opacity: 0;
             pointer-events: none;
@@ -178,7 +175,6 @@
             opacity: 1;
         }
 
-        /* Product Info */
         .product-info {
             flex: 2 1 300px;
             min-width: 300px;
@@ -319,7 +315,6 @@
             background-color: #f5f5f5 !important;
         }
 
-        /* Product Tabs */
         .product-tabs {
             margin-top: 30px;
             width: 100%;
@@ -372,10 +367,9 @@
             font-weight: bold;
         }
 
-        /* Related Products */
         .zz-related-products {
             padding: 30px 0;
-            overflow-x: auto; /* Enable horizontal scrolling */
+            overflow-x: auto;
         }
 
         .zz-section-title {
@@ -388,21 +382,21 @@
 
         .zz-related-products .row {
             display: flex;
-            flex-wrap: nowrap; /* Prevent wrapping to ensure horizontal layout */
-            overflow-x: auto; /* Enable horizontal scrolling if items overflow */
-            gap: 20px; /* Space between product items */
-            padding-bottom: 10px; /* Space for scrollbar */
-            -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
-            scrollbar-width: none; /* Hide scrollbar for Firefox */
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 20px;
+            padding-bottom: 10px;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         .zz-related-products .row::-webkit-scrollbar {
-            display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+            display: none;
         }
 
         .zz-related-products .col-lg-3 {
-            flex: 0 0 250px; /* Fixed width for each product item */
-            max-width: 250px; /* Ensure consistent width */
+            flex: 0 0 250px;
+            max-width: 250px;
         }
 
         .product-item {
@@ -487,10 +481,9 @@
             background-color: #1565C0 !important;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             body {
-                padding-bottom: 0 !important; /* Adjusted for mobile to avoid gap */
+                padding-bottom: 0 !important;
             }
 
             .product-card {
@@ -568,7 +561,6 @@
 </head>
 <body>
     <main>
-        <!-- Breadcrumb Navigation -->
         <div class="breadcrumb">
             <div class="container">
                 <ul>
@@ -579,11 +571,9 @@
             </div>
         </div>
 
-        <!-- Product Section -->
         <div class="container">
             <div class="product-card">
                 <div class="product-container">
-                    <!-- Product Images -->
                     <div class="product-images">
                         <div class="main-image zoom-container" id="prod-image">
                             <% if (product?.productImage && product.productImage.length > 0) { %>
@@ -610,7 +600,6 @@
                         </div>
                     </div>
 
-                    <!-- Product Info -->
                     <div class="product-info">
                         <h1 class="product-title">
                             <%= product?.productName %>
@@ -664,7 +653,6 @@
                     </div>
                 </div>
 
-                <!-- Product Tabs -->
                 <div class="product-tabs">
                     <div class="tabs-nav">
                         <button class="tab-button active" data-tab="description">Description</button>
@@ -681,7 +669,6 @@
                 </div>
             </div>
 
-            <!-- Related Products -->
             <div class="zz-related-products">
                 <h2 class="zz-section-title">Related Products</h2>
                 <div class="row">
@@ -719,7 +706,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Thumbnail click handler
             const thumbnails = document.querySelectorAll('.thumbnail');
             const mainImage = document.getElementById('mainImage');
 
@@ -731,7 +717,6 @@
                 });
             });
 
-            // Quantity controls
             const decreaseBtn = document.querySelector('.decrease');
             const increaseBtn = document.querySelector('.increase');
             const quantityInput = document.getElementById('quantity');
@@ -747,7 +732,6 @@
                 if (value < maxQuantity) quantityInput.value = value + 1;
             });
 
-            // Tab functionality
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -760,25 +744,77 @@
                 });
             });
 
-            // Add to Cart
             window.addToCart = function(productId) {
                 if (<%= product?.quantity > 0 %>) {
-                    console.log('Added to cart:', productId);
-                    alert('Product added to cart!');
-                    // Add AJAX or redirect logic here
+                    let quantity = document.getElementById('quantity').value
+                    fetch('/addToCart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ productId,quantity }),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Failed to add to cart');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Product added to cart!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.href = '/cart';
+                            });
+                            if (data.remainingStock === 0) {
+                                const availabilityDiv = document.querySelector('.meta-item .out-of-stock');
+                                availabilityDiv.textContent = 'Out of Stock';
+                                availabilityDiv.classList.add('out-of-stock');
+                                document.querySelector('.add-to-cart-button').setAttribute('disabled', 'true');
+                            }
+                        } else {
+                            throw new Error(data.message || 'Failed to add to cart');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    });
                 } else {
-                    alert('Product is out of stock!');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Out of stock!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 }
             };
 
-            // Add to Wishlist
             window.addToWishlist = function(productId) {
                 console.log('Added to wishlist:', productId);
-                alert('Product added to wishlist!');
-                // Add AJAX or redirect logic here
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Product added to wishlist!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             };
 
-            // Zoom functionality
             document.querySelectorAll('.zoom-container').forEach(container => {
                 const img = container.querySelector('.zoom-image');
                 const lens = container.querySelector('.zoom-lens');
@@ -800,7 +836,6 @@
                     lens.style.backgroundPosition = `-${posX * 2}px -${posY * 2}px`;
                 });
 
-                // Optional: Hide lens when mouse leaves the container
                 container.addEventListener('mouseleave', () => {
                     lens.style.opacity = '0';
                 });

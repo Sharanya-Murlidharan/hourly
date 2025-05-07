@@ -323,7 +323,6 @@ const loadShoppingPage = async (req, res) => {
             isBlocked: false,
             isDeleted: { $ne: true },
             category: { $in: categoryIds },
-            quantity: { $gt: 0 }
         };
 
         // Apply price range filter
@@ -375,7 +374,7 @@ const loadShoppingPage = async (req, res) => {
 
         // Pagination
         const page = parseInt(req.query.page) || 1;
-        const limit = 2; // Products per page
+        const limit = 8; // Products per page
         const skip = (page - 1) * limit;
 
         // Fetch products with filters and sorting
@@ -456,7 +455,7 @@ const filterProduct = async (req, res) => {
         }
 
         const categories = await Category.find({ isListed: true }).lean();
-        let itemsPerPage = 2;
+        let itemsPerPage = 8;
         let currentPage = parseInt(req.query.page) || 1;
         let startIndex = (currentPage - 1) * itemsPerPage;
         let endIndex = startIndex + itemsPerPage;
@@ -551,7 +550,7 @@ const filterByPrice = async (req, res) => {
                 break;
         }
 
-        let itemsPerPage = 2;
+        let itemsPerPage = 8;
         let currentPage = parseInt(req.query.page) || 1;
         let startIndex = (currentPage - 1) * itemsPerPage;
         let endIndex = startIndex + itemsPerPage;
@@ -624,7 +623,7 @@ const searchProducts = async (req, res) => {
                 break;
         }
 
-        let itemsPerPage = 2;
+        let itemsPerPage = 8;
         let currentPage = parseInt(req.query.page) || 1;
         let startIndex = (currentPage - 1) * itemsPerPage;
         let endIndex = startIndex + itemsPerPage;
@@ -640,7 +639,8 @@ const searchProducts = async (req, res) => {
             currentPage,
             priceRange: req.query.priceRange || '',
             sort: sortOption,
-            count: searchResult.length
+            count: searchResult.length,
+            query: search // Pass the search query to the template
         });
     } catch (error) {
         console.log('search error:', error);

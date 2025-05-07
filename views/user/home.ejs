@@ -1,10 +1,10 @@
 <%-include('../../views/partials/user/header')%>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
     * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
@@ -12,51 +12,59 @@
         color: #333;
     }
 
+    /* Apply Bebas Neue only to elements inside main */
+    main, main * {
+        font-family: 'Bebas Neue', sans-serif;
+    }
+
     /* Hero Section */
     .hero {
-        display: flex;
+        position: relative;
         width: 100%;
-        height: 400px;
+        height: 430px;
         margin-bottom: 40px;
-        background: #C9D6EA;
+        background: url('/image/banner-img.jpg') no-repeat 100% center/cover;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
     }
 
-    .hero-img-wrap {
-        width: 50%;
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
         height: 100%;
-        overflow: hidden;
-    }
-
-    .hero-img {
-        width: 49%;
-        height: 113%;
-        object-fit: cover;
+        background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay for text readability */
+        z-index: 1;
     }
 
     .hero-text {
+        position: relative;
+        z-index: 2;
         width: 50%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
+        padding: 40px;
         color: white;
-        /* background: rgba(0, 0, 0, 0.7); */
-        padding: 20px;
+        text-align: left;
     }
 
     .hero-text h2 {
         font-size: 2.5rem;
         margin-bottom: 10px;
+        color: #fff;
+        font-weight: 400; /* Bebas Neue is naturally bold, no need for extra weight */
     }
 
     .hero-text p {
         font-size: 1.2rem;
         margin-bottom: 20px;
+        color: #fff;
+        letter-spacing: 1px; /* Add slight spacing for readability */
     }
 
     .discover-btn {
-        background-color: #05445E;
+        background-color: #000;
         color: white;
         border: none;
         padding: 10px 20px;
@@ -64,22 +72,24 @@
         cursor: pointer;
         border-radius: 5px;
         transition: background-color 0.3s;
+        font-weight: 400;
+        letter-spacing: 1px;
     }
 
     .discover-btn:hover {
-        background-color: #043b52;
+        background-color: #333;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
         .hero {
-            flex-direction: column;
-            height: auto;
+            height: 300px;
+            background-position: 100% center; /* Maintain the right shift on smaller screens */
         }
 
-        .hero-img-wrap, .hero-text {
+        .hero-text {
             width: 100%;
-            height: 300px;
+            padding: 20px;
         }
 
         .hero-text h2 {
@@ -92,13 +102,17 @@
     }
 
     @media (max-width: 480px) {
-        .hero-img-wrap, .hero-text {
+        .hero {
             height: 200px;
+            background-position: 100% center; /* Maintain the right shift on smaller screens */
+        }
+
+        .hero-text {
+            padding: 15px;
         }
 
         .hero-text h2 {
             font-size: 1.5rem;
-            color: black;
         }
 
         .hero-text p {
@@ -123,6 +137,8 @@
         cursor: pointer;
         border-radius: 5px;
         transition: background-color 0.3s;
+        font-weight: 400;
+        letter-spacing: 1px;
     }
 
     .category-btn:hover, .all-btn {
@@ -131,100 +147,208 @@
     }
 
     .new-arrivals, .trending-products {
-        padding: 20px;
+        padding: 30px;
         margin-bottom: 40px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
 
     .new-arrivals h3, .trending-products h3 {
         font-size: 1.8rem;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
         text-align: center;
+        color: #000;
+        font-weight: 400;
+        letter-spacing: 2px;
     }
 
-    .products {
+    .new-arrivals .products {
+        width: 100%;
         display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 20px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 25px;
+        padding-bottom: 15px;
+        scrollbar-width: thin;
+        scrollbar-color: #05445E #f5f5f5;
+        scroll-snap-type: x proximity;
     }
 
-    .product-cart-wrap {
-        width: 250px;
-        border: 1px solid #ddd;
+    .new-arrivals .products::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .new-arrivals .products::-webkit-scrollbar-track {
+        background: #f5f5f5;
         border-radius: 5px;
+    }
+
+    .new-arrivals .products::-webkit-scrollbar-thumb {
+        background: #05445E;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+
+    .new-arrivals .products::-webkit-scrollbar-thumb:hover {
+        background: #043b52;
+    }
+
+    .new-arrivals .products .product-cart-wrap {
+        flex: 0 0 260px;
+        scroll-snap-align: start;
+        border: none;
+        border-radius: 10px;
         overflow: hidden;
-        background: white;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s;
+        background: #fff;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .mb-30 {
+        margin-bottom: 30px;
     }
 
     .product-cart-wrap:hover {
-        transform: translateY(-5px);
+        transform: scale(1.03);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
 
     .product-img-action-wrap {
         position: relative;
         width: 100%;
-        height: 200px;
+        height: 220px;
         overflow: hidden;
+        background: #f5f5f5;
     }
 
     .product-img-zoom img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.3s;
+        transition: transform 0.4s ease;
     }
 
     .product-img-zoom:hover img {
-        transform: scale(1.1);
+        transform: scale(1.15);
     }
 
     .wishlist-btn {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        border: none;
-        padding: 5px 10px;
+        top: 12px;
+        right: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #05445E;
+        border: 1px solid #ddd;
+        padding: 8px;
         border-radius: 50%;
         cursor: pointer;
-        transition: background 0.3s;
+        transition: background 0.3s, color 0.3s, transform 0.3s;
+        font-size: 1rem;
     }
 
     .wishlist-btn:hover {
         background: #05445E;
+        color: #fff;
+        transform: scale(1.1);
     }
 
     .product-content-wrap {
-        padding: 10px;
+        padding: 15px;
         text-align: center;
     }
 
     .product-content-wrap h6 {
         font-size: 1.1rem;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 400;
+        letter-spacing: 1px;
     }
 
     .product-content-wrap h5 {
         font-size: 1.2rem;
         color: #05445E;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+        font-weight: 400;
+        letter-spacing: 1px;
     }
 
     .product-content-wrap a {
         display: inline-block;
         background-color: #05445E;
         color: white;
-        padding: 8px 15px;
+        padding: 10px 20px;
         text-decoration: none;
         border-radius: 5px;
-        transition: background-color 0.3s;
+        font-size: 0.95rem;
+        font-weight: 400;
+        transition: background-color 0.3s, transform 0.3s;
+        letter-spacing: 1px;
     }
 
     .product-content-wrap a:hover {
         background-color: #043b52;
+        transform: translateY(-2px);
+    }
+
+    /* Responsive Design for New Arrivals */
+    @media (max-width: 768px) {
+        .new-arrivals .products .product-cart-wrap {
+            flex: 0 0 200px;
+        }
+
+        .product-img-action-wrap {
+            height: 180px;
+        }
+
+        .product-content-wrap h6 {
+            font-size: 1rem;
+        }
+
+        .product-content-wrap h5 {
+            font-size: 1.1rem;
+        }
+
+        .product-content-wrap a {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .new-arrivals .products .product-cart-wrap {
+            flex: 0 0 160px;
+        }
+
+        .product-img-action-wrap {
+            height: 140px;
+        }
+
+        .product-content-wrap h6 {
+            font-size: 0.9rem;
+        }
+
+        .product-content-wrap h5 {
+            font-size: 1rem;
+        }
+
+        .product-content-wrap a {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+    }
+
+    /* Other sections unchanged */
+    .products {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
     }
 
     .product-card {
@@ -276,6 +400,8 @@
         cursor: pointer;
         border-radius: 5px;
         transition: background-color 0.3s;
+        font-weight: 400;
+        letter-spacing: 1px;
     }
 
     .view-all-btn:hover {
@@ -319,71 +445,16 @@
             font-size: 1.1rem;
         }
     }
-
-    /* New Arrivals Section */
-    .new-arrivals {
-        padding: 20px;
-        margin-bottom: 40px;
-    }
-
-    .new-arrivals h3 {
-        font-size: 1.8rem;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .new-arrivals .products {
-        width: 100%;
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        gap: 20px;
-        padding-bottom: 10px;
-        scrollbar-width: thin;
-        scrollbar-color: #05445E #f5f5f5;
-        scroll-snap-type: x mandatory;
-    }
-
-    .new-arrivals .products::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .new-arrivals .products::-webkit-scrollbar-track {
-        background: #f5f5f5;
-    }
-
-    .new-arrivals .products::-webkit-scrollbar-thumb {
-        background: #05445E;
-        border-radius: 4px;
-    }
-
-    .new-arrivals .products .product-cart-wrap {
-        flex: 0 0 250px;
-        scroll-snap-align: start;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .new-arrivals .products .product-cart-wrap {
-            flex: 0 0 180px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .new-arrivals .products .product-cart-wrap {
-            flex: 0 0 150px;
-        }
-    }
 </style>
 
+<main>
 <!-- header end -->
 <section class="hero">
-    <img src="/image/Order1.jpg" alt="Hero Watch" class="hero-img">
     <div class="hero-text">
         <h2>LATEST WATCH COLLECTIONS</h2>
-        <p>Unlock the ultimate connectivity experience! The mobile phone of your dreams is now just a tap away.</p>
-        <!-- <button class="discover-btn">Discover Now</button> -->
+        <p>Unlock the ultimate connectivity experience!
+             The watch of your dreams is now just a tap away.</p>
+        <button class="discover-btn">Discover Now</button>
     </div>
 </section>
 
@@ -412,7 +483,7 @@
                     </a>
                 </div>
                 <a href="/addToWishlist?id=<%=products[i]._id%>" class="wishlist-btn">
-                    <i class="fas fa-heart"></i>
+                    <i class="fa-solid fa-heart" style="color: #e02200;"></i>
                 </a>
             </div>
             <div class="product-content-wrap">
@@ -425,6 +496,6 @@
     </div>
 </section>
 
-
 <!-- footer begins -->
 <%-include('../../views/partials/user/footer')%>
+</main>

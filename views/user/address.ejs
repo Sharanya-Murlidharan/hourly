@@ -1,0 +1,389 @@
+<%- include("../partials/user/header") %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    main, main * {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Main container padding */
+    .main {
+        padding: 30px 0;
+        min-height: calc(100vh - 150px); /* Adjust for header and footer */
+    }
+
+    /* Container for Main Content (With Sidebar) */
+    .account-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 20%;
+        background: #fff;
+        padding: 20px;
+        border-right: 1px solid #ddd;
+    }
+
+    .sidebar ul {
+        list-style: none;
+    }
+
+    .sidebar ul li {
+        margin-bottom: 10px;
+    }
+
+    .sidebar ul li a {
+        text-decoration: none;
+        color: #666;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 5px;
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+    }
+
+    .sidebar ul li a i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+        color: #666;
+        transition: color 0.3s;
+    }
+
+    .sidebar ul li a.active {
+        color: #05445E;
+        font-weight: 500;
+    }
+
+    .sidebar ul li a.active i {
+        color: #05445E;
+    }
+
+    .sidebar ul li a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 4px;
+        background-color: #05445E;
+        border-radius: 0 5px 5px 0;
+    }
+
+    /* Main Content */
+    .main-content {
+        padding: 40px;
+        flex: 1;
+    }
+
+    /* Greeting */
+    .greeting {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Add Address Button */
+    .add-address-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+        cursor: pointer;
+    }
+
+    .add-address-btn i {
+        margin-right: 5px;
+    }
+
+    .add-address-btn:hover {
+        background-color: #043b52;
+    }
+
+    /* Address List */
+    .address-list {
+        margin-bottom: 20px;
+    }
+
+    .address-item {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .address-details p {
+        font-size: 0.9rem;
+        color: #000;
+        margin-bottom: 5px;
+    }
+
+    .address-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .edit-btn, .delete-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .edit-btn {
+        background-color: #05445E;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .edit-btn:hover {
+        background-color: #043b52;
+    }
+
+    .delete-btn {
+        background-color: #ff3b30;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .delete-btn:hover {
+        background-color: #e6392f;
+    }
+
+    /* No Addresses Message */
+    .no-addresses {
+        font-size: 1rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .account-container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .address-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .address-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .greeting {
+            font-size: 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .add-address-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .address-details p {
+            font-size: 0.9rem;
+        }
+
+        .edit-btn, .delete-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .sidebar ul li a {
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+
+        .sidebar ul li a i {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<!-- Main Content -->
+<main class="main">
+    <section class="pt-10 pb-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="account-container">
+                        <div class="sidebar">
+                            <ul>
+                                <li><a href="/userProfile"><i class="fa-solid fa-user"></i> My Profile</a></li>
+                                <li><a href="/address" class="active"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
+                                <li><a href="#"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
+                                <li><a href="#"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
+                                <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li>
+                                <li>
+                                    <a href="/logout" class="menu-item logout">
+                                        <i class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#666" width="20" height="20">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                        </i> 
+                                        <span>Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="main-content">
+                            <div class="greeting">
+                                My Addresses
+                                <a href="/addAddress" class="add-address-btn">
+                                    <i class="fa-solid fa-plus"></i> Add New Address
+                                </a>
+                            </div>
+                            <!-- Address List -->
+                            <div class="address-list">
+                                <% if (addresses && addresses.length > 0) { %>
+                                    <% addresses.forEach((address, index) => { %>
+                                        <div class="address-item">
+                                            <div class="address-details">
+                                                <p><strong> • <%= address.name %></strong></p>
+                                                <p>Phone: <%= address.phone %></p>
+                                                <p>Alternative Phone: <%= address.altPhone %></p>
+                                                <p>Street: <%= address.landMark %></p>
+                                                <!-- <p>City: <%= address.city %></p>
+                                                <p>State: <%= address.state %></p>
+                                                <p>PIN Code: <%= address.pincode %></p>
+                                                <p>Country: <%= typeof address.country !== 'undefined' ? address.country : 'Not specified' %></p> -->
+                                            </div>
+                                            <div class="address-actions">
+                                                <a href="/editAddress?id=<%=address._id %>" class="edit-btn">
+                                                    <i class="fa-solid fa-edit"></i> Edit
+                                                </a>
+                                                <a href="#" class="delete-btn" data-href="/deleteAddress?id=<%=address._id%>">
+                                                    <i class="fa-solid fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p class="no-addresses">No addresses found.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Show SweetAlert for address saved or deleted
+    document.addEventListener('DOMContentLoaded', function() {
+        const addressSaved = <%= typeof addressSaved !== 'undefined' ? addressSaved : false %>;
+        const addressDeleted = <%= typeof addressDeleted !== 'undefined' ? addressDeleted : false %>;
+
+        if (addressSaved) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Address Saved',
+                text: 'Your address has been successfully saved!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#05445E'
+            });
+        }
+
+        if (addressDeleted) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Address Deleted',
+                text: 'The address has been successfully deleted!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#05445E'
+            });
+        }
+
+        // Add SweetAlert confirmation for Delete buttons
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default navigation
+                const deleteUrl = this.getAttribute('data-href');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ff3b30',
+                    cancelButtonColor: '#666',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = deleteUrl; // Proceed with deletion
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+<%- include("../partials/user/footer") %>

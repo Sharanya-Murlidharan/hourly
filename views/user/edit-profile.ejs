@@ -1,0 +1,389 @@
+<%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    main, main * {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .main {
+        padding: 30px 0;
+    }
+
+    .account-container {
+        display: flex;
+        max-width: 1200px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .main-content {
+        width: 80%;
+        padding: 40px;
+    }
+
+    .greeting {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .basic-info {
+        margin-bottom: 40px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group.basic-info-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .form-group .input-field {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 20px;
+    }
+
+    .form-group.basic-info-group .input-field {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 5px;
+        letter-spacing: 1px;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f5f5f5;
+        color: #333;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #05445E;
+        box-shadow: 0 0 5px rgba(112, 135, 145, 0.2);
+        outline: none;
+    }
+
+    .form-group input:disabled {
+        background: #e9ecef;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+    .login-details {
+        flex: 1 1 100%;
+        margin-top: 20px;
+    }
+
+    .login-details h2 {
+        font-size: 1.3rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .form-group.login-details-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .form-group.login-details-group .input-field {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .change-btn-container {
+        margin-top: 10px;
+    }
+
+    .change-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .change-btn:hover {
+        background-color: #043b52;
+    }
+
+    .image-upload-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .profile-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 5px;
+        background: #ddd;
+        object-fit: cover;
+        border: 1px solid #ddd;
+    }
+
+    .choose-photo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .choose-photo-btn:hover {
+        background-color: #043b52;
+    }
+
+    .edit-btn-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .edit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100px;
+        padding: 10px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+        text-align: center;
+    }
+
+    .edit-btn i {
+        margin-right: 5px;
+    }
+
+    .edit-btn:hover {
+        background-color: #043b52;
+    }
+
+    @media (max-width: 768px) {
+        .account-container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .main-content {
+            width: 100%;
+            padding: 20px;
+        }
+
+        .form-group.basic-info-group {
+            flex-wrap: wrap;
+        }
+
+        .form-group.login-details-group {
+            flex-wrap: wrap;
+        }
+
+        .form-group .input-field {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .image-upload-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .greeting {
+            font-size: 1.5rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            width: 80px;
+            font-size: 0.9rem;
+        }
+
+        .change-btn,
+        .choose-photo-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .login-details h2 {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+<main class="main">
+    <section class="pt-10 pb-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="account-container">
+                        <%- include("../../views/partials/user/sidebar") %>
+                        <div class="main-content">
+                            <div class="greeting">
+                                Edit Profile
+                            </div>
+                            <div class="basic-info">
+                                <form method="post" action="/update-profile" enctype="multipart/form-data">
+                                    <div class="image-upload-container">
+                                        <img src="<%= user.profileImage || '/images/default-profile.jpg' %>" alt="Profile Image" id="profile-image" class="profile-image">
+                                        <button type="button" class="choose-photo-btn" onclick="document.getElementById('image-input').click()">Choose Photo</button>
+                                        <input type="file" id="image-input" name="profileImage" accept="image/jpeg,image/png,image/webp" style="display: none;">
+                                    </div>
+                                    <div class="form-group basic-info-group">
+                                        <div class="input-field">
+                                            <label for="username">Full Name</label>
+                                            <input type="text" id="username" name="name" value="<%= user.name %>">
+                                        </div>
+                                        <div class="input-field">
+                                            <label for="phone">Phone Number</label>
+                                            <input type="text" id="phone" name="phone" value="<%= user.phone %>">
+                                        </div>
+                                    </div>
+                                    <div class="login-details">
+                                        <h2>Login Details</h2>
+                                        <div class="form-group login-details-group">
+                                            <div class="input-field">
+                                                <label for="username-login">Email</label>
+                                                <input type="text" id="username-login" value="<%= user.email || 'Not available' %>" disabled>
+                                                <div class="change-btn-container">
+                                                    <a href="/change-email" class="change-btn">Change Email</a>
+                                                </div>
+                                            </div>
+                                            <div class="input-field">
+                                                <label for="password">Password</label>
+                                                <input type="password" id="password" value="••••••••••••" disabled>
+                                                <div class="change-btn-container">
+                                                    <a href="/change-password" class="change-btn">Change Password</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="edit-btn-container">
+                                        <button type="submit" class="edit-btn">
+                                            <i class="fa-solid fa-save"></i> Save
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const imageInput = document.getElementById('image-input');
+        const profileImage = document.getElementById('profile-image');
+
+        imageInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) {
+                console.log('No file selected');
+                return;
+            }
+
+            const file = files[0];
+            if (!file.type.match('image/(jpeg|png|webp)')) {
+                console.error('Invalid file type:', file.type);
+                alert('Please select a valid image file (JPEG, PNG, WEBP).');
+                e.target.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                console.error('File size too large:', file.size);
+                alert('File size exceeds 2MB. Please choose a smaller image.');
+                e.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                profileImage.src = event.target.result;
+                profileImage.onerror = function () {
+                    console.error('Error loading image into profile-image');
+                    alert('Error loading the image. Please try a different image.');
+                    e.target.value = '';
+                };
+            };
+            reader.onerror = function () {
+                console.error('Error reading file');
+                alert('Error reading the image file. Please try again.');
+                e.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+</script>
+<%- include("../../views/partials/user/footer") %>

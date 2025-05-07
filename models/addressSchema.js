@@ -8,10 +8,10 @@ const addressSchema = new Schema({
         required:true
     },
     address:[{
-        addressType:{
-            type:String,
-            required:true
-        },
+        // addressType:{
+        //     type:String,
+        //     required:true
+        // },
         name:{
             type:String,
             required:true,
@@ -37,6 +37,10 @@ const addressSchema = new Schema({
             required:true,
         },
         altPhone:{
+            type:String,
+            required:true
+        },
+        country:{
             type:String,
             required:true
         }

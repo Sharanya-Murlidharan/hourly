@@ -1,0 +1,242 @@
+<%- include('../../views/partials/user/header') %>
+
+<style>
+  .cart-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+  .cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  .cart-table th, .cart-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  .cart-table th {
+    background-color: #f5f5f5;
+  }
+  .cart-table img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+  }
+  .quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .quantity-control button {
+    padding: 5px 10px;
+    background-color: #05445E;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .quantity-control button:hover {
+    background-color: #03384d;
+  }
+  .delete-btn {
+    color: #dc3545;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .delete-btn:hover {
+    text-decoration: underline;
+  }
+  .cart-summary {
+    text-align: right;
+    margin-top: 20px;
+  }
+  .cart-summary h3 {
+    margin-bottom: 10px;
+  }
+  .checkout-btn {
+    padding: 10px 20px;
+    background-color: #05445E;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  .checkout-btn:hover {
+    background-color: #03384d;
+  }
+</style>
+
+<div class="cart-container">
+  <h2>Your Cart</h2>
+  <% if (data && data.length > 0) { %>
+    <table class="cart-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% data.forEach(item => { %>
+          <% if (item.productId) { %>
+            <tr data-product-id="<%= item.productId._id %>">
+              <td>
+                <img src="/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                <%= item.productId.productName %>
+              </td>
+              <td>₹<%= item.price.toLocaleString('en-IN') %></td>
+              <td>
+                <div class="quantity-control">
+                  <button onclick="changeQuantity('<%= item.productId._id %>', -1)">-</button>
+                  <span id="quantity-<%= item.productId._id %>"><%= item.quantity %></span>
+                  <button onclick="changeQuantity('<%= item.productId._id %>', 1)">+</button>
+                </div>
+              </td>
+              <td id="total-<%= item.productId._id %>">₹<%= item.totalPrice.toLocaleString('en-IN') %></td>
+              <td>
+                <span class="delete-btn" onclick="confirmDeleteProduct('<%= item.productId._id %>')">Remove</span>
+              </td>
+            </tr>
+          <% } %>
+        <% }) %>
+      </tbody>
+    </table>
+    <div class="cart-summary">
+      <h3 id="grand-total">Total: ₹<%= grandTotal.toLocaleString('en-IN') %></h3>
+      <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+    </div>
+  <% } else { %>
+    <p>Your cart is empty.</p>
+  <% } %>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // Function to get query parameters from URL
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  // Check for pending actions after login
+  window.onload = function() {
+    const action = getQueryParam('action');
+    const productId = getQueryParam('productId');
+    if (action === 'remove' && productId) {
+      confirmDeleteProduct(productId);
+    }
+  };
+
+  function changeQuantity(productId, count) {
+    fetch('/changeQuantity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ productId, count }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(data => {
+          throw new Error(data.message || 'Failed to update quantity');
+        });
+      }
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Unexpected response format');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Update quantity
+        document.getElementById(`quantity-${productId}`).textContent = data.quantityInput;
+        // Update total price for the item
+        document.getElementById(`total-${productId}`).textContent = `₹${data.totalAmount.toLocaleString('en-IN')}`;
+        // Update grand total
+        document.getElementById('grand-total').textContent = `Total: ₹${data.grandTotal.toLocaleString('en-IN')}`;
+      } else {
+        throw new Error(data.message || 'Failed to update quantity');
+      }
+    })
+    .catch(error => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message,
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => {
+        if (error.message.includes('not logged in')) {
+          const redirectUrl = `/login?action=changeQuantity&productId=${productId}&count=${count}`;
+          window.location.href = redirectUrl;
+        }
+      });
+    });
+  }
+
+  function confirmDeleteProduct(productId) {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const data = {
+          productId: productId
+        };
+
+        const requestData = new Request('/deleteCartProduct', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+
+        fetch(requestData)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({
+                icon: "success",
+                title: "Deleted!",
+                text: data.message || "Product removed from cart successfully",
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                window.location.href = '/cart';
+              });
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: data.message || "Failed to remove product"
+              });
+            }
+          })
+          .catch(error => {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: error.message || "Something went wrong!"
+            }).then(() => {
+              if (error.message.includes('not logged in')) {
+                const redirectUrl = `/login?action=remove&productId=${productId}`;
+                window.location.href = redirectUrl;
+              }
+            });
+          });
+      }
+    });
+  }
+</script>
+
+<%- include('../../views/partials/user/footer') %>

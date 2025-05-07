@@ -1,0 +1,516 @@
+<%- include("../partials/user/header") %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    main, main * {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Main container padding */
+    .main {
+        padding: 30px 0;
+        min-height: calc(100vh - 150px); /* Adjust for header and footer */
+    }
+
+    /* Container for Main Content (With Sidebar) */
+    .account-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 20%;
+        background: #fff;
+        padding: 20px;
+        border-right: 1px solid #ddd;
+    }
+
+    .sidebar ul {
+        list-style: none;
+    }
+
+    .sidebar ul li {
+        margin-bottom: 10px;
+    }
+
+    .sidebar ul li a {
+        text-decoration: none;
+        color: #666;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 5px;
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+    }
+
+    .sidebar ul li a i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+        color: #666;
+        transition: color 0.3s;
+    }
+
+    .sidebar ul li a.active {
+        color: #05445E;
+        font-weight: 500;
+    }
+
+    .sidebar ul li a.active i {
+        color: #05445E;
+    }
+
+    .sidebar ul li a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 4px;
+        background-color: #05445E;
+        border-radius: 0 5px 5px 0;
+    }
+
+    /* Main Content */
+    .main-content {
+        padding: 40px;
+        flex: 1;
+    }
+
+    /* Greeting */
+    .greeting {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* Form Styles */
+    .address-form {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 5px;
+        letter-spacing: 1px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background: #f5f5f5;
+        color: #333;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-group input:focus {
+        border-color: #05445E;
+        box-shadow: 0 0 5px rgba(112, 135, 145, 0.2);
+        outline: none;
+    }
+
+    .form-group .error-message {
+        color: #ff3b30;
+        font-size: 0.8rem;
+        margin-top: 5px;
+        display: none;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .save-btn, .cancel-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .save-btn {
+        background-color: #05445E;
+        color: #fff;
+    }
+
+    .save-btn:hover {
+        background-color: #043b52;
+    }
+
+    .cancel-btn {
+        background-color: #666;
+        color: #fff;
+    }
+
+    .cancel-btn:hover {
+        background-color: #555;
+    }
+
+    /* General Error Message (for server-side errors) */
+    .general-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .account-container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .form-group input {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .greeting {
+            font-size: 1.5rem;
+        }
+
+        .save-btn, .cancel-btn {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+
+        .sidebar ul li a {
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+
+        .sidebar ul li a i {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<!-- Main Content -->
+<main class="main">
+    <section class="pt-10 pb-10">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 m-auto">
+                    <div class="account-container">
+                        <div class="sidebar">
+                            <ul>
+                                <li><a href="/userProfile"><i class="fa-solid fa-user"></i> My Profile</a></li>
+                                <li><a href="/address" class="active"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
+                                <li><a href="#"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
+                                <li><a href="#"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
+                                <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li>
+                                <li>
+                                    <a href="/logout" class="menu-item logout">
+                                        <i class="icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#666" width="20" height="20">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                        </i> 
+                                        <span>Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="main-content">
+                            <div class="greeting">
+                                Edit Address
+                            </div>
+                            <!-- Display General Server-Side Error (if any) -->
+                            <% if (typeof generalError !== 'undefined') { %>
+                                <div class="general-error">
+                                    <%= generalError %>
+                                </div>
+                            <% } %>
+                            <!-- Edit Address Form -->
+                            <div class="address-form">
+                                <form action="/edit-address?id=<%= addressId %>" method="POST" novalidate id="addressForm">
+                                    <div class="form-group">
+                                        <label for="fullName">Full Name</label>
+                                        <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" value="<%= address.name %>">
+                                        <div id="error1" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone">Phone Number</label>
+                                        <input type="tel" id="phone" name="phone" placeholder="Enter 10-digit phone number" value="<%= address.phone %>">
+                                        <div id="error2" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="altPhone">Alternative Phone Number</label>
+                                        <input type="tel" id="altPhone" name="altPhone" placeholder="Enter 10-digit phone number" value="<%= address.altPhone %>">
+                                        <div id="error3" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="street">Street Address</label>
+                                        <input type="text" id="street" name="street" placeholder="Enter your street address" value="<%= address.landMark %>">
+                                        <div id="error4" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" id="city" name="city" placeholder="Enter your city" value="<%= address.city %>">
+                                        <div id="error5" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="state">State</label>
+                                        <input type="text" id="state" name="state" placeholder="Enter your state" value="<%= address.state %>">
+                                        <div id="error6" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="pin">PIN Code</label>
+                                        <input type="text" id="pin" name="pin" placeholder="Enter your PIN code" value="<%= address.pincode %>">
+                                        <div id="error7" class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="country">Country</label>
+                                        <input type="text" id="country" name="country" placeholder="Enter your country" value="<%= address.country %>">
+                                        <div id="error8" class="error-message"></div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="submit" class="save-btn">Save</button>
+                                        <a href="/address" class="cancel-btn">Cancel</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Accessing input fields by ID
+    const fullNameInput = document.getElementById('fullName');
+    const phoneInput = document.getElementById('phone');
+    const altPhoneInput = document.getElementById('altPhone');
+    const streetInput = document.getElementById('street');
+    const cityInput = document.getElementById('city');
+    const stateInput = document.getElementById('state');
+    const pinInput = document.getElementById('pin');
+    const countryInput = document.getElementById('country');
+
+    // Accessing error message elements by ID
+    const error1 = document.getElementById('error1'); // Full Name
+    const error2 = document.getElementById('error2'); // Phone
+    const error3 = document.getElementById('error3'); // Alt Phone
+    const error4 = document.getElementById('error4'); // Street
+    const error5 = document.getElementById('error5'); // City
+    const error6 = document.getElementById('error6'); // State
+    const error7 = document.getElementById('error7'); // PIN
+    const error8 = document.getElementById('error8'); // Country
+
+    // Accessing the form by ID
+    const addressForm = document.getElementById('addressForm');
+
+    // Validation functions
+    function fullNameValidateChecking() {
+        const value = fullNameInput.value.trim();
+        const pattern = /^[A-Za-z\s]+$/;
+        if (value === "") {
+            error1.style.display = "block";
+            error1.innerHTML = "Please enter a valid name.";
+        } else if (!pattern.test(value)) {
+            error1.style.display = "block";
+            error1.innerHTML = "Full Name must contain only letters and spaces.";
+        } else {
+            error1.style.display = "none";
+            error1.innerHTML = "";
+        }
+        return error1.style.display === "none";
+    }
+
+    function phoneValidateChecking(input, errorElement) {
+        const value = input.value.trim();
+        if (value === "") {
+            errorElement.style.display = "block";
+            errorElement.innerHTML = "Phone Number cannot be empty.";
+        } else if (value.length !== 10 || isNaN(value)) {
+            errorElement.style.display = "block";
+            errorElement.innerHTML = "Phone Number must be exactly 10 digits.";
+        } else {
+            errorElement.style.display = "none";
+            errorElement.innerHTML = "";
+        }
+        return errorElement.style.display === "none";
+    }
+
+    function streetValidateChecking() {
+        const value = streetInput.value.trim();
+        if (value === "") {
+            error4.style.display = "block";
+            error4.innerHTML = "Street Address cannot be empty.";
+        } else if (value.length < 5) {
+            error4.style.display = "block";
+            error4.innerHTML = "Street Address must be at least 5 characters long.";
+        } else {
+            error4.style.display = "none";
+            error4.innerHTML = "";
+        }
+        return error4.style.display === "none";
+    }
+
+    function cityValidateChecking() {
+        const value = cityInput.value.trim();
+        const pattern = /^[A-Za-z\s]+$/;
+        if (value === "") {
+            error5.style.display = "block";
+            error5.innerHTML = "City cannot be empty.";
+        } else if (!pattern.test(value)) {
+            error5.style.display = "block";
+            error5.innerHTML = "City must contain only letters and spaces.";
+        } else {
+            error5.style.display = "none";
+            error5.innerHTML = "";
+        }
+        return error5.style.display === "none";
+    }
+
+    function stateValidateChecking() {
+        const value = stateInput.value.trim();
+        const pattern = /^[A-Za-z]+$/;
+        if (value === "") {
+            error6.style.display = "block";
+            error6.innerHTML = "State cannot be empty.";
+        } else if (!pattern.test(value)) {
+            error6.style.display = "block";
+            error6.innerHTML = "State must contain only letters.";
+        } else {
+            error6.style.display = "none";
+            error6.innerHTML = "";
+        }
+        return error6.style.display === "none";
+    }
+
+    function pinValidateChecking() {
+        const value = pinInput.value.trim();
+        const pattern = /^\d{5,6}$/;
+        if (value === "") {
+            error7.style.display = "block";
+            error7.innerHTML = "PIN Code cannot be empty.";
+        } else if (!pattern.test(value)) {
+            error7.style.display = "block";
+            error7.innerHTML = "PIN Code must be 5-6 digits.";
+        } else {
+            error7.style.display = "none";
+            error7.innerHTML = "";
+        }
+        return error7.style.display === "none";
+    }
+
+    function countryValidateChecking() {
+        const value = countryInput.value.trim();
+        const pattern = /^[A-Za-z\s]+$/;
+        if (value === "") {
+            error8.style.display = "block";
+            error8.innerHTML = "Country cannot be empty.";
+        } else if (!pattern.test(value)) {
+            error8.style.display = "block";
+            error8.innerHTML = "Country must contain only letters and spaces.";
+        } else {
+            error8.style.display = "none";
+            error8.innerHTML = "";
+        }
+        return error8.style.display === "none";
+    }
+
+    // Real-time Validation
+    fullNameInput.addEventListener('input', fullNameValidateChecking);
+    phoneInput.addEventListener('input', () => phoneValidateChecking(phoneInput, error2));
+    altPhoneInput.addEventListener('input', () => phoneValidateChecking(altPhoneInput, error3));
+    streetInput.addEventListener('input', streetValidateChecking);
+    cityInput.addEventListener('input', cityValidateChecking);
+    stateInput.addEventListener('input', stateValidateChecking);
+    pinInput.addEventListener('input', pinValidateChecking);
+    countryInput.addEventListener('input', countryValidateChecking);
+
+    // Form Submission with Validation
+    document.addEventListener('DOMContentLoaded', function() {
+        addressForm.addEventListener('submit', function(e) {
+            const isFullNameValid = fullNameValidateChecking();
+            const isPhoneValid = phoneValidateChecking(phoneInput, error2);
+            const isAltPhoneValid = phoneValidateChecking(altPhoneInput, error3);
+            const isStreetValid = streetValidateChecking();
+            const isCityValid = cityValidateChecking();
+            const isStateValid = stateValidateChecking();
+            const isPinValid = pinValidateChecking();
+            const isCountryValid = countryValidateChecking();
+
+            if (!isFullNameValid || !isPhoneValid || !isAltPhoneValid || !isStreetValid || !isCityValid || !isStateValid || !isPinValid || !isCountryValid) {
+                e.preventDefault(); // Prevent submission if any validation fails
+
+                // Scroll to the first error
+                const firstError = document.querySelector('.error-message[style="display: block"]');
+                if (firstError) {
+                    firstError.parentElement.querySelector('input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+
+        // Check if elements are found
+        if (!fullNameInput || !phoneInput || !altPhoneInput || !streetInput || !cityInput || !stateInput || !pinInput || !countryInput || 
+            !error1 || !error2 || !error3 || !error4 || !error5 || !error6 || !error7 || !error8 || !addressForm) {
+            console.error('One or more elements not found');
+        }
+    });
+</script>
+
+<%- include("../partials/user/footer") %>
