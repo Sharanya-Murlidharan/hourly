@@ -489,49 +489,49 @@ const addAddress = async(req,res)=>{
 
 const postAddAddress = async (req, res) => {
     try {
-        // Get user ID from session
-        const userId = req.session.user;
-        if (!userId) {
-            console.log('No user ID in session, redirecting to login');
-            return res.redirect('/login');
-        }
-
-        // Find the user
-        const userData = await User.findById(userId).exec();
-        if (!userData) {
-            console.log(`User not found for ID: ${userId}`);
-            return res.redirect('/login');
-        }
-
-        // Extract fields from the request body (align with frontend)
-        const { fullName, phone, altPhone, street, city, state, pin, country } = req.body;
-
-        const addressData = {
-            name: fullName,      
-            city,
-            landMark: street,    
-            state,
-            pincode: pin,        
-            phone,
-            altPhone,
-            country
-        };
-
-        // Find or create the user's address document
-        let userAddress = await Address.findOne({ userId: userData._id })
-        if (!userAddress) {
-            userAddress = new Address({
-                userId: userData._id, // Store only the userId, not the entire user object
-                address: [addressData]
-            });
-        } else {
-            userAddress.address.push(addressData);
-        }
-
-        await userAddress.save();
-        console.log(`Address saved successfully for user: ${userId}`);
-        res.redirect('/address');
-
+      const userId = req.session.user;
+      if (!userId) {
+        return res.status(401).json({ error: "Please log in" });
+      }
+  
+      const userData = await User.findById(userId);
+      if (!userData) {
+        return res.status(401).json({ error: "User not found" });
+      }
+  
+      const { fullName, phone, altPhone, street, city, state, pin, country } = req.body;
+      if (!fullName || !phone || !altPhone || !street || !city || !state || !pin || !country) {
+        return res.status(400).json({ error: "All address fields are required" });
+      }
+  
+      let userAddress = await Address.findOne({ userId });
+      if (!userAddress) {
+        userAddress = new Address({
+          userId,
+          address: [],
+        });
+      }
+  
+      userAddress.address.push({
+        name: fullName,
+        city,
+        landMark: street,
+        state,
+        pincode: pin,
+        phone,
+        altPhone,
+        country,
+      });
+  
+      await userAddress.save();
+  
+      // If request expects JSON (from modal), return addresses
+      if (req.headers["content-type"] === "application/json") {
+        return res.json({ addresses: userAddress.address });
+      }
+  
+      // Otherwise, redirect for addAddress.ejs
+      res.redirect("/address?addressSaved=true");
     } catch (error) {
         console.error('Error in postAddAddress:', error.message, error.stack);
         res.redirect("/pageNotFound")
@@ -567,41 +567,66 @@ const editAddress = async(req,res)=>{
 
 const postEditAddress = async (req, res) => {
     try {
-        const data = req.body;
-        const addressId = req.query.id;
-        const userId = req.session.user;
-
-        const userData = await User.findById(userId).exec();
-        if (!userData) {
-            return res.redirect('/login');
+      const userId = req.session.user;
+      if (!userId) {
+        return res.status(401).json({ error: "Please log in" });
+      }
+  
+      const { addressId, fullName, phone, altPhone, street, city, state, pin, country } = req.body;
+      const queryAddressId = req.query.id || addressId; // Support both query and body
+  
+      if (!queryAddressId || !fullName || !phone || !altPhone || !street || !city || !state || !pin || !country) {
+        if (req.headers["content-type"] === "application/json") {
+          return res.status(400).json({ error: "All address fields are required" });
         }
-
-        const findAddress = await Address.findOne({ "address._id": addressId }).exec();
-        if (!findAddress) {
-            
-            return res.redirect("/pageNotFound"); // Exit after redirect
+        return res.status(400).render("edit-address", {
+          generalError: "All address fields are required",
+          address: req.body,
+          addressId: queryAddressId,
+        });
+      }
+  
+      const userData = await User.findById(userId);
+      if (!userData) {
+        return res.status(401).json({ error: "User not found" });
+      }
+  
+      const findAddress = await Address.findOne({ "address._id": queryAddressId });
+      if (!findAddress) {
+        if (req.headers["content-type"] === "application/json") {
+          return res.status(400).json({ error: "Address not found" });
         }
-
-        await Address.updateOne(
-            { "address._id": addressId },
-            {
-                $set: {
-                    "address.$": {
-                        _id: addressId,
-                        name: data.fullName, // Match frontend field name
-                        city: data.city,
-                        landMark: data.street, // Match frontend field name
-                        state: data.state,
-                        pincode: data.pin, // Match frontend field name
-                        phone: data.phone,
-                        altPhone: data.altPhone,
-                        country:data.country
-                    }
-                }
-            }
-        );
-
-        res.redirect("/address?addressUpdated=true");
+        return res.redirect("/pageNotFound");
+      }
+  
+      await Address.updateOne(
+        { "address._id": queryAddressId },
+        {
+          $set: {
+            "address.$": {
+              _id: queryAddressId,
+              name: fullName,
+              city,
+              landMark: street,
+              state,
+              pincode: pin,
+              phone,
+              altPhone,
+              country,
+            },
+          },
+        }
+      );
+  
+      const updatedAddress = await Address.findOne({ "address._id": queryAddressId });
+  
+      // If request expects JSON (from modal), return addresses
+      if (req.headers["content-type"] === "application/json") {
+        return res.json({ addresses: updatedAddress.address });
+      }
+  
+      // Otherwise, redirect for editAddress.ejs
+      res.redirect("/address?addressUpdated=true");
     } catch (error) {
         console.error("Error from postEditAddress:", error);
         res.status(500).render('edit-address', {

@@ -1,0 +1,264 @@
+<%- include('../../views/partials/user/header') %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Listing</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 500;
+      color: #05445E;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .order-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .order-table th, .order-table td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 0.95rem;
+    }
+    .order-table th {
+      background-color: #05445E;
+      color: #fff;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .order-table tr {
+      transition: background-color 0.3s;
+    }
+    .order-table tr:hover {
+      background-color: #f9f9f9;
+    }
+    .status-pending {
+      color: #ff9800;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+    .status-delivered {
+      color: #28a745;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+    .status-canceled {
+      color: #dc3545;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background-color: #05445E;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      text-decoration: none;
+    }
+    .action-btn i {
+      margin-right: 8px;
+    }
+    .action-btn:hover {
+      background-color: #043b52;
+    }
+    .no-orders {
+      text-align: center;
+      color: #666;
+      font-size: 1rem;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 20px;
+      }
+      .order-table th, .order-table td {
+        padding: 10px;
+        font-size: 0.85rem;
+      }
+      .order-table thead {
+        display: none;
+      }
+      .order-table tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        background-color: #fff;
+      }
+      .order-table td {
+        display: flex;
+        justify-content: space-between;
+        text-align: right;
+        border: none;
+        padding: 10px;
+      }
+      .order-table td::before {
+        content: attr(data-label);
+        font-weight: 500;
+        color: #05445E;
+        text-align: left;
+        flex: 1;
+      }
+      .action-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .pagination .page-item {
+      margin: 0 5px;
+    }
+    .pagination .page-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      text-decoration: none;
+      color: #333;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .pagination .page-link i {
+      font-size: 0.9rem;
+    }
+    .pagination .page-link:hover {
+      background-color: #05445E;
+      color: #fff;
+      border-color: #05445E;
+    }
+    .pagination .page-item.active .page-link {
+      background-color: #05445E;
+      color: #fff;
+      border-color: #05445E;
+    }
+    @media (max-width: 768px) {
+      .pagination .page-link {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+      }
+      .pagination .page-link i {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Your Orders</h1>
+    <table class="order-table" id="orderTable">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Order Date</th>
+          <th>Status</th>
+          <th>Payment Method</th>
+          <th>Total Amount</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (orders && orders.length > 0) { %>
+          <% orders.forEach(order => { %>
+            <tr>
+              <td data-label="Order ID"><%= order.orderId %></td>
+              <td data-label="Order Date"><%= order.orderDate %></td>
+              <td data-label="Status" class="status-<%= order.status.toLowerCase() %>"><%= order.status %></td>
+              <td data-label="Payment Method"><%= order.paymentMethod %></td>
+              <td data-label="Total Amount">₹<%= order.totalAmount %></td>
+              <td data-label="Action">
+                <button class="action-btn" onclick="viewOrderDetails('<%= order.orderId %>')">
+                  <i class="fa-solid fa-eye"></i> View Details
+                </button>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="6">
+              <div class="no-orders">No orders found.</div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% if (orders && orders.length > 0) { %>
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <% if (currentPage > 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+          <% } %>
+          <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+              <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+            </li>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+          <% } %>
+        </ul>
+      </nav>
+    <% } %>
+  </div>
+
+  <script>
+    function viewOrderDetails(orderId) {
+      window.location.href = `/order/details/${orderId}`;
+    }
+  </script>
+</body>
+</html>
+<%- include('../../views/partials/user/footer') %>

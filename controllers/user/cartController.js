@@ -314,6 +314,8 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   getCartPage,
   addToCart,

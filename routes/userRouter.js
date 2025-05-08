@@ -8,6 +8,7 @@ const {uploadProfilePicture} = require("../helpers/multer")
 const profileController = require("../controllers/user/profileController")
 const productController = require("../controllers/user/productController")
 const cartController = require("../controllers/user/cartController")
+const orderController = require("../controllers/user/orderController")
 const {userAuth} = require("../middlewares/auth")
 
 
@@ -76,6 +77,12 @@ router.get("/cart", userAuth, cartController.getCartPage)
 router.post("/addToCart",userAuth, cartController.addToCart)
 router.post("/changeQuantity", userAuth,cartController.changeQuantity)
 router.post("/deleteCartProduct", userAuth, cartController.deleteProduct)
+//checkout
+router.get("/checkout",userAuth,orderController.getCheckout)
+router.post("/checkout",userAuth,orderController.proceedCheckout)
+router.get("/orderSuccess",userAuth,orderController.getSuccess)
+// order Listing
+router.get("/orderListing",orderController.getOrderList)
 
 
 module.exports = router

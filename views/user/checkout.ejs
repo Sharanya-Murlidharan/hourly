@@ -1,0 +1,732 @@
+<%- include("../partials/user/header") %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+  }
+  body {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+  .main-section {
+    padding: 30px;
+    min-height: calc(100vh - 150px);
+  }
+  .main-section h1 {
+    font-size: 2.5rem;
+    font-weight: 500;
+    margin-bottom: 40px;
+    color: #333;
+    text-align: center;
+  }
+  .checkout-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+  .address-section {
+    flex: 2;
+    text-align: left;
+  }
+  .address-section h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: #05445E;
+  }
+  .address-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  .address-option:hover {
+    border-color: #05445E;
+  }
+  .address-option input[type="radio"] {
+    margin-right: 10px;
+  }
+  .address-option label {
+    font-size: 0.9rem;
+    color: #333;
+    flex: 1;
+  }
+  .address-option label span {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+  }
+  .address-option .edit-link {
+    font-size: 0.9rem;
+    color: #05445E;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .address-option .edit-link:hover {
+    text-decoration: underline;
+  }
+  .add-address-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #05445E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .add-address-btn i {
+    margin-right: 5px;
+  }
+  .add-address-btn:hover {
+    background-color: #043b52;
+  }
+  .payment-methods {
+    margin-top: 20px;
+  }
+  .payment-methods h3 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #05445E;
+  }
+  .payment-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  .payment-option:hover {
+    border-color: #05445E;
+  }
+  .payment-option input[type="radio"] {
+    margin-right: 10px;
+  }
+  .payment-option label {
+    font-size: 0.9rem;
+    color: #333;
+  }
+  .cart-summary {
+    flex: 1;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+  }
+  .cart-summary h3 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: #05445E;
+  }
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  .summary-item.total {
+    font-weight: 500;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+  }
+  .product-item {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  .product-item:last-child {
+    border-bottom: none;
+  }
+  .product-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .product-details {
+    font-size: 0.8rem;
+    color: #666;
+  }
+  .continue-btn-container {
+    text-align: center;
+    margin: 20px 0;
+  }
+  .continue-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background-color: #05445E;
+    color: #fff;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .continue-btn:hover {
+    background-color: #043b52;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  .modal-content h2 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #05445E;
+  }
+  .modal-content .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.3s;
+  }
+  .modal-content .close:hover {
+    color: #05445E;
+  }
+  .modal-content .form-group {
+    margin-bottom: 10px;
+  }
+  .modal-content label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .modal-content input {
+    width: 100%;
+    padding: 7px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f5f5f5;
+    font-size: 0.8rem;
+  }
+  .modal-content input:focus {
+    border-color: #05445E;
+    outline: none;
+  }
+  .modal-content .button-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+  }
+  .modal-content button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .modal-content .save-btn {
+    background-color: #05445E;
+    color: #fff;
+  }
+  .modal-content .save-btn:hover {
+    background-color: #043b52;
+  }
+  .modal-content .cancel-btn {
+    background-color: #6c757d;
+    color: #fff;
+  }
+  .modal-content .cancel-btn:hover {
+    background-color: #5a6268;
+  }
+  .error-message {
+    color: #ff3b30;
+    font-size: 0.7rem;
+    margin-top: 4px;
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .checkout-container {
+      flex-direction: column;
+      gap: 20px;
+    }
+    .modal-content {
+      width: 90%;
+      max-width: 350px;
+      padding: 12px;
+    }
+    .modal-content .button-group {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .modal-content button {
+      width: 100%;
+    }
+  }
+</style>
+
+<body>
+  <section class="main-section">
+    <h1>Checkout</h1>
+    <div class="checkout-container">
+      <div class="address-section">
+        <h2>Select Address</h2>
+        <div id="address-list">
+          <% addresses.forEach((address, index) => { %>
+            <div class="address-option">
+              <input
+                type="radio"
+                name="address"
+                id="address<%= address._id %>"
+                value="<%= address._id %>"
+                <%= index === 0 ? 'checked' : '' %>
+              >
+              <label for="address<%= address._id %>">
+                <%= address.name %><br>
+                <span><%= address.landMark %>, <%= address.city %>, <%= address.state %>, <%= address.pincode %></span>
+              </label>
+              <a class="edit-link" onclick="openEditModal('<%= address._id %>', '<%= address.name %>', '<%= address.phone %>', '<%= address.altPhone %>', '<%= address.landMark %>', '<%= address.city %>', '<%= address.state %>', '<%= address.pincode %>', '<%= address.country %>')">Edit</a>
+            </div>
+          <% }) %>
+        </div>
+        <button class="add-address-btn" onclick="openAddModal()">
+          <i class="fa-solid fa-plus"></i> Add New Address
+        </button>
+
+        <div class="payment-methods">
+          <h3>Payment Method</h3>
+          <div class="payment-option">
+            <input type="radio" name="payment_option" id="cod" value="cod" checked>
+            <label for="cod">Cash on Delivery</label>
+          </div>
+          <div class="payment-option">
+            <input type="radio" name="payment_option" id="razorpay" value="razorpay" disabled>
+            <label for="razorpay">Razorpay</label>
+          </div>
+          <div class="payment-option">
+            <input type="radio" name="payment_option" id="wallet" value="wallet" disabled>
+            <label for="wallet">Wallet</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart-summary">
+        <h3>Cart Total</h3>
+        <% cartItems.forEach(item => { %>
+          <div class="product-item">
+            <div class="product-name"><%= item.productId.productName %></div>
+            <div class="product-details">
+              Quantity: <%= item.quantity %> × ₹<%= item.price %>
+            </div>
+            <div class="summary-item">
+              <span>Total</span>
+              <span>₹<%= item.totalPrice %></span>
+            </div>
+          </div>
+        <% }) %>
+        <div class="summary-item total">
+          <span>Subtotal</span>
+          <span>₹<%= totalPrice %></span>
+        </div>
+      </div>
+    </div>
+    <div class="continue-btn-container">
+      <button onclick="proceedToPayment()" class="continue-btn">Continue</button>
+    </div>
+  </section>
+
+  <div id="addressModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <h2 id="modalTitle">Add Address</h2>
+      <form id="addressForm">
+        <input type="hidden" id="addressId" name="addressId">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" name="fullName" placeholder="Enter your full name">
+          <div id="error1" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" placeholder="Enter 10-digit phone number">
+          <div id="error2" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="altPhone">Alternative Phone Number</label>
+          <input type="tel" id="altPhone" name="altPhone" placeholder="Enter 10-digit phone number">
+          <div id="error3" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="street">Street Address</label>
+          <input type="text" id="street" name="street" placeholder="Enter your street address">
+          <div id="error4" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" placeholder="Enter your city">
+          <div id="error5" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="state">State</label>
+          <input type="text" id="state" name="state" placeholder="Enter your state">
+          <div id="error6" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="pin">PIN Code</label>
+          <input type="text" id="pin" name="pin" placeholder="Enter your PIN code">
+          <div id="error7" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="country">Country</label>
+          <input type="text" id="country" name="country" placeholder="Enter your country">
+          <div id="error8" class="error-message"></div>
+        </div>
+        <div class="button-group">
+          <button type="submit" class="save-btn">Save</button>
+          <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function fullNameValidateChecking() {
+      const value = document.getElementById('fullName').value.trim();
+      const pattern = /^[A-Za-z\s]+$/;
+      const error = document.getElementById('error1');
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "Please enter a valid name.";
+      } else if (!pattern.test(value)) {
+        error.style.display = "block";
+        error.innerHTML = "Full Name must contain only letters and spaces.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function phoneValidateChecking(inputId, errorId) {
+      const value = document.getElementById(inputId).value.trim();
+      const error = document.getElementById(errorId);
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "Phone Number cannot be empty.";
+      } else if (value.length !== 10 || isNaN(value)) {
+        error.style.display = "block";
+        error.innerHTML = "Phone Number must be exactly 10 digits.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function streetValidateChecking() {
+      const value = document.getElementById('street').value.trim();
+      const error = document.getElementById('error4');
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "Street Address cannot be empty.";
+      } else if (value.length < 5) {
+        error.style.display = "block";
+        error.innerHTML = "Street Address must be at least 5 characters long.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function cityValidateChecking() {
+      const value = document.getElementById('city').value.trim();
+      const pattern = /^[A-Za-z\s]+$/;
+      const error = document.getElementById('error5');
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "City cannot be empty.";
+      } else if (!pattern.test(value)) {
+        error.style.display = "block";
+        error.innerHTML = "City must contain only letters and spaces.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function stateValidateChecking() {
+      const value = document.getElementById('state').value.trim();
+      const pattern = /^[A-Za-z]+$/;
+      const error = document.getElementById('error6');
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "State cannot be empty.";
+      } else if (!pattern.test(value)) {
+        error.style.display = "block";
+        error.innerHTML = "State must contain only letters.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function pinValidateChecking() {
+      const value = document.getElementById('pin').value.trim();
+      const pattern = /^\d{5,6}$/;
+      const error = document.getElementById('error7');
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "PIN Code cannot be empty.";
+      } else if (!pattern.test(value)) {
+        error.style.display = "block";
+        error.innerHTML = "PIN Code must be 5-6 digits.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function countryValidateChecking() {
+      const value = document.getElementById('country').value.trim();
+      const pattern = /^[A-Za-z\s]+$/;
+      const error = document.getElementById('error8');
+      if (value === "") {
+        error.style.display = "block";
+        error.innerHTML = "Country cannot be empty.";
+      } else if (!pattern.test(value)) {
+        error.style.display = "block";
+        error.innerHTML = "Country must contain only letters and spaces.";
+      } else {
+        error.style.display = "none";
+        error.innerHTML = "";
+      }
+      return error.style.display === "none";
+    }
+
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = 'Add Address';
+      document.getElementById('addressForm').reset();
+      document.getElementById('addressId').value = '';
+      document.getElementById('addressModal').style.display = 'flex';
+      document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
+    }
+
+    function openEditModal(id, fullName, phone, altPhone, street, city, state, pin, country) {
+      document.getElementById('modalTitle').textContent = 'Edit Address';
+      document.getElementById('addressId').value = id;
+      document.getElementById('fullName').value = fullName;
+      document.getElementById('phone').value = phone;
+      document.getElementById('altPhone').value = altPhone;
+      document.getElementById('street').value = street;
+      document.getElementById('city').value = city;
+      document.getElementById('state').value = state;
+      document.getElementById('pin').value = pin;
+      document.getElementById('country').value = country;
+      document.getElementById('addressModal').style.display = 'flex';
+      document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
+    }
+
+    function closeModal() {
+      document.getElementById('addressModal').style.display = 'none';
+      document.getElementById('addressForm').reset();
+      document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
+    }
+
+    document.getElementById('fullName').addEventListener('input', fullNameValidateChecking);
+    document.getElementById('phone').addEventListener('input', () => phoneValidateChecking('phone', 'error2'));
+    document.getElementById('altPhone').addEventListener('input', () => phoneValidateChecking('altPhone', 'error3'));
+    document.getElementById('street').addEventListener('input', streetValidateChecking);
+    document.getElementById('city').addEventListener('input', cityValidateChecking);
+    document.getElementById('state').addEventListener('input', stateValidateChecking);
+    document.getElementById('pin').addEventListener('input', pinValidateChecking);
+    document.getElementById('country').addEventListener('input', countryValidateChecking);
+
+    document.getElementById('addressForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const isFullNameValid = fullNameValidateChecking();
+      const isPhoneValid = phoneValidateChecking('phone', 'error2');
+      const isAltPhoneValid = phoneValidateChecking('altPhone', 'error3');
+      const isStreetValid = streetValidateChecking();
+      const isCityValid = cityValidateChecking();
+      const isStateValid = stateValidateChecking();
+      const isPinValid = pinValidateChecking();
+      const isCountryValid = countryValidateChecking();
+
+      if (!isFullNameValid || !isPhoneValid || !isAltPhoneValid || !isStreetValid || !isCityValid || !isStateValid || !isPinValid || !isCountryValid) {
+        const firstError = document.querySelector('.error-message[style="display: block"]');
+        if (firstError) {
+          firstError.parentElement.querySelector('input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      const url = data.addressId ? '/edit-address' : '/add-address';
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+
+        if (result.error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.error,
+            confirmButtonColor: '#05445E',
+          });
+        } else {
+          const addressList = document.getElementById('address-list');
+          addressList.innerHTML = result.addresses.map((address, index) => `
+            <div class="address-option">
+              <input
+                type="radio"
+                name="address"
+                id="address${address._id}"
+                value="${address._id}"
+                ${index === 0 ? 'checked' : ''}
+              >
+              <label for="address${address._id}">
+                ${address.name}<br>
+                <span>${address.landMark}, ${address.city}, ${address.state}, ${address.pincode}</span>
+              </label>
+              <a class="edit-link" onclick="openEditModal('${address._id}', '${address.name}', '${address.phone}', '${address.altPhone}', '${address.landMark}', '${address.city}', '${address.state}', '${address.pincode}', '${address.country}')">Edit</a>
+            </div>
+          `).join('');
+          closeModal();
+          Swal.fire({
+            icon: 'success',
+            title: data.addressId ? 'Address Updated' : 'Address Added',
+            text: `Your address has been successfully ${data.addressId ? 'updated' : 'added'}!`,
+            confirmButtonColor: '#05445E',
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          confirmButtonColor: '#05445E',
+        });
+      }
+    });
+
+    async function proceedToPayment() {
+      const selectedAddress = document.querySelector('input[name="address"]:checked');
+      const selectedPayment = document.querySelector('input[name="payment_option"]:checked');
+
+      if (!selectedAddress) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Address Selected',
+          text: 'Please select an address to proceed.',
+          confirmButtonColor: '#05445E',
+        });
+        return;
+      }
+      if (!selectedPayment) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Payment Method Selected',
+          text: 'Please select a payment method to proceed.',
+          confirmButtonColor: '#05445E',
+        });
+        return;
+      }
+
+      const data = {
+        addressId: selectedAddress.value,
+        paymentMethod: selectedPayment.value,
+      };
+      console.log("Sending data to /checkout:", data);
+
+      try {
+        const response = await fetch('/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        console.log("Server response:", result);
+
+        if (result.error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.error,
+            confirmButtonColor: '#05445E',
+          });
+        } else {
+          window.location.href = result.redirect;
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          confirmButtonColor: '#05445E',
+        });
+      }
+    }
+  </script>
+</body>
+
+<%- include("../partials/user/footer") %>

@@ -64,6 +64,28 @@
   .checkout-btn:hover {
     background-color: #03384d;
   }
+  .empty-cart-container {
+    text-align: center;
+    padding: 40px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+  .empty-cart-container p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .shop-btn {
+    padding: 10px 20px;
+    background-color: #05445E;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  .shop-btn:hover {
+    background-color: #03384d;
+  }
 </style>
 
 <div class="cart-container">
@@ -109,7 +131,10 @@
       <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
     </div>
   <% } else { %>
-    <p>Your cart is empty.</p>
+    <div class="empty-cart-container">
+      <p>Your cart is empty.</p>
+      <a href="/shop" class="shop-btn">Go to Shop</a>
+    </div>
   <% } %>
 </div>
 

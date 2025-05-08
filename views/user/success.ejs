@@ -1,0 +1,371 @@
+<%- include("../partials/user/header") %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+  }
+  body {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+  .main-section {
+    padding: 30px;
+    min-height: calc(100vh - 150px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .order-container {
+    max-width: 800px;
+    width: 100%;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+  }
+  .order-container h1 {
+    font-size: 2rem;
+    font-weight: 500;
+    color: #05445E;
+    margin-bottom: 20px;
+  }
+  .order-container .success-icon {
+    font-size: 3rem;
+    color: #28a745;
+    margin-bottom: 20px;
+  }
+  .order-container p {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  .order-details {
+    text-align: left;
+    margin-bottom: 30px;
+  }
+  .order-details h3 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #05445E;
+    margin-bottom: 15px;
+  }
+  .order-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  .order-item.total {
+    font-weight: 500;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+  }
+  .button-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #05445E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    min-width: 160px;
+    justify-content: center;
+  }
+  .action-btn i {
+    margin-right: 5px;
+  }
+  .action-btn:hover {
+    background-color: #043b52;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    text-align: center;
+  }
+  .modal-content h2 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #05445E;
+    margin-bottom: 15px;
+  }
+  .modal-content p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  .modal-content .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.3s;
+  }
+  .modal-content .close:hover {
+    color: #05445E;
+  }
+  .modal-content .button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .modal-content button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    min-width: 120px;
+  }
+  .modal-content .download-btn {
+    background-color: #05445E;
+    color: #fff;
+  }
+  .modal-content .download-btn:hover {
+    background-color: #043b52;
+  }
+  .modal-content .cancel-btn {
+    background-color: #6c757d;
+    color: #fff;
+  }
+  .modal-content .cancel-btn:hover {
+    background-color: #5a6268;
+  }
+  @media (max-width: 768px) {
+    .order-container {
+      padding: 20px;
+    }
+    .order-container h1 {
+      font-size: 1.8rem;
+    }
+    .success-icon {
+      font-size: 2.5rem;
+    }
+    .button-container {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .action-btn {
+      width: 100%;
+    }
+    .modal-content {
+      width: 90%;
+      max-width: 350px;
+      padding: 15px;
+    }
+    .modal-content .button-group {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .modal-content button {
+      width: 100%;
+    }
+  }
+</style>
+
+<body>
+  <section class="main-section">
+    <div class="order-container">
+      <i class="fa-solid fa-check-circle success-icon"></i>
+      <h1>Order Successful!</h1>
+      <p>Thank you for your order. Your order has been placed successfully.</p>
+      
+      <div class="order-details">
+        <h3>Order Details</h3>
+        <div class="order-item">
+          <span>Order ID</span>
+          <span><%= order.orderId %></span>
+        </div>
+        <div class="order-item">
+          <span>Order Date</span>
+          <span><%= order.createdOn.toLocaleDateString('en-GB') %></span>
+        </div>
+        <div class="order-item">
+          <span>Status</span>
+          <span><%= order.status %></span>
+        </div>
+        <div class="order-item">
+          <span>Payment Method</span>
+          <span><%= order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod %></span>
+        </div>
+        <h3>Items Purchased</h3>
+        <% order.orderedItems.forEach(item => { %>
+          <div class="order-item">
+            <span><%= item.product.productName %> (Qty: <%= item.quantity %>)</span>
+            <span>₹<%= item.price * item.quantity %></span>
+          </div>
+        <% }) %>
+        <div class="order-item total">
+          <span>Total</span>
+          <span>₹<%= order.finalAmount %></span>
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button class="action-btn" onclick="openInvoiceModal()">
+          <i class="fa-solid fa-file-pdf"></i> Download Invoice
+        </button>
+        <a href="/order/details/<%= order.orderId %>" class="action-btn">
+          <i class="fa-solid fa-list"></i> Order Details
+        </a>
+        <a href="/shop" class="action-btn">
+          <i class="fa-solid fa-shopping-cart"></i> Continue Shopping
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div id="invoiceModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeInvoiceModal()">×</span>
+      <h2>Download Invoice</h2>
+      <p>Are you sure you want to download the invoice for Order ID: <%= order.orderId %>?</p>
+      <div class="button-group">
+        <button class="download-btn" onclick="downloadInvoice()">Download Invoice</button>
+        <button class="cancel-btn" onclick="closeInvoiceModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openInvoiceModal() {
+      document.getElementById('invoiceModal').style.display = 'flex';
+    }
+
+    function closeInvoiceModal() {
+      document.getElementById('invoiceModal').style.display = 'none';
+    }
+
+    function downloadInvoice() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const primaryColor = '#05445E';
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(12);
+
+      doc.setFillColor(primaryColor);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont("Helvetica", "bold");
+      doc.text("INVOICE", 20, 25);
+      doc.setFontSize(10);
+      doc.setFont("Helvetica", "normal");
+      doc.text("HOURLY", 150, 15);
+      doc.text("hourly@example.com", 150, 20);
+      doc.text("Phone: +91 123-456-7890", 150, 25);
+      doc.text("GSTIN: 12ABCDE3456F7ZH", 150, 30);
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont("Helvetica", "bold");
+      doc.text("Bill To:", 20, 50);
+      doc.setFontSize(10);
+      doc.setFont("Helvetica", "normal");
+      doc.text(`Name: ${"<%= order.address.name %>"}`, 20, 60);
+      doc.text(`Address: ${"<%= order.address.landMark %>"}, ${"<%= order.address.city %>"}, ${"<%= order.address.state %>"}, ${"<%= order.address.country %>"}`, 20, 70);
+      doc.text(`PIN: ${"<%= order.address.pincode %>"}`, 20, 80);
+      doc.text(`Phone: ${"<%= order.address.phone %>"}`, 20, 90);
+      doc.text(`Alt Phone: ${"<%= order.address.altPhone %>"}`, 20, 100);
+
+      doc.setFontSize(14);
+      doc.setFont("Helvetica", "bold");
+      doc.text("Order Details", 20, 120);
+      doc.setFontSize(10);
+      doc.setFont("Helvetica", "normal");
+      doc.text(`Order ID: <%= order.orderId %>`, 20, 130);
+      doc.text(`Order Date: <%= order.createdOn.toLocaleDateString('en-GB') %>`, 20, 140);
+      doc.text(`Payment Method: <%= order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod %>`, 20, 150);
+
+      const tableStartY = 165;
+      const columnWidths = { item: 80, qty: 20, price: 30, total: 30 };
+      const columnPositions = { item: 20, qty: 100, price: 120, total: 150 };
+
+      doc.setFillColor(primaryColor);
+      doc.rect(20, tableStartY - 5, 170, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont("Helvetica", "bold");
+      doc.text("Item", columnPositions.item + 2, tableStartY);
+      doc.text("Qty", columnPositions.qty + 2, tableStartY);
+      doc.text("Price", columnPositions.price + 2, tableStartY);
+      doc.text("Total", columnPositions.total + 2, tableStartY);
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("Helvetica", "normal");
+      let yPos = tableStartY + 10;
+      <% order.orderedItems.forEach((item, index) => { %>
+        doc.rect(20, yPos - 5, 170, 8);
+        doc.text("<%= item.product.productName %>", columnPositions.item + 2, yPos);
+        doc.text("<%= item.quantity %>", columnPositions.qty + 2, yPos);
+        doc.text("₹<%= item.price %>", columnPositions.price + 2, yPos);
+        doc.text("₹<%= item.price * item.quantity %>", columnPositions.total + 2, yPos);
+        yPos += 10;
+      <% }) %>
+
+      doc.setFont("Helvetica", "bold");
+      doc.rect(20, yPos - 5, 170, 8);
+      doc.text("Grand Total", columnPositions.price + 2, yPos);
+      doc.text("₹<%= order.finalAmount %>", columnPositions.total + 2, yPos);
+
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setFontSize(10);
+      doc.setFont("Helvetica", "italic");
+      doc.setTextColor(100, 100, 100);
+      doc.text("Thank you for your purchase!", 105, pageHeight - 20, { align: "center" });
+
+      try {
+        doc.save(`invoice_<%= order.orderId %>.pdf`);
+        closeInvoiceModal();
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        alert("Failed to download invoice. Please try again.");
+      }
+    }
+  </script>
+</body>
+
+<%- include("../partials/user/footer") %>
