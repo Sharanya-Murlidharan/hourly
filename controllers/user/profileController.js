@@ -5,6 +5,28 @@ const bcrypt = require('bcrypt')
 const env = require('dotenv').config()
 const session = require('express-session')
 
+
+// Function to generate a random 8-character referral code
+const generateReferralCode = async () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let referralCode = '';
+    for (let i = 0; i < 8; i++) {
+        referralCode += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    // Check for uniqueness
+    let existingUser = await User.findOne({ referralCode });
+    while (existingUser) {
+        referralCode = '';
+        for (let i = 0; i < 8; i++) {
+            referralCode += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        existingUser = await User.findOne({ referralCode });
+    }
+
+    return referralCode;
+};
+
 function generateOtp() {
     const digits = '1234567890'
     let otp = ''
@@ -180,6 +202,14 @@ const userProfile = async (req,res)=>{
     try {
         const userId = req.session.user
         const userData = await User.findById(userId)
+
+         // Check if user has a referral code; if not, generate one
+        if (!userData.referralCode) {
+            const newReferralCode = await generateReferralCode();
+            userData.referralCode = newReferralCode;
+            await userData.save();
+        }
+
         const addressData = await Address.findOne({userId : userId})
         res.render('profile',{
             user:userData,
@@ -387,6 +417,7 @@ const editProfile = async(req,res)=>{
 
 const updateProfile = async (req, res) => {
     try {
+        console.log(req.file,'file')
         const userId = req.session.user;
         if (!userId) {
             return res.render('login', {
@@ -441,7 +472,15 @@ const updateProfile = async (req, res) => {
                 message: 'User not found.'
             });
         }
-
+         const user = await User.findOne({_id:userId})
+         if(!user){
+            res.render('profile', {
+                user: updatedUser,
+                message: "User Not Found"
+            });
+         }
+         user.ProfilePicture = req.file.path
+         await user.save()
         // Render profile page with success message
         res.render('profile', {
             user: updatedUser,

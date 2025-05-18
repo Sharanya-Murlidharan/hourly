@@ -54,14 +54,19 @@
   .cart-summary h3 {
     margin-bottom: 10px;
   }
-  .checkout-btn {
+  .cart-summary .button-container {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .checkout-btn, .shop-btn {
     padding: 10px 20px;
     background-color: #05445E;
     color: white;
     text-decoration: none;
     border-radius: 5px;
   }
-  .checkout-btn:hover {
+  .checkout-btn:hover, .shop-btn:hover {
     background-color: #03384d;
   }
   .empty-cart-container {
@@ -76,16 +81,9 @@
     color: #333;
     margin-bottom: 20px;
   }
-  .shop-btn {
-    padding: 10px 20px;
-    background-color: #05445E;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-  }
-  .shop-btn:hover {
-    background-color: #03384d;
-  }
+  .original-price { text-decoration: line-through; color: #666; }
+.discounted-price { color: #d32f2f; }
+.offer-badge { background: #d32f2f; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; }
 </style>
 
 <div class="cart-container">
@@ -109,7 +107,15 @@
                 <img src="/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
                 <%= item.productId.productName %>
               </td>
-              <td>₹<%= item.price.toLocaleString('en-IN') %></td>
+             <td>
+  <% if (item.offer && item.offer.discount > 0) { %>
+    <span style="text-decoration: line-through; color: #666;">₹<%= item.price.toLocaleString('en-IN') %></span>
+    <span style="color: #28a745;">₹<%= item.discountedPrice.toLocaleString('en-IN') %></span>
+    <span style="background: #28a745; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem;"><%= item.offer.discount %>% OFF</span>
+  <% } else { %>
+    ₹<%= item.price.toLocaleString('en-IN') %>
+  <% } %>
+</td>
               <td>
                 <div class="quantity-control">
                   <button onclick="changeQuantity('<%= item.productId._id %>', -1)">-</button>
@@ -117,7 +123,14 @@
                   <button onclick="changeQuantity('<%= item.productId._id %>', 1)">+</button>
                 </div>
               </td>
-              <td id="total-<%= item.productId._id %>">₹<%= item.totalPrice.toLocaleString('en-IN') %></td>
+             <td id="total-<%= item.productId._id %>">
+  <% if (item.offer && item.offer.discount > 0) { %>
+    <span style="text-decoration: line-through; color: #666;">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></span>
+    <span style="color: #28a745;">₹<%= (item.discountedPrice * item.quantity).toLocaleString('en-IN') %></span>
+  <% } else { %>
+    ₹<%= item.totalPrice.toLocaleString('en-IN') %>
+  <% } %>
+</td>
               <td>
                 <span class="delete-btn" onclick="confirmDeleteProduct('<%= item.productId._id %>')">Remove</span>
               </td>
@@ -128,7 +141,10 @@
     </table>
     <div class="cart-summary">
       <h3 id="grand-total">Total: ₹<%= grandTotal.toLocaleString('en-IN') %></h3>
-      <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+      <div class="button-container">
+        <a href="/shop" class="shop-btn">Go to Shop</a>
+        <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+      </div>
     </div>
   <% } else { %>
     <div class="empty-cart-container">

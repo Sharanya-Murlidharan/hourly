@@ -114,7 +114,7 @@ const editCategory = async (req, res) => {
 const deleteCategory = async (req, res) => {
     const { categoryId } = req.body;
     try {
-      await Category.findByIdAndDelete(
+      await Category.findByIdAndUpdate(
         categoryId,
         { isDeleted: true }, // Set isDeleted to true
         { new: true }

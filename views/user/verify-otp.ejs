@@ -227,7 +227,7 @@
         const otpInput = document.getElementById('otp').value
         $.ajax({
             type:'POST',
-            url:'/verify-passForgot-otp',
+            url:'/verify-otp',
             data:{otp:otpInput},
             success:function(response){
                 if (response.success) {

@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary-color: #FFAA8A;
+            --primary-dark: #FF8C61;
+            --primary-light: #FFD4C5;
+            --secondary-color: #2D3047;
+            --text-dark: #2D3047;
+            --text-light: #6B7280;
+            --background-light: #FFF5F2;
+            --white: #FFFFFF;
+            --active-item-bg: #EEEEFF;
+            --toggle-color: #3D639E;
+            --border-color: #E5E7EB;
+            --card-bg: #FFFFFF;
+            --pending-color: #F59E0B;
+            --success-color: #10B981;
+            --pdf-color: #EF4444;
+            --excel-color: #10B981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(45, 48, 71, 0.08);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .date-filter {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filter-dropdown {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .filter-dropdown select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--white);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-dark);
+            appearance: none;
+            transition: all 0.3s ease;
+        }
+
+        .filter-dropdown select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .filter-dropdown::after {
+            content: '\f078';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .date-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .date-input {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .date-input input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-dark);
+            background-color: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .date-input input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .date-input .calendar-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .filter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            color: var(--white);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(45, 48, 71, 0.1);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #5B6473;
+        }
+
+        .btn-pdf {
+            background-color: var(--pdf-color);
+        }
+
+        .btn-pdf:hover {
+            background-color: #DC2626;
+        }
+
+        .btn-excel {
+            background-color: var(--excel-color);
+        }
+
+        .btn-excel:hover {
+            background-color: #059669;
+        }
+
+        .sales-summary {
+            padding: 20px;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+            box-shadow: 0 4px 8px rgba(45, 48, 71, 0.1);
+        }
+
+        .summary-card.highlight {
+            border-color: var(--primary-color);
+            background-color: var(--primary-light);
+        }
+
+        .summary-card-title {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .summary-card-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .data-table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .data-table th {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            text-align: left;
+            padding: 12px 15px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--active-item-bg);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-Pending {
+            background-color: #FEF3C7;
+            color: var(--pending-color);
+        }
+
+        .status-Processing {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .status-Shipped {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-Delivered {
+            background-color: #D1FAE5;
+            color: var(--success-color);
+        }
+
+        .status-Canceled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-ReturnRequest {
+            background-color: #FEF3C7;
+            color: var(--pending-color);
+        }
+
+        .status-Returned {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination a.active {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .pagination a:hover {
+            background-color: var(--primary-light);
+        }
+
+        @media (max-width: 992px) {
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .admin-header {
+                left: 0 !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .filter-actions {
+                justify-content: center;
+            }
+
+            .btn {
+                flex: 1;
+                max-width: 120px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .date-input {
+                min-width: 100%;
+            }
+
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .btn {
+                width: calc(50% - 5px);
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include("../../views/partials/admin/header") %>
+    <div class="main-content">
+        <div class="dashboard-container">
+            <!-- Date Range Filter Section -->
+            <div class="date-filter">
+                <div class="filter-dropdown">
+                    <select id="dateRangeSelect">
+                        <option value="">Select Range</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="last7days">Last 7 Days</option>
+                        <option value="last30days">Last 30 Days</option>
+                        <option value="thisMonth">This Month</option>
+                        <option value="lastMonth">Last Month</option>
+                        <option value="thisYear">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="date-inputs">
+                    <div class="date-input">
+                        <input type="text" id="startDate" placeholder="dd-mm-yyyy" value="<%= startDate %>" readonly>
+                        <i class="fas fa-calendar calendar-icon"></i>
+                    </div>
+                    <div class="date-input">
+                        <input type="text" id="endDate" placeholder="dd-mm-yyyy" value="<%= endDate %>" readonly>
+                        <i class="fas fa-calendar calendar-icon"></i>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary" id="applyFilter">Apply</button>
+                    <button class="btn btn-secondary" id="clearFilter">Clear</button>
+                    <button class="btn btn-pdf" id="exportPDF"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="btn btn-excel" id="exportExcel"><i class="fas fa-file-excel"></i> Excel</button>
+                </div>
+            </div>
+
+            <!-- Sales Summary Section -->
+            <div class="sales-summary">
+                <h2 class="summary-title">Sales Summary</h2>
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-card-title">Gross Sales</div>
+                        <div class="summary-card-value" id="grossSales">₹ <%= grossSales.toLocaleString('en-IN') %></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-title">Cancelled Or Refunded</div>
+                        <div class="summary-card-value" id="cancelledOrRefunded">₹ <%= cancelledOrRefunded.toLocaleString('en-IN') %></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-title">Coupons Redeemed</div>
+                        <div class="summary-card-value" id="couponsRedeemed">₹ <%= couponsRedeemed.toLocaleString('en-IN') %></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-title">Discounts</div>
+                        <div class="summary-card-value" id="discounts">₹ <%= discounts.toLocaleString('en-IN') %></div>
+                    </div>
+                    <div class="summary-card highlight">
+                        <div class="summary-card-title">Net Sales</div>
+                        <div class="summary-card-value" id="netSales">₹ <%= netSales.toLocaleString('en-IN') %></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-card-title">Total Orders</div>
+                        <div class="summary-card-value" id="totalOrders"><%= totalOrders %></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ORDER ID</th>
+                            <th>AMOUNT</th>
+                            <th>DISCOUNT</th>
+                            <th>COUPON</th>
+                            <th>FINAL AMOUNT</th>
+                            <th>RETURN/CANCELLED</th>
+                            <th>PAYMENT</th>
+                            <th>DATE</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td><%= order.orderId %></td>
+                                <td>₹ <%= order.amount.toLocaleString('en-IN') %></td>
+                                <td>₹ <%= order.discount.toLocaleString('en-IN') %></td>
+                                <td>₹ <%= order.coupon.toLocaleString('en-IN') %></td>
+                                <td>₹ <%= order.finalAmount.toLocaleString('en-IN') %></td>
+                                <td>₹ <%= order.returnOrCancelled.toLocaleString('en-IN') %></td>
+                                <td><%= order.paymentMethod %></td>
+                                <td><%= order.date %></td>
+                                <td><span class="status status-<%= order.status.replace(' ', '') %>"><%= order.status %></span></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+                <div class="pagination">
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <a href="/admin/sales?startDate=<%= startDate %>&endDate=<%= endDate %>&page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Flatpickr
+            flatpickr('#startDate', {
+                dateFormat: 'd-m-Y',
+                maxDate: 'today',
+                onChange: function(selectedDates, dateStr) {
+                    endDatePicker.set('minDate', dateStr);
+                }
+            });
+
+            const endDatePicker = flatpickr('#endDate', {
+                dateFormat: 'd-m-Y',
+                maxDate: 'today'
+            });
+
+            const dateRangeSelect = document.getElementById('dateRangeSelect');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const applyFilterBtn = document.getElementById('applyFilter');
+            const clearFilterBtn = document.getElementById('clearFilter');
+            const exportPDFBtn = document.getElementById('exportPDF');
+            const exportExcelBtn = document.getElementById('exportExcel');
+
+            // Format number as currency
+            function formatCurrency(value) {
+                return `₹ ${Number(value).toLocaleString('en-IN')}`;
+            }
+
+            // Update summary cards
+            function updateSummary(summary) {
+                document.getElementById('grossSales').textContent = formatCurrency(summary.grossSales);
+                document.getElementById('cancelledOrRefunded').textContent = formatCurrency(summary.cancelledOrRefunded);
+                document.getElementById('couponsRedeemed').textContent = formatCurrency(summary.couponsRedeemed);
+                document.getElementById('discounts').textContent = formatCurrency(summary.discounts);
+                document.getElementById('netSales').textContent = formatCurrency(summary.netSales);
+                document.getElementById('totalOrders').textContent = summary.totalOrders;
+            }
+
+            // Update table
+            function updateTable(orders) {
+                const tbody = document.getElementById('salesTableBody');
+                tbody.innerHTML = '';
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${order.orderId}</td>
+                        <td>${formatCurrency(order.amount)}</td>
+                        <td>${formatCurrency(order.discount)}</td>
+                        <td>${formatCurrency(order.coupon)}</td>
+                        <td>${formatCurrency(order.finalAmount)}</td>
+                        <td>${formatCurrency(order.returnOrCancelled)}</td>
+                        <td>${order.paymentMethod}</td>
+                        <td>${order.date}</td>
+                        <td><span class="status status-${order.status.replace(' ', '')}">${order.status}</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Fetch sales data using Fetch API
+            async function fetchSalesData() {
+                const range = dateRangeSelect.value;
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (range === 'custom' && (!startDate || !endDate)) {
+                    Swal.fire('Error', 'Please select a date range', 'error');
+                    return;
+                }
+
+                applyFilterBtn.textContent = 'Loading...';
+                applyFilterBtn.disabled = true;
+
+                try {
+                    const params = new URLSearchParams({ range, startDate, endDate });
+                    const response = await fetch(`/admin/sales/data?${params}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateSummary(data.summary);
+                        updateTable(data.orders);
+                        Swal.fire('Success', 'Sales data loaded', 'success');
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error fetching sales data:', error);
+                    Swal.fire('Error', 'Failed to fetch sales data', 'error');
+                } finally {
+                    applyFilterBtn.textContent = 'Apply';
+                    applyFilterBtn.disabled = false;
+                }
+            }
+
+            // Set date range based on selection
+            dateRangeSelect.addEventListener('change', function() {
+                const today = new Date();
+                let startDate = new Date();
+                let endDate = new Date();
+
+                switch (this.value) {
+                    case 'today':
+                        break;
+                    case 'yesterday':
+                        startDate.setDate(today.getDate() - 1);
+                        endDate.setDate(today.getDate() - 1);
+                        break;
+                    case 'last7days':
+                        startDate.setDate(today.getDate() - 6);
+                        break;
+                    case 'last30days':
+                        startDate.setDate(today.getDate() - 29);
+                        break;
+                    case 'thisMonth':
+                        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        break;
+                    case 'lastMonth':
+                        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                        break;
+                    case 'thisYear':
+                        startDate = new Date(today.getFullYear(), 0, 1);
+                        endDate = new Date(today.getFullYear(), 11, 31);
+                        break;
+                    case 'custom':
+                        startDateInput.value = '';
+                        endDateInput.value = '';
+                        return;
+                    default:
+                        startDateInput.value = '';
+                        endDateInput.value = '';
+                        return;
+                }
+
+                startDateInput.value = flatpickr.formatDate(startDate, 'd-m-Y');
+                endDateInput.value = flatpickr.formatDate(endDate, 'd-m-Y');
+            });
+
+            // Apply filter
+            applyFilterBtn.addEventListener('click', fetchSalesData);
+
+            // Clear filter
+            clearFilterBtn.addEventListener('click', function() {
+                dateRangeSelect.value = '';
+                startDateInput.value = '';
+                endDateInput.value = '';
+                updateSummary({
+                    grossSales: 0,
+                    cancelledOrRefunded: 0,
+                    couponsRedeemed: 0,
+                    discounts: 0,
+                    netSales: 0,
+                    totalOrders: 0
+                });
+                updateTable([]);
+            });
+
+            // Export PDF
+            exportPDFBtn.addEventListener('click', function() {
+                const range = dateRangeSelect.value;
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (range === 'custom' && (!startDate || !endDate)) {
+                    Swal.fire('Error', 'Please select a date range', 'error');
+                    return;
+                }
+
+                window.location.href = `/admin/sales/report/pdf?range=${range}&startDate=${startDate}&endDate=${endDate}`;
+            });
+
+            // Export Excel
+            exportExcelBtn.addEventListener('click', function() {
+                const range = dateRangeSelect.value;
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (range === 'custom' && (!startDate || !endDate)) {
+                    Swal.fire('Error', 'Please select a date range', 'error');
+                    return;
+                }
+
+                window.location.href = `/admin/sales/report/excel?range=${range}&startDate=${startDate}&endDate=${endDate}`;
+            });
+        });
+    </script>
+</body>
+</html>

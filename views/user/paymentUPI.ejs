@@ -1,0 +1,620 @@
+<%- include("../partials/user/header") %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialogue Digital - Payment - UPI QR</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        :root {
+            --primary-color: #05445E;
+            --light-primary-color: rgba(5, 68, 94, 0.1);
+            --text-color: #333;
+            --light-text: #666;
+            --white: #fff;
+            --border-color: #ddd;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+        }
+
+        .announcement-bar {
+            background-color: #000;
+            color: var(--white);
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .ribbon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 150px;
+            overflow: hidden;
+        }
+
+        .ribbon-text {
+            position: absolute;
+            display: block;
+            width: 225px;
+            padding: 15px 0;
+            background-color: #f44336;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            color: white;
+            font-size: 17px;
+            text-transform: uppercase;
+            text-align: center;
+            transform: rotate(45deg);
+            right: -25px;
+            top: 30px;
+            font-weight: bold;
+        }
+
+        .payment-card {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .payment-container {
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-sidebar {
+            width: 40%;
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 30px;
+            position: relative;
+        }
+
+        .merchant-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .merchant-logo {
+            width: 40px;
+            height: 40px;
+            background-color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .price-summary {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .price-amount {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .user-icon {
+            font-size: 16px;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: auto;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .payment-sidebar-image {
+            position: absolute;
+            bottom: 60px;
+            right: 30px;
+            opacity: 0.2;
+            width: 150px;
+        }
+
+        .payment-content {
+            width: 60%;
+            background-color: var(--white);
+        }
+
+        .payment-modal {
+            height: 100%;
+            padding: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--light-text);
+        }
+
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .method-group {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .method-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .method-option.active {
+            background-color: var(--light-primary-color);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .method-name {
+            font-weight: 500;
+        }
+
+        .method-icons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .payment-icons span {
+            font-size: 16px;
+        }
+
+        .upi-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            background-color: #f5f5f5;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .qr-instructions {
+            text-align: center;
+            font-size: 14px;
+            color: var(--light-text);
+            margin-bottom: 15px;
+        }
+
+        .app-icons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .app-icon {
+            width: 30px;
+            height: 30px;
+            background-color: #f5f5f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .upi-input-group {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .upi-input-label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: var(--light-text);
+        }
+
+        .upi-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn-verify {
+            width: 100%;
+            padding: 14px;
+            background-color: #151515;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .secure-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+            color: var(--light-text);
+            font-size: 12px;
+        }
+
+        .secure-icon {
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 10px;
+            }
+            
+            .payment-container {
+                flex-direction: column;
+            }
+            
+            .payment-sidebar, .payment-content {
+                width: 100%;
+            }
+
+            .ribbon {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            nav ul {
+                justify-content: center;
+            }
+            
+            .payment-modal {
+                padding: 15px;
+            }
+            
+            .qr-code {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement-bar">
+        3-7 BUSINESS DAYS DELIVERY & FREE RETURNS
+    </div>
+    
+    <div class="container">
+        <h1 class="page-title">Complete Your Payment</h1>
+        
+        <div class="payment-card">
+            <div class="ribbon">
+                <span class="ribbon-text">Final Step</span>
+            </div>
+            
+            <div class="payment-container">
+                <div class="payment-sidebar">
+                    <div class="merchant-info">
+                        <div class="merchant-logo">D</div>
+                        <span>Dialogue Digital</span>
+                    </div>
+                    
+                    <div class="price-summary">
+                        <div class="summary-title">Price Summary</div>
+                        <div class="price-amount">₹<%= totalPrice %></div>
+                    </div>
+                    
+                    <div class="user-info">
+                        <span class="user-icon">👤</span>
+                        <span>Using as <%= locals.user ? user.phone : "+91 88568 09348" %></span>
+                        <span>›</span>
+                    </div>
+                    
+                    <div class="payment-sidebar-image">
+                        <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+                            <rect x="10" y="20" width="30" height="40" rx="2" fill="white" fill-opacity="0.5"/>
+                            <rect x="50" y="20" width="30" height="40" rx="2" fill="white" fill-opacity="0.5"/>
+                            <rect x="30" y="70" width="30" height="20" rx="2" fill="white" fill-opacity="0.5"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="secure-badge">
+                        <span>Secured by</span>
+                        <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/razorpay-6015163_1280.png" alt="Razorpay" style="height: 20px; margin-left: 5px;">
+                    </div>
+                </div>
+                
+                <div class="payment-content">
+                    <div class="payment-modal">
+                        <div class="modal-header">
+                            <div class="modal-title">Payment Options</div>
+                            <button class="close-btn">×</button>
+                        </div>
+                        
+                        <div class="payment-methods">
+                            <div class="method-option active">
+                                <div class="method-name">UPI QR</div>
+                                <div class="method-icons"></div>
+                            </div>
+                            
+                            <div class="upi-content">
+                                <h3>UPI QR</h3>
+                                
+                                <div class="qr-code">
+                                    <img src="<%= qrCodeUrl || 'https://via.placeholder.com/150?text=QR+Code' %>" alt="QR Code">
+                                </div>
+                                
+                                <div class="qr-instructions">
+                                    Scan the QR code using any UPI app to pay
+                                </div>
+                                
+                                <div class="app-icons">
+                                    <div class="app-icon">
+                                        <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/gpay-6015153_1280.png" alt="Google Pay" style="width: 24px; height: 24px;">
+                                    </div>
+                                    <div class="app-icon">
+                                        <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/phonepay-6015154_1280.png" alt="PhonePe" style="width: 24px; height: 24px;">
+                                    </div>
+                                    <div class="app-icon">
+                                        <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/paytm-6015155_1280.png" alt="Paytm" style="width: 24px; height: 24px;">
+                                    </div>
+                                </div>
+                                
+                                <button class="btn-verify" id="verify-payment">Verify Payment</button>
+                            </div>
+                        </div>
+                        
+                        <div class="secure-info">
+                            <span class="secure-icon">🔒</span>
+                            <span>All payments are secure and encrypted</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const verifyBtn = document.querySelector('#verify-payment');
+            const closeBtn = document.querySelector('.close-btn');
+
+            // Generate Razorpay order and QR code
+            async function initiateUPIPayment() {
+                try {
+                    const response = await fetch('/create-razorpay-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: <%= totalPrice %> * 100 })
+                    });
+                    const order = await response.json();
+
+                    if (order.error) {
+                        throw new Error(order.error);
+                    }
+
+                    const options = {
+                        key: '<%= process.env.RAZORPAY_KEY_ID %>',
+                        amount: order.amount,
+                        currency: 'INR',
+                        name: 'Dialogue Digital',
+                        description: 'Payment for your order',
+                        order_id: order.id,
+                        handler: async function(response) {
+                            const verifyResponse = await fetch('/verify-razorpay-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    paymentMethod: 'razorpay'
+                                })
+                            });
+                            const verifyResult = await verifyResponse.json();
+
+                            if (verifyResult.success) {
+                                await placeOrder('razorpay');
+                            } else {
+                                window.location.href = '/payment-failed';
+                            }
+                        },
+                        prefill: {
+                            name: '<%= locals.user ? user.name : "" %>',
+                            email: '<%= locals.user ? user.email : "" %>',
+                            contact: '<%= locals.user ? user.phone : "" %>'
+                        },
+                        theme: {
+                            color: '#05445E'
+                        },
+                        method: {
+                            upi: true
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function(response) {
+                        window.location.href = '/payment-failed';
+                    });
+
+                    // Note: Razorpay does not provide a direct QR code API for UPI.
+                    // For now, we're using a placeholder. In a real scenario, you might use a third-party QR code generator
+                    // or Razorpay's UPI intent flow.
+                    return order;
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to initiate payment. Please try again.',
+                        confirmButtonColor: '#05445E',
+                    });
+                }
+            }
+
+            // Call initiateUPIPayment on page load to generate order
+            await initiateUPIPayment();
+
+            // Verify payment
+            verifyBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/verify-razorpay-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentMethod: 'razorpay' })
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        await placeOrder('razorpay');
+                    } else {
+                        window.location.href = '/payment-failed';
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Payment verification failed. Please try again.',
+                        confirmButtonColor: '#05445E',
+                    });
+                }
+            });
+
+            // Place Order Function
+            async function placeOrder(paymentMethod) {
+                const data = {
+                    paymentMethod: paymentMethod
+                };
+
+                try {
+                    const response = await fetch('/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                    const result = await response.json();
+
+                    if (result.error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.error,
+                            confirmButtonColor: '#05445E',
+                        });
+                    } else {
+                        window.location.href = result.redirect;
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.',
+                        confirmButtonColor: '#05445E',
+                    });
+                }
+            }
+
+            // Close button
+            closeBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to cancel this payment?')) {
+                    window.location.href = '/cart';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+<%- include("../partials/user/footer") %>

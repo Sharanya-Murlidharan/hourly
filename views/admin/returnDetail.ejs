@@ -1,0 +1,395 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .main-content {
+    margin-left: 240px;
+    padding: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 62px;
+  }
+
+  .greeting {
+    font-size: 1.8rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .back-btn {
+    padding: 8px 16px;
+    background-color: #05445E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+  }
+
+  .back-btn:hover {
+    background-color: #043b52;
+  }
+
+  .order-summary,
+  .user-details,
+  .shipping-address,
+  .payment-summary,
+  .return-reason {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .order-id {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .status-returnrequest {
+    color: #ff9800;
+    font-weight: 500;
+  }
+
+  .order-meta p,
+  .user-details p,
+  .shipping-address p,
+  .payment-summary p,
+  .return-reason p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .user-details h3,
+  .shipping-address h3,
+  .payment-summary h3,
+  .product-list h3,
+  .return-reason h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .product-list {
+    margin-bottom: 10px;
+  }
+
+  .product-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 8px;
+  }
+
+  .product-image {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  .product-details {
+    flex: 1;
+  }
+
+  .product-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .product-meta {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .product-subtotal {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .approve-btn {
+    padding: 8px 16px;
+    background-color: #388e3c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .approve-btn:hover {
+    background-color: #2e7d32;
+  }
+
+  .reject-btn {
+    padding: 8px 16px;
+    background-color: #d32f2f;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .reject-btn:hover {
+    background-color: #b02828;
+  }
+
+  @media (max-width: 992px) {
+    .main-content {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      padding: 8px;
+    }
+
+    .greeting,
+    .order-header,
+    .product-item,
+    .action-buttons {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .greeting {
+      font-size: 1.5rem;
+    }
+
+    .back-btn, .approve-btn, .reject-btn {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+    }
+
+    .order-id,
+    .product-name,
+    .product-subtotal {
+      font-size: 0.9rem;
+    }
+
+    .order-meta p,
+    .user-details p,
+    .shipping-address p,
+    .payment-summary p,
+    .return-reason p,
+    .product-meta {
+      font-size: 0.8rem;
+    }
+
+    .user-details h3,
+    .shipping-address h3,
+    .payment-summary h3,
+    .product-list h3,
+    .return-reason h3 {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+<main class="main-content">
+  <div class="greeting">
+    Return Request Details
+    <a href="/admin/return-requests" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Return Requests
+    </a>
+  </div>
+  <% if (order) { %>
+    <div class="order-summary">
+      <div class="order-header">
+        <span class="order-id">Order ID: <%= order.orderId %></span>
+        <span class="status-returnrequest"><%= order.status %></span>
+      </div>
+      <div class="order-meta">
+        <p>Order Date: <%= new Date(order.createdOn).toLocaleDateString('en-GB') %></p>
+      </div>
+    </div>
+    <div class="return-reason">
+      <h3>Return Reason</h3>
+      <p><%= order.returnReason || 'No reason provided.' %></p>
+    </div>
+    <div class="user-details">
+      <h3>User Details</h3>
+      <p><strong>Name:</strong> <%= user.name %></p>
+      <p><strong>Email:</strong> <%= user.email %></p>
+      <p><strong>Phone:</strong> <%= user.phone || 'N/A' %></p>
+    </div>
+    <div class="product-list">
+      <h3>Ordered Items</h3>
+      <div>
+        <% order.orderedItems.forEach(item => { %>
+          <div class="product-item">
+            <div class="product-image">
+              <img src="/<%= item.product.productImage[0] ? item.product.productImage[0] : 'https://via.placeholder.com/60' %>" alt="<%= item.product.productName %>">
+            </div>
+            <div class="product-details">
+              <div class="product-name"><%= item.product.productName %></div>
+              <div class="product-meta">Quantity: <%= item.quantity %></div>
+              <div class="product-meta">Price: ₹<%= item.price.toFixed(2) %></div>
+            </div>
+            <div class="product-subtotal">Subtotal: ₹<%= (item.quantity * item.price).toFixed(2) %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <div class="shipping-address">
+      <h3>Shipping Address</h3>
+      <p><strong><%= order.address.name %></strong></p>
+      <p><%= order.address.landMark %></p>
+      <p><%= order.address.city %>, <%= order.address.state %>, <%= order.address.pincode %>, <%= order.address.country %></p>
+      <p>Phone: <%= order.address.phone %></p>
+    </div>
+    <div class="payment-summary">
+      <h3>Payment Summary</h3>
+      <p><strong>Total Price:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
+      <p><strong>Discount:</strong> ₹<%= order.discount.toFixed(2) %></p>
+      <p><strong>Final Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
+      <p><strong>Payment Method:</strong> <%= order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1) %></p>
+    </div>
+    <div class="action-buttons">
+      <button class="approve-btn" onclick="verifyReturn('<%= order._id %>', 'approve')">Approve Return</button>
+      <button class="reject-btn" onclick="verifyReturn('<%= order._id %>', 'reject')">Reject Return</button>
+    </div>
+  <% } else { %>
+    <p>Order not found.</p>
+  <% } %>
+</main>
+
+<script>
+  function verifyReturn(orderId, action) {
+    if (action === 'approve') {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will approve the return and refund the amount to the user\'s wallet.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#388e3c',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, approve it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/admin/verify-return/${orderId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                Swal.fire({
+                  title: 'Success!',
+                  text: 'Return approved successfully.',
+                  icon: 'success',
+                  timer: 1500
+                }).then(() => {
+                  window.location.href = '/admin/return-requests';
+                });
+              } else {
+                Swal.fire('Error!', data.message, 'error');
+              }
+            })
+            .catch(error => {
+              Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
+            });
+        }
+      });
+    } else {
+      Swal.fire({
+        title: 'Reject Return',
+        text: 'Please provide a reason for rejection:',
+        input: 'text',
+        inputPlaceholder: 'Enter rejection reason',
+        showCancelButton: true,
+        confirmButtonColor: '#d32f2f',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Reject',
+        inputValidator: (value) => {
+          if (!value || value.trim() === '') {
+            return 'Please enter a rejection reason.';
+          }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/admin/verify-return/${orderId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, rejectReason: result.value })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                Swal.fire({
+                  title: 'Success!',
+                  text: 'Return rejected successfully.',
+                  icon: 'success',
+                  timer: 1500
+                }).then(() => {
+                  window.location.href = '/admin/return-requests';
+                });
+              } else {
+                Swal.fire('Error!', data.message, 'error');
+              }
+            })
+            .catch(error => {
+              Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
+            });
+        }
+      });
+    }
+  }
+</script>

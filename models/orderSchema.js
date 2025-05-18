@@ -7,6 +7,11 @@ const orderSchema = new Schema({
     unique: true,
     required: true
   },
+   user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   orderedItems: [{
     product: {
       type: Schema.Types.ObjectId,
@@ -65,6 +70,14 @@ const orderSchema = new Schema({
     type: String,
     required: true,
     enum: ['cod', 'razorpay', 'wallet']
+  },
+  returnReason: {
+    type: String,
+    default: null
+  },
+  razorpayOrderId: {
+    type: String,
+    default: null // Store Razorpay order ID for retries
   }
 });
 

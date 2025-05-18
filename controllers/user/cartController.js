@@ -1,6 +1,7 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Cart = require("../../models/cartSchema");
+const Offer = require("../../models/offerSchema")
 const mongoose = require("mongoose");
 
 const getCartPage = async (req, res) => {
@@ -26,9 +27,69 @@ const getCartPage = async (req, res) => {
 
     if (cart && cart.items) {
       cartItems = cart.items;
+      const currentDate = new Date();
+
+      // Fetch all active offers
+      const offers = await Offer.find({
+        isDeleted: false,
+        isListed: true,
+        validFrom: { $lte: currentDate },
+        validUpto: { $gte: currentDate }
+      }).populate('applicableItem');
+
       for (const item of cartItems) {
         if (item.productId) {
           quantity += item.quantity;
+          // Find applicable offers
+          const productOffers = offers.filter(offer =>
+            offer.applicable === 'Product' && offer.applicableItem._id.toString() === item.productId._id.toString()
+          );
+          const categoryOffers = offers.filter(offer =>
+            offer.applicable === 'Category' && offer.applicableItem._id.toString() === item.productId.category.toString()
+          );
+          const brandOffers = offers.filter(offer =>
+            offer.applicable === 'Brand' && offer.applicableItem._id.toString() === item.productId.brand.toString()
+          );
+
+          const allOffers = [...productOffers, ...categoryOffers, ...brandOffers];
+
+          let highestDiscount = 0;
+          let selectedOffer = null;
+
+          for (const offer of allOffers) {
+            let discount = 0;
+            if (offer.offerType === 'Percentage') {
+              discount = (item.price * offer.offerAmount) / 100;
+            } else if (offer.offerType === 'Fixed') {
+              discount = offer.offerAmount;
+            }
+            if (discount > highestDiscount) {
+              highestDiscount = discount;
+              selectedOffer = {
+                type: offer.offerType,
+                amount: offer.offerAmount,
+                discount: offer.offerType === 'Percentage' ? offer.offerAmount : Math.round((discount / item.price) * 100)
+              };
+            }
+          }
+
+          // Apply productOffer from productSchema if higher
+          if (item.productId.productOffer > 0) {
+            const productOfferDiscount = (item.price * item.productId.productOffer) / 100;
+            if (productOfferDiscount > highestDiscount) {
+              highestDiscount = productOfferDiscount;
+              selectedOffer = {
+                type: 'Percentage',
+                amount: item.productId.productOffer,
+                discount: item.productId.productOffer
+              };
+            }
+          }
+
+          // Calculate discounted price
+          item.discountedPrice = Math.round(item.price - highestDiscount);
+          item.offer = selectedOffer || { discount: 0 };
+          item.totalPrice = item.discountedPrice * item.quantity;
           grandTotal += item.totalPrice;
         }
       }
@@ -87,8 +148,9 @@ const addToCart = async (req, res) => {
     }
 
     // Check if the product is already in the cart
-    const itemIndex = cart.items.findIndex(item => item.productId._id.toString() === productId);
+       const itemIndex = cart.items.findIndex(item => item.productId && item.productId._id.toString() === productId);
     let newQuantity;
+
 
     if (itemIndex > -1) {
       // Product exists in cart, check if we can increase quantity
@@ -135,23 +197,23 @@ const addToCart = async (req, res) => {
     }
 
     // Update product stock
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { $inc: { quantity: -1 } },
-      { new: true }
-    );
+    // const updatedProduct = await Product.findByIdAndUpdate(
+    //   productId,
+    //   { $inc: { quantity: -1 } },
+    //   { new: true }
+    // );
 
-    // Update status if out of stock
-    if (updatedProduct.quantity === 0) {
-      await Product.findByIdAndUpdate(productId, { status: "out of stock" });
-    }
+    // // Update status if out of stock
+    // if (updatedProduct.quantity === 0) {
+    //   await Product.findByIdAndUpdate(productId, { status: "out of stock" });
+    // }
 
     return res.json({
       success: true,
       message: "Product added to cart successfully",
       cartLength,
       user: userId,
-      remainingStock: updatedProduct.quantity
+      // remainingStock: updatedProduct.quantity
     });
   } catch (error) {
     console.error("Error in addToCart:", error.message, error.stack);
@@ -207,8 +269,10 @@ const changeQuantity = async (req, res) => {
       return res.status(400).json({ success: false, message: "Quantity cannot be less than 1" });
     }
 
-    if (newQuantity > product.quantity + cartItem.quantity) {
-      return res.status(400).json({ success: false, message: "Out of stock" });
+    if(count > 0){
+      if (newQuantity > product.quantity) {
+        return res.status(400).json({ success: false, message: "Out of stock" });
+      }
     }
 
     cartItem.quantity = newQuantity;
@@ -216,9 +280,9 @@ const changeQuantity = async (req, res) => {
     await cart.save();
 
     // Update product stock
-    await Product.findByIdAndUpdate(productId, {
-      $inc: { quantity: count === 1 ? -1 : 1 }
-    });
+    // await Product.findByIdAndUpdate(productId, {
+    //   $inc: { quantity: count === 1 ? -1 : 1 }
+    // });
 
     let grandTotal = 0;
     for (const item of cart.items) {
@@ -284,12 +348,12 @@ const deleteProduct = async (req, res) => {
     }
 
     const cartItem = cart.items[itemIndex];
-    const quantityToRestore = cartItem.quantity;
+    // const quantityToRestore = cartItem.quantity;
 
     // Restore the product stock
-    await Product.findByIdAndUpdate(productId, {
-      $inc: { quantity: quantityToRestore }
-    });
+    // await Product.findByIdAndUpdate(productId, {
+    //   $inc: { quantity: quantityToRestore }
+    // });
 
     // Remove the item from the cart's items array
     cart.items.splice(itemIndex, 1);

@@ -1,0 +1,346 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    overflow: auto;
+    height: 100vh;
+  }
+  .content {
+    margin-left: 240px;
+    padding: 20px;
+    height: 100vh;
+    overflow: auto;
+  }
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .header-left {
+    flex: 1;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .content-title {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+  }
+  .search-bar form {
+    display: flex;
+    align-items: center;
+  }
+  .search-bar input {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px 0 0 20px;
+    width: 200px;
+    outline: none;
+  }
+  .search-bar button {
+    padding: 8px 15px;
+    border: none;
+    background-color: #3D639E;
+    color: #fff;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+  }
+  .search-bar button:hover {
+    background-color: #2d4d79;
+  }
+  .clear-search-btn {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+  }
+  .clear-search-btn:hover {
+    background-color: #c82333;
+  }
+  .add-order-btn {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+  }
+  .add-order-btn:hover {
+    background-color: #218838;
+  }
+  .table-container {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background-color: #f8f9fa;
+  }
+  .status-delivered {
+    color: #388e3c;
+    font-weight: 500;
+  }
+  .status-pending {
+    color: #f9a825;
+    font-weight: 500;
+  }
+  .status-canceled {
+    color: #d32f2f;
+    font-weight: 500;
+  }
+  .status-processing,
+  .status-shipped {
+    color: #0288d1;
+    font-weight: 500;
+  }
+  .status-returnrequest,
+  .status-returned {
+    color: #ff9800;
+    font-weight: 500;
+  }
+  .actions a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .actions .view {
+    background-color: #17a2b8;
+  }
+  .actions .view:hover {
+    background-color: #138496;
+  }
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+  }
+  .pagination .page-item {
+    margin: 0 5px;
+  }
+  .pagination .page-link {
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  .pagination .page-link:hover {
+    background-color: #f8f9fa;
+    color: #000;
+  }
+  .pagination .page-item.active .page-link {
+    background-color: #3D639E;
+    color: #fff;
+    border-color: #3D639E;
+  }
+  .pagination .page-item.disabled .page-link {
+    color: #ccc;
+    background-color: #fff;
+    cursor: not-allowed;
+  }
+  @media (max-width: 992px) {
+    .content {
+      margin-left: 0;
+    }
+  }
+  @media (max-width: 768px) {
+    .content {
+      padding: 15px;
+    }
+    .content-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .header-right {
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+    }
+    .search-bar input {
+      width: 100%;
+    }
+    th, td {
+      font-size: 0.8rem;
+      padding: 8px;
+    }
+    th:nth-child(2), td:nth-child(2) {
+      display: none;
+    }
+  }
+  @media (max-width: 480px) {
+    .content-title {
+      font-size: 20px;
+    }
+    th, td {
+      font-size: 0.7rem;
+      padding: 6px;
+    }
+    .actions a {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+    .pagination .page-link {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+  }
+</style>
+
+<script>
+  // Client-side trim for search input
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchForm = document.querySelector('.search-bar form');
+    searchForm.addEventListener('submit', (e) => {
+      const searchInput = searchForm.querySelector('input[name="search"]');
+      searchInput.value = searchInput.value.trim();
+    });
+  });
+</script>
+
+<div class="content">
+  <div class="content-header">
+    <div class="header-left">
+      <h2 class="content-title">Orders Management</h2>
+    </div>
+    <div class="header-right">
+    <div class="search-bar">
+        <form action="/admin/orders" method="GET">
+          <input
+            type="text"
+            name="search"
+            placeholder="Search by Order ID or Username"
+            value="<%= searchQuery || '' %>"
+          />
+          <button type="submit">Search</button>
+          <% if (searchQuery) { %>
+          <button
+            type="button"
+            class="clear-search-btn"
+            onclick="window.location.href='/admin/orders?page=1'"
+          >
+            Clear Search
+          </button>
+          <% } %>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Order Date</th>
+          <th>User Name</th>
+          <th>Total Amount</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (orders && orders.length > 0) { %>
+        <% orders.forEach(order => { %>
+        <tr>
+          <td><%= order.orderId %></td>
+          <td><%= new Date(order.createdOn).toLocaleDateString('en-GB') %></td>
+          <td><%= order.user.name %></td>
+          <td>₹<%= order.finalAmount %></td>
+          <td class="status-<%= order.status.toLowerCase().replace(/\s/g, '') %>">
+            <%= order.status %>
+          </td>
+          <td class="actions">
+            <a
+              href="/admin/orderDetail/<%= order.orderId %>?page=<%= currentPage %>&search=<%= encodeURIComponent(searchQuery || '') %>"
+              class="view"
+              ><i class="fas fa-eye"></i
+            ></a>
+          </td>
+        </tr>
+        <% }) %>
+        <% } else { %>
+        <tr>
+          <td colspan="6">No orders found.</td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      <% if (currentPage > 1) { %>
+      <li class="page-item">
+        <a
+          class="page-link"
+          href="?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+          aria-label="Previous"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </a>
+      </li>
+      <% } %>
+
+      <% for(let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+        <a
+          class="page-link"
+          href="?page=<%= i %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+        >
+          <%= i %>
+        </a>
+      </li>
+      <% } %>
+
+      <% if (currentPage < totalPages) { %>
+      <li class="page-item">
+        <a
+          class="page-link"
+          href="?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+          aria-label="Next"
+        >
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      </li>
+      <% } %>
+    </ul>
+  </nav>
+</div>

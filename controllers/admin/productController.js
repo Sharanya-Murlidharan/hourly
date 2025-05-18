@@ -8,11 +8,18 @@ const sharp = require("sharp");
 // Get Product Listing Page
 const getProductListPage = async (req, res) => {
     try {
-        const products = await Product.find({ isDeleted: false })
+        const categories = await Category.find({ isListed: true });
+        const categoryIds = categories.map((category) => category._id.toString());
+
+        const products = await Product.find({ 
+            isDeleted: false,
+            category: {$in:categoryIds}
+        })
             .populate('category')
             .populate('brand')
             .sort({ createdAt: -1 }) // Sort by createdAt in descending order (latest first)
             .lean();
+
         res.render("products", {
             products: products
         });
@@ -241,6 +248,22 @@ const deleteProduct = async (req, res) => {
     }
   };
 
+  const order = async(req,res)=>{
+    try {
+        res.render("order")
+    } catch (error) {
+        res.redirect("/404-error")
+    }
+  }
+
+  const viewOrder = async(req,res)=>{
+    try {
+        res.render(vieweOrders)
+    } catch (error) {
+        res.redirect("/404-error")
+    }
+  }
+
 module.exports = {
     getProductListPage,
     getProductAddPage,
@@ -249,5 +272,7 @@ module.exports = {
     unlistProduct,
     getProductEditPage,
     editProducts,
-    deleteProduct
+    deleteProduct,
+    order,
+    viewOrder
 };

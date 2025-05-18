@@ -111,6 +111,7 @@
         color: #333;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
     }
 
     .product-card:hover {
@@ -142,27 +143,65 @@
         text-overflow: ellipsis;
     }
 
-    .product-card .price {
+    .price-container {
+        margin: 8px 0;
+    }
+
+    .original-price {
+        font-size: 0.85rem;
+        color: #666;
+        text-decoration: line-through;
+        margin-right: 8px;
+    }
+
+    .discounted-price {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #d32f2f;
+    }
+
+    .price {
         font-size: 0.95rem;
         font-weight: 600;
         color: #000000c4;
     }
 
-    .add-to-cart-btn {
-        width: 100%;
-        margin-top: 8px;
-        padding: 8px;
-        background-color: #05445E;
+    .discount-badge {
+        background-color: #d32f2f;
         color: #fff;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 0.75rem;
+        margin-left: 8px;
+    }
+
+    .button-container {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .add-to-cart-btn,
+    .wishlist-btn {
+        flex: 1;
+        padding: 8px;
         border: none;
         border-radius: 5px;
         font-size: 0.85rem;
         cursor: pointer;
         transition: background-color 0.3s ease;
+        background-color: #05445E;
+        color: #fff;
     }
 
-    .add-to-cart-btn:hover {
+    .add-to-cart-btn:hover,
+    .wishlist-btn:hover {
         background-color: #03384d;
+    }
+
+    .wishlist-btn.active {
+        background-color: #05445E;
+        color: #fff;
     }
 
     .pagination {
@@ -188,7 +227,7 @@
         border: 1px solid #ddd;
         border-radius: 5px;
         font-size: 0.9rem;
-        transition: background-color 0.3s, color 0.3s;
+        transition: background-color 0.3s, color: 0.3s;
     }
 
     .pagination .page-link i {
@@ -270,11 +309,20 @@
             font-size: 0.95rem;
         }
 
-        .product-card .price {
+        .original-price {
+            font-size: 0.8rem;
+        }
+
+        .discounted-price, .price {
             font-size: 0.9rem;
         }
 
-        .add-to-cart-btn {
+        .discount-badge {
+            font-size: 0.65rem;
+        }
+
+        .add-to-cart-btn,
+        .wishlist-btn {
             font-size: 0.8rem;
             padding: 6px;
         }
@@ -298,6 +346,16 @@
         .product-card img {
             height: 140px;
         }
+
+        .button-container {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .add-to-cart-btn,
+        .wishlist-btn {
+            width: 100%;
+        }
     }
 
     .out-of-stock {
@@ -313,6 +371,20 @@
         font-weight: bold;
     }
 </style>
+
+<!-- Debug: Log product data to check discount fields -->
+<script>
+    <% products.forEach(product => { %>
+        console.log('Product <%= product._id %>:', {
+            hasDiscount: <%= JSON.stringify(product.hasDiscount) %>,
+            originalPrice: <%= JSON.stringify(product.originalPrice) %>,
+            discountedPrice: <%= JSON.stringify(product.discountedPrice) %>,
+            discountPercentage: <%= JSON.stringify(product.discountPercentage) %>,
+            salePrice: <%= JSON.stringify(product.salePrice) %>,
+            productOffer: <%= JSON.stringify(product.productOffer) %>
+        });
+    <% }) %>
+</script>
 
 <div class="container">
     <aside class="sidebar ms-1">
@@ -369,16 +441,36 @@
                 <p style="text-align: center; color: #555;">No products found.</p>
             <% } else { %>
                 <% products.forEach(product => { %>
-                <div class="product-card">
+                <div class="product-card" data-product-id="<%= product._id %>">
                     <a href="/productDetails?id=<%= product._id %>">
                         <img src="/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                         <h4><%= product.productName %></h4>
-                        <p class="price">₹<%= product.salePrice.toLocaleString('en-IN') %></p>
+                        <div class="price-container">
+                            <% if (product.hasDiscount) { %>
+                                <span class="original-price">₹<%= product.salePrice.toLocaleString('en-IN') %></span>
+                                <span class="discounted-price">₹<%= product.discountedPrice.toLocaleString('en-IN') %></span>
+                                <span class="discount-badge"><%= product.discountPercentage %>% OFF</span>
+                            <% } else { %>
+                                <p class="price">₹<%= product.salePrice.toLocaleString('en-IN') %></p>
+                            <% } %>
+                        </div>
                     </a>
                     <% if (product.quantity > 0) { %>
-                    <button class="add-to-cart-btn" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+                    <div class="button-container">
+                        <button class="add-to-cart-btn" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+                        <button class="wishlist-btn <%= wishlistProductIds.includes(product._id.toString()) ? 'active' : '' %>" 
+                                onclick="toggleWishlist('<%= product._id %>', this)">
+                            <%= wishlistProductIds.includes(product._id.toString()) ? 'Remove from Wishlist' : 'Add to Wishlist' %>
+                        </button>
+                    </div>
                     <% } else { %>
                         <div class="out-of-stock">Out of Stock</div>
+                        <div class="button-container">
+                            <button class="wishlist-btn <%= wishlistProductIds.includes(product._id.toString()) ? 'active' : '' %>" 
+                                    onclick="toggleWishlist('<%= product._id %>', this)">
+                                <%= wishlistProductIds.includes(product._id.toString()) ? 'Remove from Wishlist' : 'Add to Wishlist' %>
+                            </button>
+                        </div>
                     <% } %>
                 </div>
                 <% }) %>
@@ -457,7 +549,7 @@
                     text: data.message || 'Failed to add to cart',
                     timer: 1500,
                     showConfirmButton: false
-                })
+                });
             }
         })
         .catch(error => {
@@ -465,7 +557,64 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: error.message,
+                text: error.message || "catch error",
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+    }
+
+    function toggleWishlist(productId, button) {
+        const isInWishlist = button.classList.contains('active');
+        const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isInWishlist) {
+                    button.classList.remove('active');
+                    button.textContent = 'Add to Wishlist';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Removed',
+                        text: 'Product removed from wishlist!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    button.classList.add('active');
+                    button.textContent = 'Remove from Wishlist';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added',
+                        text: 'Product added to wishlist!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update wishlist',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while updating the wishlist',
                 timer: 2000,
                 showConfirmButton: false
             });

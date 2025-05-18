@@ -1,0 +1,457 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font Assistants: 'Montserrat', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .main-content {
+    margin-left: 240px;
+    padding: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 62px;
+  }
+
+  .greeting {
+    font-size: 1.8rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .back-btn {
+    padding: 8px 16px;
+    background-color: #05445E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+  }
+
+  .back-btn:hover {
+    background-color: #043b52;
+  }
+
+  .order-summary,
+  .user-details,
+  .shipping-address,
+  .payment-summary {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .order-id {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .status-dropdown {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #05445E;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .status-dropdown:hover:not(:disabled) {
+    background-color: #043b52;
+  }
+
+  .status-dropdown:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  .status-delivered { color: #388e3c; }
+  .status-pending { color: #f9a825; }
+  .status-canceled { color: #d32f2f; }
+  .status-processing,
+  .status-shipped { color: #0288d1; }
+  .status-returnrequest,
+  .status-returned { color: #ff9800; }
+
+  .order-meta p,
+  .user-details p,
+  .shipping-address p,
+  .payment-summary p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .user-details h3,
+  .shipping-address h3,
+  .payment-summary h3,
+  .product-list h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .product-list {
+    margin-bottom: 10px;
+  }
+
+  .product-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 8px;
+  }
+
+  .product-image {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  .product-details {
+    flex: 1;
+  }
+
+  .product-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .product-meta {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .product-subtotal {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .debug-info {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 5px;
+    word-break: break-all;
+  }
+
+  @media (max-width: 992px) {
+    .main-content {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      padding: 8px;
+    }
+
+    .greeting,
+    .order-header,
+    .product-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .greeting {
+      font-size: 1.5rem;
+    }
+
+    .back-btn, .status-dropdown {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+    }
+
+    .order-id,
+    .product-name,
+    .product-subtotal {
+      font-size: 0.9rem;
+    }
+
+    .order-meta p,
+    .user-details p,
+    .shipping-address p,
+    .payment-summary p,
+    .product-meta {
+      font-size: 0.8rem;
+    }
+
+    .user-details h3,
+    .shipping-address h3,
+    .payment-summary h3,
+    .product-list h3 {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+<main class="main-content">
+  <div class="greeting">
+    Order Details
+    <a href="/admin/orders" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Orders
+    </a>
+  </div>
+  <% if (order) { %>
+    <div class="order-summary">
+      <div class="order-header">
+        <span class="order-id">Order ID: <%= order.orderId %></span>
+        <select class="status-dropdown <%= order.status === 'Canceled' ? 'status-canceled' : '' %>" id="statusDropdown" data-order-id="<%= order.orderId %>" <%= order.status === 'Canceled' ? 'disabled' : '' %>>
+          <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'].forEach(status => { %>
+            <option value="<%= status %>" <%= order.status === status ? 'selected' : '' %>><%= status %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="order-meta">
+        <p>Order Date: <%= new Date(order.createdOn).toLocaleDateString('en-GB') %></p>
+      </div>
+    </div>
+    <div class="user-details">
+      <h3>User Details</h3>
+      <p><strong>Name:</strong> <%= order.user.name %></p>
+      <p><strong>Email:</strong> <%= order.user.email %></p>
+      <p><strong>Phone:</strong> <%= order.user.phone || 'N/A' %></p>
+    </div>
+    <div class="product-list">
+      <h3>Ordered Items</h3>
+      <div>
+        <% order.orderedItems.forEach(item => { %>
+          <div class="product-item">
+            <div class="product-image">
+              <img src="/<%= item.product.productImage[0] ?  item.product.productImage[0] : 'https://via.placeholder.com/60' %>" alt="<%= item.product.productName %>">
+            </div>
+            <div class="product-details">
+              <div class="product-name"><%= item.product.productName %></div>
+              <div class="product-meta">Quantity: <%= item.quantity %></div>
+              <div class="product-meta">Price: ₹<%= item.price %></div>
+            </div>
+            <div class="product-subtotal">Subtotal: ₹<%= item.quantity * item.price %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <div class="shipping-address">
+      <h3>Shipping Address</h3>
+      <p><strong><%= order.address.name %></strong></p>
+      <p><%= order.address.landMark %></p>
+      <p><%= order.address.city %>, <%= order.address.state %>, <%= order.address.pincode %>, <%= order.address.country %></p>
+      <p>Phone: <%= order.address.phone %></p>
+    </div>
+    <div class="payment-summary">
+      <h3>Payment Summary</h3>
+      <p><strong>Total Price:</strong> ₹<%= order.totalPrice %></p>
+      <p><strong>Discount:</strong> ₹<%= order.discount %></p>
+      <p><strong>Final Amount:</strong> ₹<%= order.finalAmount %></p>
+      <p><strong>Payment Method:</strong> <%= order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1) %></p>
+    </div>
+  <% } else { %>
+    <p>Order not found.</p>
+  <% } %>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const statusDropdown = document.getElementById('statusDropdown');
+    const orderStatus = '<%= order.status %>';
+    const orderId = '<%= order._id %>';
+
+    if (orderStatus === 'Return Request') {
+      Swal.fire({
+        title: 'Return Request Pending',
+        text: 'This order has a pending return request. How would you like to proceed?',
+        icon: 'info',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonColor: '#388e3c',
+        denyButtonColor: '#d32f2f',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Approve Return',
+        denyButtonText: 'Reject Return',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Approve return
+          Swal.fire({
+            title: 'Are you sure?',
+            text: 'This will approve the return and refund the amount to the user\'s wallet.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#388e3c',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, approve it!'
+          }).then((approveResult) => {
+            if (approveResult.isConfirmed) {
+              fetch(`/admin/verify-return/${orderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'approve' })
+              })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    Swal.fire({
+                      title: 'Success!',
+                      text: 'Return approved successfully.',
+                      icon: 'success',
+                      timer: 1500
+                    }).then(() => {
+                      statusDropdown.value = 'Returned';
+                      statusDropdown.className = 'status-dropdown status-returned';
+                    });
+                  } else {
+                    Swal.fire('Error!', data.message, 'error');
+                  }
+                })
+                .catch(error => {
+                  Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
+                });
+            }
+          });
+        } else if (result.isDenied) {
+          // Reject return
+          Swal.fire({
+            title: 'Reject Return',
+            text: 'Please provide a reason for rejection:',
+            input: 'text',
+            inputPlaceholder: 'Enter rejection reason',
+            showCancelButton: true,
+            confirmButtonColor: '#d32f2f',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Reject',
+            inputValidator: (value) => {
+              if (!value || value.trim() === '') {
+                return 'Please enter a rejection reason.';
+              }
+            }
+          }).then((rejectResult) => {
+            if (rejectResult.isConfirmed) {
+              fetch(`/admin/verify-return/${orderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reject', rejectReason: rejectResult.value })
+              })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    Swal.fire({
+                      title: 'Success!',
+                      text: 'Return rejected successfully.',
+                      icon: 'success',
+                      timer: 1500
+                    }).then(() => {
+                      statusDropdown.value = 'Delivered';
+                      statusDropdown.className = 'status-dropdown status-delivered';
+                    });
+                  } else {
+                    Swal.fire('Error!', data.message, 'error');
+                  }
+                })
+                .catch(error => {
+                  Swal.fire('Error!', 'An error occurred: ' + error.message, 'error');
+                });
+            }
+          });
+        }
+      });
+    }
+
+    if (statusDropdown && !statusDropdown.disabled) {
+      statusDropdown.addEventListener('change', async (e) => {
+        const orderId = e.target.dataset.orderId;
+        const newStatus = e.target.value;
+
+        try {
+          const response = await fetch(`/admin/orders/${orderId}/status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus }),
+          });
+
+          const result = await response.json();
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Status Updated',
+              text: `Order status changed to ${newStatus}`,
+              timer: 1500,
+              showConfirmButton: false,
+            });
+            const statusClasses = {
+              'Delivered': 'status-delivered',
+              'Pending': 'status-pending',
+              'Canceled': 'status-canceled',
+              'Processing': 'status-processing',
+              'Shipped': 'status-shipped',
+              'Return Request': 'status-returnrequest',
+              'Returned': 'status-returned',
+            };
+            e.target.className = 'status-dropdown';
+            e.target.classList.add(statusClasses[newStatus] || '');
+            if (newStatus === 'Canceled') {
+              e.target.disabled = true;
+            }
+          } else {
+            throw new Error(result.message || 'Failed to update status');
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Failed to update status',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          e.target.value = '<%= order.status %>';
+        }
+      });
+    }
+  });
+</script>

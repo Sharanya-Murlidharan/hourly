@@ -41,7 +41,7 @@ const getBrandPage = async(req,res)=>{
     }
 }
 
-addBrand = async (req, res) => {
+const addBrand = async (req, res) => {
     const { name, description } = req.body;
     try {
       console.log("Add Brand Request Received:", { name, description });

@@ -20,7 +20,7 @@
         font-family: 'Montserrat', sans-serif;
     }
 
-    /* Main container padding from second code */
+    /* Main container padding */
     .main {
         padding: 30px 0;
     }
@@ -35,7 +35,6 @@
         overflow: hidden;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
-
 
     /* Default hover behavior for non-logout links */
     .sidebar ul li a:not(.menu-item.logout):hover {
@@ -143,6 +142,7 @@
         background: #ddd;
         border-radius: 5px;
         margin-bottom: 20px;
+        object-fit: cover; /* Ensure image fits nicely */
     }
 
     /* Edit Button Container */
@@ -152,37 +152,96 @@
         margin-top: 20px; /* Add spacing above the button */
     }
 
-    /* Login Details Section */
-    .login-details {
-        margin-bottom: 40px;
+    /* Referral Card */
+    .referral-card {
+        background-color: #ffffff;
+        border: 1px solid #ddd; /* Added border to define the box */
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Enhanced box shadow */
     }
 
-    .login-details h2 {
+    .referral-title {
         font-size: 1.5rem;
-        margin-bottom: 20px;
-        color: #333;
         font-weight: 500;
-        letter-spacing: 1px;
+        color: #333;
+        margin-bottom: 12px;
     }
 
-    /* Change Username and Change Password Buttons */
-    .change-btn {
-        display: inline-block;
-        padding: 8px 16px;
-        background-color: #05445E;
-        color: #fff;
+    .referral-description {
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #555;
+        margin-bottom: 16px;
+    }
+
+    .amount {
+        font-weight: 500;
+        color: #05445E; /* Match the primary color of profile.ejs */
+    }
+
+    .referral-code-container {
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    .referral-label {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #333;
+        margin-right: 12px;
+        white-space: nowrap;
+    }
+
+    .referral-code {
+        background-color: #f5f5f5;
+        border-radius: 5px;
+        padding: 10px 16px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #333;
+        border: 1px solid #ddd;
+        flex-grow: 1;
+        text-align: center;
+        margin-right: 10px;
+        cursor: default;
+    }
+
+    .copy-button {
+        background-color: #05445E; /* Match the primary color of profile.ejs */
+        color: white;
         border: none;
         border-radius: 5px;
+        padding: 10px 20px;
         font-size: 0.9rem;
+        font-weight: 500;
         cursor: pointer;
-        transition: background-color 0.3s;
-        letter-spacing: 1px;
-        text-decoration: none;
-        margin-top: 10px;
+        transition: background-color 0.3s ease;
     }
 
-    .change-btn:hover {
-        background-color: #043b52; /* Darker teal on hover */
+    .copy-button:hover {
+        background-color: #043b52; /* Match the hover color of other buttons */
+    }
+
+    .copied-message {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 100;
+    }
+
+    .copied-message.show {
+        opacity: 1;
     }
 
     /* Edit Button */
@@ -238,15 +297,16 @@
             min-width: 0; /* Allow fields to shrink on smaller screens */
             flex: 1;
         }
+
+        .referral-code-container {
+            flex-direction: row;
+            align-items: center;
+        }
     }
 
     @media (max-width: 480px) {
         .greeting {
             font-size: 1.5rem;
-        }
-
-        .login-details h2 {
-            font-size: 1.2rem;
         }
 
         .form-group input,
@@ -259,9 +319,45 @@
             font-size: 0.9rem;
         }
 
-        .change-btn {
+        .referral-title {
+            font-size: 1.2rem;
+        }
+
+        .referral-description {
+            font-size: 0.9rem;
+        }
+
+        .referral-label {
+            font-size: 0.9rem;
+        }
+
+        .referral-code {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+
+        .copy-button {
             font-size: 0.8rem;
-            padding: 6px 12px;
+            padding: 8px 16px;
+        }
+
+        .referral-code-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .referral-label {
+            margin-bottom: 8px;
+        }
+
+        .referral-code {
+            width: 100%;
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+
+        .copy-button {
+            align-self: flex-end;
         }
     }
 </style>
@@ -275,31 +371,28 @@
                         <%- include("../../views/partials/user/sidebar") %>
                         <div class="main-content">
                             <div class="greeting">
-                                Hi <%=user.name%>
+                                Hi <%= user.name || 'User' %>
                             </div>
                             <div class="basic-info">
-                                <div class="image-placeholder"></div>
+                                <img class="image-placeholder" src="<%= user.ProfilePicture || '/images/default-profile.png' %>" alt="Profile Picture">
                                 <div class="form-group basic-info-group">
                                     <div class="input-field">
                                         <label for="username">Full Name</label>
-                                        <input type="text" id="username" value="<%=user.name%>" disabled>
+                                        <input type="text" id="username" value="<%= user.name || 'Not provided' %>" disabled>
                                     </div>
                                     <div class="input-field">
                                         <label for="phone">Phone Number</label>
-                                        <input type="text" id="phone" value="<%=user.phone%>" disabled>
+                                        <input type="text" id="phone" value="<%= user.phone || 'Not provided' %>" disabled>
                                     </div>
-                                    
                                 </div>
                                 <div class="form-group login-details-group">
                                     <div class="input-field">
                                         <label for="username-login">Email</label>
-                                        <input type="text" id="username-login" value="<%=user.email%>" disabled>
-                                        <!-- <a href="/change-email" class="change-btn">Change Email</a> -->
+                                        <input type="text" id="username-login" value="<%= user.email || 'Not provided' %>" disabled>
                                     </div>
                                     <div class="input-field">
                                         <label for="password">Password</label>
-                                        <input type="password" id="password" value="••••••••••••" disabled>
-                                        <!-- <a href="/change-password" class="change-btn">Change Password</a> -->
+                                        <input type="password" id="password" value="<%= user.password ? '••••••••••••' : 'Google Login' %>" disabled>
                                     </div>
                                 </div>
                                 <div class="edit-btn-container">
@@ -307,16 +400,56 @@
                                         <i class="fa-solid fa-pen-to-square"></i> Edit
                                     </a>
                                 </div>
+                                <!-- Referral Card -->
+                                <div class="referral-card">
+                                    <h2 class="referral-title">Invite & Earn</h2>
+                                    <p class="referral-description">
+                                        Share your referral code with friends and earn <span class="amount">₹1000</span> for each successful referral!
+                                    </p>
+                                    <div class="referral-code-container">
+                                        <span class="referral-label">Your Referral Code:</span>
+                                        <div class="referral-code" id="referralCode"><%= user.referralCode || 'Not available' %></div>
+                                        <button class="copy-button" id="copyButton">Copy</button>
+                                    </div>
+                                </div>
                             </div>
-                            <!-- <div class="login-details">
-                                <h2>Login Details</h2>
-                                
-                            </div> -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <div class="copied-message" id="copiedMessage">Referral code copied!</div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copyButton');
+        const referralCode = document.getElementById('referralCode');
+        const copiedMessage = document.getElementById('copiedMessage');
+
+        copyButton.addEventListener('click', function() {
+            // Create a temporary input element
+            const tempInput = document.createElement('input');
+            tempInput.value = referralCode.textContent;
+            document.body.appendChild(tempInput);
+            
+            // Select and copy the text
+            tempInput.select();
+            document.execCommand('copy');
+            
+            // Remove the temporary input
+            document.body.removeChild(tempInput);
+            
+            // Show the copied message
+            copiedMessage.classList.add('show');
+            
+            // Hide the message after 2 seconds
+            setTimeout(function() {
+                copiedMessage.classList.remove('show');
+            }, 2000);
+        });
+    });
+</script>
+
 <%- include("../../views/partials/user/footer") %>

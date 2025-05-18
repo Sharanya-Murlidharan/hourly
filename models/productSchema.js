@@ -34,8 +34,10 @@ const productSchema = new Schema({
     },
     quantity:{
         type:Number,
-        default:true, // Changed to required to match frontend
-        default: 0 // Fixed default to a number
+        //default:true, // Changed to required to match frontend
+        //default: 0 // Fixed default to a number
+        required: true,
+        min: 0, // Ensure stock can't be negative
     },
    
     productImage:{

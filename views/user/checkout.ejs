@@ -102,37 +102,6 @@
   .add-address-btn:hover {
     background-color: #043b52;
   }
-  .payment-methods {
-    margin-top: 20px;
-  }
-  .payment-methods h3 {
-    font-size: 1.2rem;
-    font-weight: 500;
-    margin-bottom: 15px;
-    color: #05445E;
-  }
-  .payment-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background: #f5f5f5;
-    cursor: pointer;
-    transition: border-color 0.3s;
-  }
-  .payment-option:hover {
-    border-color: #05445E;
-  }
-  .payment-option input[type="radio"] {
-    margin-right: 10px;
-  }
-  .payment-option label {
-    font-size: 0.9rem;
-    color: #333;
-  }
   .cart-summary {
     flex: 1;
     padding: 20px;
@@ -164,6 +133,11 @@
   }
   .product-item:last-child {
     border-bottom: none;
+  }
+  .product-image {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
   }
   .product-name {
     font-size: 0.9rem;
@@ -293,6 +267,81 @@
     margin-top: 4px;
     display: none;
   }
+  .coupon-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .coupon-section input {
+    flex: 1;
+    padding: 7px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 0.9rem;
+  }
+  .coupon-section button {
+    padding: 7px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .coupon-section .apply-btn {
+    background-color: #05445E;
+    color: #fff;
+  }
+  .coupon-section .apply-btn:hover {
+    background-color: #043b52;
+  }
+  .coupon-section .remove-btn {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  .coupon-section .remove-btn:hover {
+    background-color: #c82333;
+  }
+  .coupon-section .view-coupons {
+    font-size: 0.9rem;
+    color: #05445E;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .coupon-section .view-coupons:hover {
+    text-decoration: underline;
+  }
+  .coupon-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #f5f5f5;
+  }
+  .coupon-item h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #05445E;
+    margin-bottom: 5px;
+  }
+  .coupon-item p {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 5px;
+  }
+  .coupon-item .copy-btn {
+    padding: 6px 12px;
+    background-color: #05445E;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .coupon-item .copy-btn:hover {
+    background-color: #043b52;
+  }
   @media (max-width: 768px) {
     .checkout-container {
       flex-direction: column;
@@ -309,6 +358,28 @@
     }
     .modal-content button {
       width: 100%;
+    }
+    .coupon-section {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .coupon-section input {
+      width: 100%;
+    }
+    .coupon-section button {
+      width: 100%;
+    }
+  }
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  @media (max-width: 768px) {
+    .product-image {
+      width: 100%;
+      height: 150px;
     }
   }
 </style>
@@ -340,29 +411,16 @@
         <button class="add-address-btn" onclick="openAddModal()">
           <i class="fa-solid fa-plus"></i> Add New Address
         </button>
-
-        <div class="payment-methods">
-          <h3>Payment Method</h3>
-          <div class="payment-option">
-            <input type="radio" name="payment_option" id="cod" value="cod" checked>
-            <label for="cod">Cash on Delivery</label>
-          </div>
-          <div class="payment-option">
-            <input type="radio" name="payment_option" id="razorpay" value="razorpay" disabled>
-            <label for="razorpay">Razorpay</label>
-          </div>
-          <div class="payment-option">
-            <input type="radio" name="payment_option" id="wallet" value="wallet" disabled>
-            <label for="wallet">Wallet</label>
-          </div>
-        </div>
       </div>
 
       <div class="cart-summary">
         <h3>Cart Total</h3>
-        <% cartItems.forEach(item => { %>
+        <% items.forEach(item => { %>
           <div class="product-item">
-            <div class="product-name"><%= item.productId.productName %></div>
+            <div style="display: flex; align-items: center;">
+              <div class="product-image"><img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>"></div>
+              <div class="product-name"><%= item.productId.productName %></div>
+            </div>
             <div class="product-details">
               Quantity: <%= item.quantity %> × ₹<%= item.price %>
             </div>
@@ -372,14 +430,47 @@
             </div>
           </div>
         <% }) %>
-        <div class="summary-item total">
+
+        <!-- Coupon Section -->
+        <div class="coupon-section">
+          <% if (isCouponApplied) { %>
+            <button class="remove-btn" onclick="removeCoupon()">Remove Coupon</button>
+          <% } else { %>
+            <input type="text" id="couponCode" placeholder="Enter coupon code">
+            <button class="apply-btn" onclick="applyCoupon()">Apply</button>
+            <a class="view-coupons" onclick="openCouponModal()">View Available Coupons</a>
+          <% } %>
+        </div>
+
+        <div id="couponModal" class="modal">
+          <div class="modal-content">
+            <span class="close" onclick="closeCouponModal()">×</span>
+            <h2>Available Coupons</h2>
+            <div id="coupon-list"></div>
+          </div>
+        </div>
+
+        <div class="summary-item">
           <span>Subtotal</span>
-          <span>₹<%= totalPrice %></span>
+          <span id="subtotal-value">₹<%= subtotal %></span>
+        </div>
+        <div class="summary-item">
+  <span>Offer Discount</span>
+  <span id="offer-discount-value">-₹<%= offerDiscount %></span>
+</div>
+        <div class="summary-item">
+          <span>Coupon Discount</span>
+          <span id="discount-value">-₹<%= discount %></span>
+        </div>
+        <div class="summary-item total">
+          <span>Grand Total</span>
+          <span id="total-value">₹<%= totalPrice %></span>
+        </div>
+
+        <div class="continue-btn-container">
+          <button onclick="proceedToPayment()" class="continue-btn">Continue</button>
         </div>
       </div>
-    </div>
-    <div class="continue-btn-container">
-      <button onclick="proceedToPayment()" class="continue-btn">Continue</button>
     </div>
   </section>
 
@@ -668,9 +759,112 @@
       }
     });
 
+    async function applyCoupon() {
+      const couponCode = document.getElementById('couponCode').value.trim();
+      if (!couponCode) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Coupon Code',
+          text: 'Please enter a coupon code.',
+          confirmButtonColor: '#05445E',
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch('/apply-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ couponCode }),
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          // Update the UI with the new totals
+          document.getElementById('subtotal-value').textContent = `₹${result.subtotal}`;
+          document.getElementById('offer-discount-value').textContent = `-₹${result.offerDiscount}`;
+          document.getElementById('discount-value').textContent = `-₹${result.discount}`;
+          document.getElementById('total-value').textContent = `₹${result.totalPrice}`;
+
+          // Replace the coupon input with a remove button
+          const couponSection = document.querySelector('.coupon-section');
+          couponSection.innerHTML = `
+            <button class="remove-btn" onclick="removeCoupon()">Remove Coupon</button>
+          `;
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Coupon Applied',
+            text: result.message,
+            confirmButtonColor: '#05445E',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.error,
+            confirmButtonColor: '#05445E',
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          confirmButtonColor: '#05445E',
+        });
+      }
+    }
+
+    async function removeCoupon() {
+      try {
+        const response = await fetch('/remove-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          // Update the UI with the new totals
+          document.getElementById('subtotal-value').textContent = `₹${result.subtotal}`;
+          document.getElementById('offer-discount-value').textContent = `-₹${result.offerDiscount}`;
+          document.getElementById('discount-value').textContent = `-₹${result.discount}`;
+          document.getElementById('total-value').textContent = `₹${result.totalPrice}`;
+
+          // Replace the remove button with the coupon input
+          const couponSection = document.querySelector('.coupon-section');
+          couponSection.innerHTML = `
+            <input type="text" id="couponCode" placeholder="Enter coupon code">
+            <button class="apply-btn" onclick="applyCoupon()">Apply</button>
+            <a class="view-coupons" onclick="openCouponModal()">View Available Coupons</a>
+          `;
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Coupon Removed',
+            text: result.message,
+            confirmButtonColor: '#05445E',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: result.error,
+            confirmButtonColor: '#05445E',
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          confirmButtonColor: '#05445E',
+        });
+      }
+    }
+
     async function proceedToPayment() {
       const selectedAddress = document.querySelector('input[name="address"]:checked');
-      const selectedPayment = document.querySelector('input[name="payment_option"]:checked');
 
       if (!selectedAddress) {
         Swal.fire({
@@ -681,30 +875,18 @@
         });
         return;
       }
-      if (!selectedPayment) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'No Payment Method Selected',
-          text: 'Please select a payment method to proceed.',
-          confirmButtonColor: '#05445E',
-        });
-        return;
-      }
 
       const data = {
         addressId: selectedAddress.value,
-        paymentMethod: selectedPayment.value,
       };
-      console.log("Sending data to /checkout:", data);
 
       try {
-        const response = await fetch('/checkout', {
+        const response = await fetch('/proceed-to-payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
         const result = await response.json();
-        console.log("Server response:", result);
 
         if (result.error) {
           Swal.fire({
@@ -717,11 +899,78 @@
           window.location.href = result.redirect;
         }
       } catch (error) {
-        console.error("Fetch error:", error);
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: 'An error occurred. Please try again.',
+          confirmButtonColor: '#05445E',
+        });
+      }
+    }
+
+    function openCouponModal() {
+      document.getElementById('couponModal').style.display = 'flex';
+      displayCoupons();
+    }
+
+    function closeCouponModal() {
+      document.getElementById('couponModal').style.display = 'none';
+      document.getElementById('coupon-list').innerHTML = '';
+    }
+
+   async function displayCoupons() {
+  const couponList = document.getElementById('coupon-list');
+  couponList.innerHTML = '<p>Loading coupons...</p>';
+
+  try {
+    const response = await fetch('/available-coupons', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const result = await response.json();
+
+    if (result.success && result.coupons.length > 0) {
+      couponList.innerHTML = result.coupons.map(coupon => `
+        <div class="coupon-item">
+          <h3>${coupon.name}</h3>
+          <p>Code: ${coupon.code}</p>
+          <p>Discount: ₹${coupon.amount}</p>
+          <p>Min. Cart Value: ₹${coupon.minCartValue}</p>
+          <p>Expiry Date: ${new Date(coupon.validUpto).toLocaleDateString()}</p>
+          <p>${coupon.description || 'No description available'}</p>
+          <button class="copy-btn" onclick="copyCouponCode('${coupon.code}')">Copy Code</button>
+        </div>
+      `).join('');
+    } else {
+      couponList.innerHTML = '<p>No coupons available.</p>';
+    }
+  } catch (error) {
+    couponList.innerHTML = '<p>Failed to load coupons. Please try again.</p>';
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to load coupons.',
+      confirmButtonColor: '#05445E',
+    });
+  }
+}
+
+    async function copyCouponCode(code) {
+      try {
+        await navigator.clipboard.writeText(code);
+        document.getElementById('couponCode').value = code;
+        closeCouponModal();
+        Swal.fire({
+          icon: 'success',
+          title: 'Coupon Copied',
+          text: 'Coupon code copied and applied to input!',
+          confirmButtonColor: '#05445E',
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to copy coupon code.',
           confirmButtonColor: '#05445E',
         });
       }

@@ -1,0 +1,743 @@
+<%- include("../partials/user/header") %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialogue Digital - Payment Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Razorpay SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        :root {
+            --primary-color: #05445E;
+            --secondary-color: #189AB4;
+            --text-color: #333;
+            --light-bg: #f5f5f5;
+            --white: #ffffff;
+            --grey: #eaeaea;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-color);
+        }
+
+        /* Payment Container */
+        .payment-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .payment-options {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .payment-summary {
+            flex: 0 0 350px;
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Payment Summary */
+        .payment-summary .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: var(--white);
+        }
+
+        .payment-summary .logo .logo-icon {
+            background-color: var(--white);
+            color: var(--primary-color);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .price-summary {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .price-summary h3 {
+            font-size: 14px;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .price-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .user-info {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .user-info i {
+            margin-right: 10px;
+            color: var(--text-color);
+        }
+
+        .user-info span {
+            flex: 1;
+            color: var(--text-color);
+        }
+
+        .user-info .arrow {
+            color: var(--text-color);
+        }
+
+        .decoration {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            opacity: 0.2;
+        }
+
+        .secured-by {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .secured-by img {
+            height: 20px;
+            margin-left: 5px;
+        }
+
+        /* Payment Options Card */
+        .payment-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .payment-card-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--grey);
+        }
+
+        .payment-card-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .payment-card-header .close-btn {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #999;
+        }
+
+        .payment-card-body {
+            padding: 15px 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--grey);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 0;
+            margin-right: 20px;
+            font-weight: 500;
+            color: #999;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--text-color);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--grey);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .payment-method:hover {
+            background-color: var(--light-bg);
+        }
+
+        .payment-method-info {
+            flex: 1;
+        }
+
+        .payment-method-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .payment-method-icons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .payment-method-icons img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .payment-method-action {
+            margin-left: 10px;
+        }
+
+        .upi-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--light-bg);
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .upi-option-icon {
+            margin-right: 15px;
+            display: flex;
+        }
+
+        .upi-option-icon img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .upi-option-info {
+            flex: 1;
+        }
+
+        .upi-option-title {
+            font-weight: 500;
+        }
+
+        .proceed-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .proceed-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .secure-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .secure-info i {
+            margin-right: 5px;
+        }
+
+        /* Sale Badge */
+        .sale-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #ff4a4a;
+            color: white;
+            padding: 30px 60px;
+            font-weight: bold;
+            transform: rotate(45deg) translate(30%, -50%);
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .payment-container {
+                flex-direction: column;
+            }
+            
+            .payment-summary {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 15px;
+            }
+            
+            .main-content {
+                padding: 20px 15px;
+            }
+            
+            .payment-method {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .payment-method-icons {
+                margin-top: 10px;
+            }
+            
+            .payment-method-action {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            nav {
+                display: none;
+            }
+            
+            .logo-container {
+                justify-content: center;
+            }
+            
+            .payment-summary {
+                flex: 1 0 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-top">
+            3-7 BUSINESS DAYS DELIVERY & FREE RETURNS
+        </div>
+
+        <div class="main-content">
+            <div class="sale-badge">Hot Sale!</div>
+            <h1>Complete Your Payment</h1>
+            
+            <div class="payment-container">
+                <div class="payment-options">
+                    <div class="payment-card">
+                        <div class="payment-card-header">
+                            <h2>Payment Options</h2>
+                            <button class="close-btn">×</button>
+                        </div>
+                        <div class="payment-card-body">
+                            <div class="tabs">
+                                <div class="tab active">Recommended</div>
+                                <div class="tab">All Methods</div>
+                            </div>
+                            
+                            <div class="upi-option" data-method="upi-qr">
+                                <div class="upi-option-icon">
+                                    <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/gpay-6015153_1280.png" alt="Google Pay">
+                                </div>
+                                <div class="upi-option-info">
+                                    <div class="upi-option-title">UPI - Google Pay</div>
+                                </div>
+                                <div class="payment-method-action">
+                                    <span class="arrow">›</span>
+                                </div>
+                            </div>
+                            
+                            <div class="payment-methods">
+                                <div class="payment-method" data-method="upi">
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title">UPI</div>
+                                        <div class="payment-method-icons">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/gpay-6015153_1280.png" alt="Google Pay">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/phonepay-6015154_1280.png" alt="PhonePe">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/paytm-6015155_1280.png" alt="Paytm">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-method" data-method="card">
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title">Cards</div>
+                                        <div class="payment-method-icons">
+                                            <img src="https://cdn.pixabay.com/photo/2016/03/31/18/41/visa-1295403_1280.png" alt="Visa">
+                                            <img src="https://cdn.pixabay.com/photo/2016/03/31/18/41/mastercard-1295402_1280.png" alt="Mastercard">
+                                            <img src="https://cdn.pixabay.com/photo/2016/03/31/18/41/amex-1295401_1280.png" alt="Amex">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-method" data-method="netbanking">
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title">Netbanking</div>
+                                        <div class="payment-method-icons">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/sbi-6015156_1280.png" alt="SBI">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/hdfc-6015157_1280.png" alt="HDFC">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/icici-6015158_1280.png" alt="ICICI">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-method" data-method="wallet">
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title">Wallet</div>
+                                        <div class="payment-method-icons">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/paytm-6015155_1280.png" alt="Paytm">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/phonepay-6015154_1280.png" alt="PhonePe">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/amazonpay-6015159_1280.png" alt="Amazon Pay">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-method" data-method="paylater">
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title">Pay Later</div>
+                                        <div class="payment-method-icons">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/lazypay-6015160_1280.png" alt="LazyPay">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/simpl-6015161_1280.png" alt="Simpl">
+                                            <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/zestmoney-6015162_1280.png" alt="ZestMoney">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="payment-method" data-method="cod">
+                                    <div class="payment-method-info">
+                                        <div class="payment-method-title">Cash on Delivery</div>
+                                        <div class="payment-method-icons">
+                                            <span style="font-size: 24px;">💵</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="proceed-btn">Proceed to Pay</button>
+                    
+                    <div class="secure-info">
+                        <i>🔒</i> All payments are secure and encrypted
+                    </div>
+                </div>
+                
+                <div class="payment-summary">
+                    <div class="logo">
+                        <div class="logo-icon">D</div>
+                        <span>Dialogue Digital</span>
+                    </div>
+                    
+                    <div class="price-summary">
+                        <h3>Price Summary</h3>
+                        <div class="price-amount">₹<%= totalPrice %></div>
+                    </div>
+                    
+                    <div class="user-info">
+                        <i>👤</i>
+                        <span>Using as <%= locals.user ? user.phone : "+91 88568 09348" %></span>
+                        <span class="arrow">›</span>
+                    </div>
+                    
+                    <div class="decoration">
+                        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M150 50C150 77.6142 122.614 100 90 100C57.3858 100 30 77.6142 30 50C30 22.3858 57.3858 0 90 0C122.614 0 150 22.3858 150 50Z" fill="white"/>
+                            <path d="M170 150C170 177.614 147.614 200 120 200C92.3858 200 70 177.614 70 150C70 122.386 92.3858 100 120 100C147.614 100 170 122.386 170 150Z" fill="white"/>
+                            <path d="M90 170C117.614 170 140 147.614 140 120C140 92.3858 117.614 70 90 70C62.3858 70 40 92.3858 40 120C40 147.614 62.3858 170 90 170Z" fill="white"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="secured-by">
+                        Secured by <img src="https://cdn.pixabay.com/photo/2021/02/14/16/47/razorpay-6015163_1280.png" alt="Razorpay">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Payment method selection
+            const paymentMethods = document.querySelectorAll('.payment-method');
+            let selectedMethod = null;
+            
+            paymentMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    paymentMethods.forEach(m => m.style.borderColor = '#eaeaea');
+                    this.style.borderColor = '#05445E';
+                    selectedMethod = this.getAttribute('data-method');
+                    updateButtonText();
+                });
+            });
+            
+            // UPI option selection
+            const upiOption = document.querySelector('.upi-option');
+            upiOption.addEventListener('click', function() {
+                this.style.backgroundColor = '#e1f5fe';
+                selectedMethod = this.getAttribute('data-method');
+                updateButtonText();
+            });
+
+            // Proceed button
+            const proceedBtn = document.querySelector('.proceed-btn');
+            function updateButtonText() {
+                if (selectedMethod) {
+                    switch(selectedMethod) {
+                        case 'upi-qr':
+                            proceedBtn.textContent = 'Proceed with UPI QR';
+                            break;
+                        case 'upi':
+                            proceedBtn.textContent = 'Proceed with UPI';
+                            break;
+                        case 'card':
+                            proceedBtn.textContent = 'Proceed with Card';
+                            break;
+                        case 'netbanking':
+                            proceedBtn.textContent = 'Proceed with Netbanking';
+                            break;
+                        case 'wallet':
+                            proceedBtn.textContent = 'Proceed with Wallet';
+                            break;
+                        case 'paylater':
+                            proceedBtn.textContent = 'Proceed with Pay Later';
+                            break;
+                        case 'cod':
+                            proceedBtn.textContent = 'Place Order with COD';
+                            break;
+                        default:
+                            proceedBtn.textContent = 'Proceed to Pay';
+                    }
+                } else {
+                    proceedBtn.textContent = 'Proceed to Pay';
+                }
+            }
+
+            // Razorpay Payment Handler
+            async function initiateRazorpayPayment(paymentMethod) {
+                try {
+                    // Fetch Razorpay order ID from the server
+                    const response = await fetch('/create-razorpay-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: <%= totalPrice %> * 100 }) // Amount in paise
+                    });
+                    const order = await response.json();
+
+                    if (order.error) {
+                        throw new Error(order.error);
+                    }
+
+                    const options = {
+                        key: '<%= process.env.RAZORPAY_KEY_ID %>',
+                        amount: order.amount,
+                        currency: 'INR',
+                        name: 'Dialogue Digital',
+                        description: 'Payment for your order',
+                        order_id: order.id,
+                        handler: async function(response) {
+                            // Verify payment on the server
+                            const verifyResponse = await fetch('/verify-razorpay-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    paymentMethod: 'razorpay'
+                                })
+                            });
+                            const verifyResult = await verifyResponse.json();
+
+                            if (verifyResult.success) {
+                                // Place the order after successful payment
+                                await placeOrder('razorpay');
+                            } else {
+                                window.location.href = '/payment-failed';
+                            }
+                        },
+                        prefill: {
+                            name: '<%= locals.user ? user.name : "" %>',
+                            email: '<%= locals.user ? user.email : "" %>',
+                            contact: '<%= locals.user ? user.phone : "" %>'
+                        },
+                        theme: {
+                            color: '#05445E'
+                        },
+                        method: {
+                            upi: paymentMethod === 'upi',
+                            card: paymentMethod === 'card',
+                            netbanking: paymentMethod === 'netbanking',
+                            wallet: paymentMethod === 'wallet',
+                            paylater: paymentMethod === 'paylater'
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function(response) {
+                        window.location.href = '/payment-failed';
+                    });
+                    rzp.open();
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to initiate payment. Please try again.',
+                        confirmButtonColor: '#05445E',
+                    });
+                }
+            }
+
+            // Place Order Function
+            async function placeOrder(paymentMethod) {
+                const data = {
+                    paymentMethod: paymentMethod
+                };
+
+                try {
+                    const response = await fetch('/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                    const result = await response.json();
+
+                    if (result.error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.error,
+                            confirmButtonColor: '#05445E',
+                        });
+                    } else {
+                        window.location.href = result.redirect;
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.',
+                        confirmButtonColor: '#05445E',
+                    });
+                }
+            }
+
+            // Proceed button click
+            proceedBtn.addEventListener('click', async function() {
+                if (!selectedMethod) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Payment Method Selected',
+                        text: 'Please select a payment method to proceed.',
+                        confirmButtonColor: '#05445E',
+                    });
+                    return;
+                }
+
+                if (selectedMethod === 'upi-qr') {
+                    window.location.href = '/payment-upi-qr';
+                } else if (selectedMethod === 'cod') {
+                    await placeOrder('cod');
+                } else {
+                    await initiateRazorpayPayment(selectedMethod);
+                }
+            });
+            
+            // Close button
+            const closeBtn = document.querySelector('.close-btn');
+            closeBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to cancel this payment?')) {
+                    window.location.href = '/cart';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+<%- include("../partials/user/footer") %>

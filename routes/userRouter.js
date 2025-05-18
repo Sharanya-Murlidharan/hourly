@@ -9,6 +9,7 @@ const profileController = require("../controllers/user/profileController")
 const productController = require("../controllers/user/productController")
 const cartController = require("../controllers/user/cartController")
 const orderController = require("../controllers/user/orderController")
+const wishlistController = require("../controllers/user/wishlistController")
 const {userAuth} = require("../middlewares/auth")
 
 
@@ -23,7 +24,8 @@ router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 
 router.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/signup' }),
     (req, res) => {
-        res.redirect('/')
+        req.session.user = req.user._id;
+        res.redirect('/');
     }
 )
 // homepage
@@ -63,7 +65,7 @@ router.post('/change-password',userAuth,profileController.changePaawordValid)
 router.post('/verify-change-password-otp',userAuth,profileController.verifyChangePassOtp)
 router.post('/update-password', userAuth, profileController.updatePassword); 
 // edit profile
-router.get('/editProfile',userAuth,profileController.editProfile)
+router.get('/editProfile',userAuth,uploadProfilePicture,profileController.editProfile)
 router.post('/update-profile',uploadProfilePicture, profileController.updateProfile);
 // address management
 router.get('/address',userAuth,profileController.getAddress)
@@ -79,10 +81,32 @@ router.post("/changeQuantity", userAuth,cartController.changeQuantity)
 router.post("/deleteCartProduct", userAuth, cartController.deleteProduct)
 //checkout
 router.get("/checkout",userAuth,orderController.getCheckout)
+router.get("/payment", userAuth, orderController.getPaymentPage)
+router.post("/proceed-to-payment", userAuth, orderController.proceedToPaymentPage)
 router.post("/checkout",userAuth,orderController.proceedCheckout)
+router.post("/create-razorpay-order", userAuth, orderController.createRazorpayOrder)
+router.post("/verify-razorpay-payment", userAuth, orderController.verifyRazorpayPayment)
+router.post("/retry-razorpay-payment", userAuth, orderController.retryRazorpayPayment)
+router.post("/apply-coupon", userAuth, orderController.applyCoupon);
+router.post("/remove-coupon", userAuth, orderController.removeCoupon);
+router.get("/available-coupons", userAuth, orderController.getAvailableCoupons);
 router.get("/orderSuccess",userAuth,orderController.getSuccess)
+router.get("/paymentFail", userAuth, orderController.getPaymentFail)
 // order Listing
 router.get("/orderListing",orderController.getOrderList)
+router.get("/orderDetail/:id",orderController.orderDetail)
+router.post('/cancel/:id', orderController.cancelOrder);
+router.post('/cancel-product/:id', orderController.cancelProduct);
+router.post('/return/:id', orderController.returnOrder)
+// wallet
+router.get('/wallet', userAuth, orderController.getWallet)
+
+// wishlist
+router.get('/wishlist',userAuth,wishlistController.getWishlist)
+router.post('/addToWishlist', userAuth, wishlistController.addToWishlist);
+router.post('/removeFromWishlist', userAuth, wishlistController.removeFromWishlist);
+
+
 
 
 module.exports = router

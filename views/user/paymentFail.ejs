@@ -1,0 +1,107 @@
+<%- include("../partials/user/header") %>
+
+<style>
+    :root {
+        --primary-color: #05445E;
+        --secondary-color: #189AB4;
+        --error-color: #f44336;
+        --text-color: #333;
+        --light-bg: #f5f5f5;
+        --white: #ffffff;
+    }
+
+    * {
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .main-content {
+        background-color: var(--light-bg);
+        color: var(--text-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 200px); /* Accounts for header (~80px) + footer (~120px) */
+        flex-direction: column;
+        padding: 20px 20px 40px; /* Matches header padding, extra for footer */
+    }
+
+    .failure-container {
+        text-align: center;
+        background-color: var(--white);
+        padding: 40px; /* Matches footer padding */
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Matches header box-shadow */
+        max-width: 400px; /* Slightly wider than header search-bar for balance */
+        width: 90%;
+        margin: 40px auto; /* Mimics footer gap and header centering */
+    }
+
+    .failure-icon {
+        font-size: 60px;
+        color: var(--error-color);
+        margin-bottom: 20px;
+    }
+
+    h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    p {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: var(--primary-color);
+        color: var(--white);
+        text-decoration: none;
+        border-radius: 5px;
+        margin: 10px;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: var(--secondary-color);
+    }
+
+    @media (max-width: 480px) {
+        .main-content {
+            padding: 10px 10px 20px; /* Reduced, matches header mobile */
+        }
+
+        .failure-container {
+            padding: 20px;
+            margin: 20px auto; /* Reduced but consistent */
+            max-width: 300px; /* Tighter for mobile, like header search-bar */
+        }
+
+        h1 {
+            font-size: 20px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        .failure-icon {
+            font-size: 50px;
+        }
+    }
+</style>
+
+<div class="main-content">
+    <div class="failure-container">
+        <div class="failure-icon">✘</div>
+        <h1>Payment Failed</h1>
+        <p>We’re sorry, but your payment could not be processed. Please try again.</p>
+        <a href="/payment" class="btn">Retry Payment</a>
+        <a href="/orderListing" class="btn">View Orders</a>
+    </div>
+</div>
+
+<%- include("../partials/user/footer") %>

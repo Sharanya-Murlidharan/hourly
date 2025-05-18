@@ -1,533 +1,375 @@
-<%- include("../partials/user/header") %>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
-<!-- SweetAlert2 CDN -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+const User = require("../../models/userSchema");
+const Product = require("../../models/productSchema");
+const Cart = require("../../models/cartSchema");
+const Address = require("../../models/addressSchema");
+const Order = require("../../models/orderSchema");
+const Wallet = require("../../models/walletSchema");
+const mongoose = require("mongoose");
 
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+const getOBjofId = (id) => {
+  return new mongoose.Types.ObjectId(id);
+};
+
+// Other existing functions (getCheckout, proceedCheckout, etc.) remain unchanged
+
+const getOrderList = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.redirect("/login");
     }
 
-    body {
-        font-family: 'Montserrat', sans-serif;
-        line-height: 1.6;
-        color: #333;
-        background-color: #f5f5f5;
-    }
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
 
-    main, main * {
-        font-family: 'Montserrat', sans-serif;
-    }
+    const user = await User.findById(userId);
+    const totalOrders = await Order.countDocuments({ _id: { $in: user.orderHistory } });
+    const totalPages = Math.ceil(totalOrders / limit);
 
-    /* Main container padding */
-    .main {
-        padding: 30px 0;
-        min-height: calc(100vh - 150px); /* Adjust for header and footer */
-    }
+    const orders = await Order.find({ _id: { $in: user.orderHistory } })
+      .populate("orderedItems.product")
+      .sort({ createdOn: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    /* Container for Main Content */
-    .account-container {
-        max-width: 1200px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Main Content */
-    .main-content {
-        padding: 40px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    /* Greeting */
-    .greeting {
-        font-size: 1.8rem;
-        font-weight: 500;
-        color: #333;
-        margin-bottom: 20px;
-    }
-
-    /* Cart Table */
-    .cart-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-        background: #f5f5f5;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-
-    .cart-table th, .cart-table td {
-        padding: 15px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
-
-    .cart-table th {
-        background-color: #05445E;
-        color: #fff;
-        font-weight: 500;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-    }
-
-    .cart-table td {
-        font-size: 0.9rem;
-        color: #333;
-    }
-
-    .cart-table .product-cell {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .cart-table .product-cell img {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 5px;
-    }
-
-    .cart-table .product-cell h3 {
-        font-size: 1rem;
-        font-weight: 500;
-        margin: 0;
-    }
-
-    .quantity-selector {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .quantity-selector button {
-        background-color: #05445E;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        padding: 5px 10px;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .quantity-selector button:hover {
-        background-color: #043b52;
-    }
-
-    .quantity-selector input {
-        width: 40px;
-        text-align: center;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 5px;
-        font-size: 0.9rem;
-    }
-
-    .remove-btn {
-        background-color: #ff3b30;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        padding: 8px 16px;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        letter-spacing: 1px;
-        text-decoration: none;
-    }
-
-    .remove-btn:hover {
-        background-color: #e6392f;
-    }
-
-    /* Cart Summary */
-    .cart-summary {
-        background: #f5f5f5;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 20px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-
-    .cart-summary h3 {
-        font-size: 1.2rem;
-        font-weight: 500;
-        margin-bottom: 15px;
-    }
-
-    .cart-summary p {
-        font-size: 1rem;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .checkout-btn {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        background-color: #05445E;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        font-size: 1rem;
-        font-weight: 500;
-        text-align: center;
-        text-decoration: none;
-        transition: background-color 0.3s;
-        letter-spacing: 1px;
-    }
-
-    .checkout-btn:hover {
-        background-color: #043b52;
-    }
-
-    /* Empty Cart Message */
-    .empty-cart {
-        font-size: 1rem;
-        color: #666;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .main-content {
-            padding: 20px;
-        }
-
-        .cart-table th, .cart-table td {
-            padding: 10px;
-        }
-
-        .cart-table .product-cell img {
-            width: 40px;
-            height: 40px;
-        }
-
-        .cart-table .product-cell h3 {
-            font-size: 0.9rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .greeting {
-            font-size: 1.5rem;
-        }
-
-        .cart-table {
-            display: block;
-            overflow-x: auto;
-        }
-
-        .cart-table th, .cart-table td {
-            font-size: 0.8rem;
-            padding: 8px;
-        }
-
-        .cart-table .product-cell h3 {
-            font-size: 0.8rem;
-        }
-
-        .quantity-selector button {
-            padding: 3px 8px;
-            font-size: 0.8rem;
-        }
-
-        .quantity-selector input {
-            width: 30px;
-            font-size: 0.8rem;
-        }
-
-        .remove-btn {
-            font-size: 0.8rem;
-            padding: 6px 12px;
-        }
-
-        .cart-summary h3 {
-            font-size: 1rem;
-        }
-
-        .cart-summary p {
-            font-size: 0.9rem;
-        }
-
-        .checkout-btn {
-            font-size: 0.9rem;
-            padding: 8px;
-        }
-    }
-</style>
-
-<!-- Main Content -->
-<main class="main">
-    <section class="pt-10 pb-10">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-10 m-auto">
-                    <div class="account-container">
-                        <div class="main-content">
-                            <div class="greeting">
-                                My Cart
-                            </div>
-                            <!-- Cart Table -->
-                            <div class="cart-items" id="cart-items">
-                                <table class="cart-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Price</th>
-                                            <th>Quantity</th>
-                                            <th>Subtotal</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="cart-table-body">
-                                        <!-- Sample cart items (to be populated dynamically) -->
-                                        <tr class="cart-item" data-id="1">
-                                            <td class="product-cell">
-                                                <img src="https://via.placeholder.com/60" alt="Product 1">
-                                                <h3>Product 1</h3>
-                                            </td>
-                                            <td>₹<span class="item-price">2499</span></td>
-                                            <td>
-                                                <div class="quantity-selector">
-                                                    <button class="decrease-quantity">-</button>
-                                                    <input type="number" class="quantity-input" value="2" min="1">
-                                                    <button class="increase-quantity">+</button>
-                                                </div>
-                                            </td>
-                                            <td>₹<span class="item-subtotal">4998</span></td>
-                                            <td>
-                                                <a href="#" class="remove-btn" data-href="/removeFromCart?id=1">
-                                                    <i class="fa-solid fa-trash"></i> Remove
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        <tr class="cart-item" data-id="2">
-                                            <td class="product-cell">
-                                                <img src="https://via.placeholder.com/60" alt="Product 2">
-                                                <h3>Product 2</h3>
-                                            </td>
-                                            <td>₹<span class="item-price">4199</span></td>
-                                            <td>
-                                                <div class="quantity-selector">
-                                                    <button class="decrease-quantity">-</button>
-                                                    <input type="number" class="quantity-input" value="1" min="1">
-                                                    <button class="increase-quantity">+</button>
-                                                </div>
-                                            </td>
-                                            <td>₹<span class="item-subtotal">4199</span></td>
-                                            <td>
-                                                <a href="#" class="remove-btn" data-href="/removeFromCart?id=2">
-                                                    <i class="fa-solid fa-trash"></i> Remove
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        <!-- End of sample cart items -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!-- Cart Summary -->
-                            <div class="cart-summary" id="cart-summary">
-                                <h3>Cart Summary</h3>
-                                <p>Total: <span id="cart-total">₹9197</span></p>
-                                <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</main>
-
-<script>
-    // Function to populate cart items dynamically (example)
-    async function loadCartItems() {
-        // Replace this with your API call to fetch cart items
-        // Example: const response = await fetch('/api/cart');
-        // const cartItems = await response.json();
-        const cartItems = [
-            { id: '1', name: 'Product 1', price: 2499, quantity: 2, image: 'https://via.placeholder.com/60' },
-            { id: '2', name: 'Product 2', price: 4199, quantity: 1, image: 'https://via.placeholder.com/60' }
-        ];
-
-        const cartTableBody = document.getElementById('cart-table-body');
-        const cartSummary = document.getElementById('cart-summary');
-
-        if (cartItems.length === 0) {
-            cartTableBody.innerHTML = '<tr><td colspan="5" class="empty-cart">Your cart is empty.</td></tr>';
-            cartSummary.style.display = 'none';
-            return;
-        }
-
-        cartTableBody.innerHTML = '';
-        cartItems.forEach(item => {
-            const row = document.createElement('tr');
-            row.className = 'cart-item';
-            row.dataset.id = item.id;
-            row.innerHTML = `
-                <td class="product-cell">
-                    <img src="${item.image}" alt="${item.name}">
-                    <h3>${item.name}</h3>
-                </td>
-                <td>₹<span class="item-price">${item.price.toFixed(0)}</span></td>
-                <td>
-                    <div class="quantity-selector">
-                        <button class="decrease-quantity">-</button>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="1">
-                        <button class="increase-quantity">+</button>
-                    </div>
-                </td>
-                <td>₹<span class="item-subtotal">${(item.price * item.quantity).toFixed(0)}</span></td>
-                <td>
-                    <a href="#" class="remove-btn" data-href="/removeFromCart?id=${item.id}">
-                        <i class="fa-solid fa-trash"></i> Remove
-                    </a>
-                </td>
-            `;
-            cartTableBody.appendChild(row);
-        });
-
-        // Reattach event listeners after dynamically adding items
-        attachEventListeners();
-        updateCartTotal();
-    }
-
-    // Update total price dynamically
-    function updateCartTotal() {
-        let total = 0;
-        document.querySelectorAll('.cart-item').forEach(item => {
-            const price = parseFloat(item.querySelector('.item-price').textContent);
-            const quantity = parseInt(item.querySelector('.quantity-input').value);
-            const subtotal = price * quantity;
-            item.querySelector('.item-subtotal').textContent = subtotal.toFixed(0);
-            total += subtotal;
-        });
-        const cartTotalElement = document.getElementById('cart-total');
-        if (cartTotalElement) {
-            cartTotalElement.textContent = `₹${total.toFixed(0)}`;
-        }
-    }
-
-    // Attach event listeners to quantity selectors and remove buttons
-    function attachEventListeners() {
-        // Handle quantity changes
-        document.querySelectorAll('.quantity-selector').forEach(selector => {
-            const input = selector.querySelector('.quantity-input');
-            const decreaseBtn = selector.querySelector('.decrease-quantity');
-            const increaseBtn = selector.querySelector('.increase-quantity');
-            const itemId = selector.closest('.cart-item').dataset.id;
-
-            decreaseBtn.addEventListener('click', () => {
-                let quantity = parseInt(input.value);
-                if (quantity > 1) {
-                    quantity--;
-                    input.value = quantity;
-                    updateCartTotal();
-                    // Optionally send update to server
-                    fetch(`/updateCartQuantity?id=${itemId}&quantity=${quantity}`, { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data.success) {
-                                console.error('Failed to update quantity on server');
-                            }
-                        });
-                }
-            });
-
-            increaseBtn.addEventListener('click', () => {
-                let quantity = parseInt(input.value);
-                quantity++;
-                input.value = quantity;
-                updateCartTotal();
-                // Optionally send update to server
-                fetch(`/updateCartQuantity?id=${itemId}&quantity=${quantity}`, { method: 'POST' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            console.error('Failed to update quantity on server');
-                        }
-                    });
-            });
-
-            input.addEventListener('change', () => {
-                let quantity = parseInt(input.value);
-                if (quantity < 1 || isNaN(quantity)) {
-                    quantity = 1;
-                    input.value = quantity;
-                }
-                updateCartTotal();
-                // Optionally send update to server
-                fetch(`/updateCartQuantity?id=${itemId}&quantity=${quantity}`, { method: 'POST' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            console.error('Failed to update quantity on server');
-                        }
-                    });
-            });
-        });
-
-        // Add SweetAlert confirmation for Remove buttons
-        document.querySelectorAll('.remove-btn').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const removeUrl = this.getAttribute('data-href');
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ff3b30',
-                    cancelButtonColor: '#666',
-                    confirmButtonText: 'Yes, remove it!',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = removeUrl;
-                    }
-                });
-            });
-        });
-    }
-
-    // Show SweetAlert for item removed (based on URL parameter)
-    document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const itemRemoved = urlParams.get('itemRemoved') === 'true';
-
-        if (itemRemoved) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Item Removed',
-                text: 'The item has been successfully removed from your cart!',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#05445E'
-            });
-        }
-
-        // Load cart items (uncomment to fetch dynamically)
-        // loadCartItems();
-
-        // Attach event listeners to static items and calculate initial total
-        attachEventListeners();
-        updateCartTotal();
+    const formattedOrders = orders.map(order => {
+      return {
+        orderId: order.orderId,
+        orderDate: order.createdOn.toLocaleDateString('en-GB'),
+        status: order.status,
+        paymentMethod: order.paymentMethod,
+        totalAmount: order.finalAmount,
+        items: order.orderedItems.map(item => ({
+          productName: item.product ? item.product.productName : 'Unknown Product',
+          productImage: item.product && item.product.productImage && item.product.productImage.length > 0
+            ? `/${item.product.productImage[0]}`
+            : '/images/placeholder.jpg',
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.quantity * item.price
+        }))
+      };
     });
-</script>
-<%- include("../partials/user/footer") %>
+
+    res.render("orderListing", {
+      user,
+      orders: formattedOrders,
+      currentPage: page,
+      totalPages: totalPages
+    });
+  } catch (error) {
+    console.error("Error in getOrderList:", error.message, error.stack);
+    res.redirect("/pageNotFound");
+  }
+};
+
+const orderDetail = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.redirect("/login");
+    }
+    const orderId = req.params.id;
+    const user = await User.findById(userId);
+    const order = await Order.findOne({ orderId, _id: { $in: user.orderHistory } })
+      .populate("orderedItems.product");
+    if (!order) {
+      return res.redirect("/pageNotFound");
+    }
+    res.render("orderDetail", {
+      user,
+      order
+    });
+  } catch (error) {
+    console.error("Error from orderDetail:", error);
+    res.redirect("/pageNotFound");
+  }
+};
+
+const cancelOrder = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
+    }
+
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid order ID.' });
+    }
+
+    const user = await User.findById(userId);
+    const order = await Order.findOne({ _id: id }).populate('orderedItems.product');
+    if (!order || !user.orderHistory.includes(order._id)) {
+      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    }
+
+    if (order.status.toLowerCase() === 'canceled' || order.status.toLowerCase() === 'delivered') {
+      return res.status(400).json({ success: false, message: 'Order cannot be canceled.' });
+    }
+
+    // Restore stock
+    for (const item of order.orderedItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.quantity += item.quantity;
+        await product.save();
+      }
+    }
+
+    // Refund to wallet if payment was made
+    if (order.finalAmount > 0 && order.paymentMethod !== 'COD') {
+      const wallet = await Wallet.findOneAndUpdate(
+        { userId },
+        {
+          $inc: { balance: order.finalAmount },
+          $push: {
+            transactions: {
+              amount: order.finalAmount,
+              type: 'credit',
+              description: `Refund for cancelled order ${order.orderId}`,
+              date: new Date()
+            }
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    order.status = 'Canceled';
+    order.totalPrice = 0;
+    order.finalAmount = 0;
+    order.discount = 0;
+    await order.save();
+
+    res.status(200).json({ success: true, message: 'Order canceled successfully.' });
+  } catch (error) {
+    console.error('Error canceling order:', error.message, error.stack);
+    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+  }
+};
+
+const cancelProduct = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
+    }
+
+    const { id: orderId } = req.params;
+    const { productId: orderedProductId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(orderedProductId)) {
+      return res.status(400).json({ success: false, message: 'Invalid order or product ID.' });
+    }
+
+    const user = await User.findById(userId);
+    const order = await Order.findOne({ _id: orderId }).populate('orderedItems.product');
+    if (!order || !user.orderHistory.includes(order._id)) {
+      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    }
+
+    if (order.status.toLowerCase() === 'canceled' || order.status.toLowerCase() === 'delivered') {
+      return res.status(400).json({ success: false, message: 'Order cannot be modified.' });
+    }
+
+    const itemIndex = order.orderedItems.findIndex(item => item._id.equals(orderedProductId));
+    if (itemIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Product not found in order.' });
+    }
+
+    const item = order.orderedItems[itemIndex];
+    if (item.quantity === 0) {
+      return res.status(400).json({ success: false, message: 'Product is already canceled.' });
+    }
+
+    const subtotal = item.quantity * item.price;
+
+    const product = await Product.findById(item.product);
+    if (product) {
+      product.quantity += item.quantity;
+      await product.save();
+    }
+
+    // Mark product as canceled by setting quantity to 0
+    order.orderedItems[itemIndex].quantity = 0;
+    order.totalPrice -= subtotal;
+    order.finalAmount -= subtotal;
+
+    // Refund to wallet if payment was made
+    if (subtotal > 0 && order.paymentMethod !== 'COD') {
+      const wallet = await Wallet.findOneAndUpdate(
+        { userId },
+        {
+          $inc: { balance: subtotal },
+          $push: {
+            transactions: {
+              amount: subtotal,
+              type: 'credit',
+              description: `Refund for cancelled order ${order.orderId}`,
+              date: new Date()
+            }
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    // Check if all items are canceled
+    const allCanceled = order.orderedItems.every(item => item.quantity === 0);
+    if (allCanceled) {
+      order.status = 'Canceled';
+      order.totalPrice = 0;
+      order.finalAmount = 0;
+      order.discount = 0;
+    }
+
+    await order.save();
+
+    res.status(200).json({ success: true, message: 'Product canceled successfully.' });
+  } catch (error) {
+    console.error('Error canceling product:', error.message, error.stack);
+    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+  }
+};
+
+const returnOrder = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
+    }
+
+    const { id } = req.params;
+    const { reason } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid order ID.' });
+    }
+
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Return reason is required.' });
+    }
+
+    const user = await User.findById(userId);
+    const order = await Order.findOne({ _id: id }).populate('orderedItems.product');
+    if (!order || !user.orderHistory.includes(order._id)) {
+      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    }
+
+    if (order.status.toLowerCase() !== 'delivered') {
+      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned.' });
+    }
+
+    order.status = 'Return Request';
+    order.returnReason = reason.trim();
+
+    // Add pending transaction for return refund
+    await Wallet.findOneAndUpdate(
+      { userId },
+      {
+        $push: {
+          transactions: {
+            amount: order.finalAmount,
+            type: 'credit',
+            description: `Pending refund for return of order ${order.orderId}`,
+            date: new Date()
+          }
+        }
+      },
+      { upsert: true }
+    );
+
+    await order.save();
+
+    res.status(200).json({ success: true, message: 'Return request submitted successfully.' });
+  } catch (error) {
+    console.error('Error submitting return request:', error.message, error.stack);
+    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+  }
+};
+
+const returnProduct = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
+    }
+
+    const { id: orderId } = req.params;
+    const { productId: orderedProductId, reason } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(orderedProductId)) {
+      return res.status(400).json({ success: false, message: 'Invalid order or product ID.' });
+    }
+
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Return reason is required.' });
+    }
+
+    const user = await User.findById(userId);
+    const order = await Order.findOne({ _id: orderId }).populate('orderedItems.product');
+    if (!order || !user.orderHistory.includes(order._id)) {
+      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    }
+
+    if (order.status.toLowerCase() !== 'delivered') {
+      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned.' });
+    }
+
+    const itemIndex = order.orderedItems.findIndex(item => item._id.equals(orderedProductId));
+    if (itemIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Product not found in order.' });
+    }
+
+    const item = order.orderedItems[itemIndex];
+    if (item.quantity === 0) {
+      return res.status(400).json({ success: false, message: 'Canceled products cannot be returned.' });
+    }
+
+    const subtotal = item.quantity * item.price;
+
+    // Add pending transaction for return refund
+    await Wallet.findOneAndUpdate(
+      { userId },
+      {
+        $push: {
+          transactions: {
+            amount: subtotal,
+            type: 'credit',
+            description: `Pending refund for return of product in order ${order.orderId}`,
+            date: new Date()
+          }
+        }
+      },
+      { upsert: true }
+    );
+
+    // Store return reason in a metadata array since schema can't be modified
+    if (!order.returnReasons) {
+      order.returnReasons = [];
+    }
+    order.returnReasons.push({
+      productId: orderedProductId,
+      reason: reason.trim()
+    });
+
+    await order.save();
+
+    res.status(200).json({ success: true, message: 'Product return request submitted successfully.' });
+  } catch (error) {
+    console.error('Error submitting product return request:', error.message, error.stack);
+    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+  }
+};
+
+// Other existing functions (getWallet, etc.) remain unchanged
+
+module.exports = {
+  getOBjofId,
+  getOrderList,
+  orderDetail,
+  cancelOrder,
+  cancelProduct,
+  returnOrder,
+  returnProduct,
+  // Other exported functions
+};

@@ -1,76 +1,96 @@
-const User = require('../models/userSchema')
-const userAuth = (req, res, next) => {
-    const publicRoutes = ['/', '/login', '/register'];
-    
-    if (publicRoutes.includes(req.path)) {
-        if (req.session.user) {
-            User.findById(req.session.user)
-                .then(user => {
-                    if (user && !user.isBlocked) {
-                        next(); 
-                    } else {
-                        req.session.destroy(err => {
-                            if (err) {
-                                console.error("Error destroying session:", err);
-                                return res.status(500).json({ error: "Internal server error" });
-                            }
-                            console.log("Session forcefully destroyed successfully");
-                            res.redirect('/login');
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error("Error in user auth middleware:", error);
-                    res.status(500).json({ error: "Internal server error" });
-                });
+    const User = require('../models/userSchema')
+    const userAuth = (req, res, next) => {
+        const publicRoutes = ['/', '/login', '/register'];
+        
+        if (publicRoutes.includes(req.path)) {
+            if (req.session.user) {
+                User.findById(req.session.user)
+                    .then(user => {
+                        if (user && !user.isBlocked) {
+                            next(); 
+                        } else {
+                            req.session.destroy(err => {
+                                if (err) {
+                                    console.error("Error destroying session:", err);
+                                    return res.status(500).json({ error: "Internal server error" });
+                                }
+                                console.log("Session forcefully destroyed successfully");
+                                res.redirect('/login');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error in user auth middleware:", error);
+                        res.status(500).json({ error: "Internal server error" });
+                    });
+            } else {
+                next();
+            }
         } else {
-            next();
+            if (req.session.user) {
+                User.findById(req.session.user)
+                    .then(user => {
+                        if (user && !user.isBlocked) {
+                            next();
+                        } else {
+                            req.session.destroy(err => {
+                                if (err) {
+                                    console.error("Error destroying session:", err);
+                                    return res.status(500).json({ error: "Internal server error" });
+                                }
+                                console.log("Session forcefully destroyed successfully");
+                                res.redirect('/login');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error in user auth middleware:", error);
+                        res.status(500).json({ error: "Internal server error" });
+                    });
+            } else {
+                res.redirect('/login');
+            }
         }
-    } else {
-        if (req.session.user) {
-            User.findById(req.session.user)
+    };
+
+
+    // const adminAuth = (req,res,next)=>{
+    //     User.findOne({isAdmin:true})
+    //     .then(data=>{
+    //         if(data){
+    //             next()
+    //         }else{
+    //             res.redirect("/admin/login")
+    //         }
+    //     })
+    //     .catch(error=>{
+    //         console.log("Error in adminauth middleware",error);
+    //         res.status(500).send("Internal server error")
+            
+    //     })
+    // }
+
+    const adminAuth = (req, res, next) => {
+        if (req.session.admin) {
+            User.findById(req.session.admin)
                 .then(user => {
-                    if (user && !user.isBlocked) {
+                    if (user && user.isAdmin) {
+                        req.user = user; 
                         next();
                     } else {
-                        req.session.destroy(err => {
-                            if (err) {
-                                console.error("Error destroying session:", err);
-                                return res.status(500).json({ error: "Internal server error" });
-                            }
-                            console.log("Session forcefully destroyed successfully");
-                            res.redirect('/login');
-                        });
+                        res.redirect('/admin/login');
                     }
                 })
                 .catch(error => {
-                    console.error("Error in user auth middleware:", error);
-                    res.status(500).json({ error: "Internal server error" });
+                    console.log("Error in admin auth middleware", error);
+                    res.status(500).send('Internal Server Error');
                 });
         } else {
-            res.redirect('/login');
+            res.redirect('/admin/login');
         }
+    };
+
+    module.exports = {
+        userAuth,
+        adminAuth
     }
-};
-
-
-const adminAuth = (req,res,next)=>{
-    User.findOne({isAdmin:true})
-    .then(data=>{
-        if(data){
-            next()
-        }else{
-            res.redirect("/admin/login")
-        }
-    })
-    .catch(error=>{
-        console.log("Error in adminauth middleware",error);
-        res.status(500).send("Internal server error")
-        
-    })
-}
-
-module.exports = {
-    userAuth,
-    adminAuth
-}

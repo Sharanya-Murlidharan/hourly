@@ -46,7 +46,7 @@ const profileStorage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalName));
+        cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
 
@@ -58,12 +58,12 @@ const uploadProfilePicture = multer({
     },
     fileFilter: (req, file, cb) => {
         // Check if file and file.originalName exist
-        if (!file || !file.originalName) {
+        if (!file || !file.originalname) {
             return cb(new Error('No file uploaded or invalid file data'));
         }
 
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        const extname = /\.(jpe?g|png|webp)$/i.test(path.extname(file.originalName));
+        const extname = /\.(jpe?g|png|webp)$/i.test(path.extname(file.originalname));
         const mimetype = allowedTypes.includes(file.mimetype);
 
         if (extname && mimetype) {

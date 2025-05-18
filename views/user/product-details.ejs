@@ -14,13 +14,11 @@
             box-sizing: border-box;
             font-family: Arial, sans-serif;
         }
-
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
         }
-
         body {
             background-color: #fff !important;
             color: #333 !important;
@@ -31,56 +29,46 @@
             display: flex !important;
             flex-direction: column !important;
         }
-
         main {
             flex: 1 0 auto !important;
         }
-
         footer {
             flex-shrink: 0 !important;
             width: 100%;
         }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 15px;
             width: 100%;
         }
-
         .breadcrumb {
             padding: 15px 0;
             background-color: #fff !important;
             border-bottom: 1px solid #e0e0e0 !important;
             font-size: 14px;
         }
-
         .breadcrumb ul {
             list-style: none;
             display: flex;
             align-items: center;
         }
-
         .breadcrumb li {
             display: inline;
             color: #666 !important;
         }
-
         .breadcrumb li:not(:last-child)::after {
             content: '/';
             margin: 0 8px;
             color: #999 !important;
         }
-
         .breadcrumb a {
             text-decoration: none;
             color: #d32f2f !important;
         }
-
         .breadcrumb a:hover {
             text-decoration: underline;
         }
-
         .product-card {
             background-color: #fff !important;
             border: none !important;
@@ -88,7 +76,6 @@
             padding: 30px;
             width: 100%;
         }
-
         .product-container {
             display: flex !important;
             flex-wrap: wrap;
@@ -96,13 +83,11 @@
             align-items: flex-start;
             width: 100%;
         }
-
         .product-images {
             flex: 1 1 300px;
             max-width: 400px;
             min-width: 300px;
         }
-
         .main-image {
             border: 1px solid #e0e0e0 !important;
             padding: 10px;
@@ -111,20 +96,17 @@
             background-color: #fff !important;
             border-radius: 5px;
         }
-
         .main-image img {
             max-width: 100%;
             height: 300px;
             object-fit: contain;
         }
-
         .thumbnails {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
         }
-
         .thumbnail {
             width: 60px;
             height: 60px;
@@ -134,30 +116,24 @@
             border-radius: 5px;
             transition: border-color 0.3s;
         }
-
         .thumbnail img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .thumbnail.active {
             border-color: #d32f2f !important;
         }
-
         .thumbnail:hover {
             border-color: #ff5722;
         }
-
         .zoom-container {
             position: relative;
             display: inline-block;
         }
-
         .zoom-image {
             transition: transform 0.5s ease;
         }
-
         .zoom-lens {
             position: absolute;
             border: 2px solid #fff;
@@ -170,24 +146,20 @@
             transition: opacity 0.2s;
             background: rgba(255, 255, 255, 0.5);
         }
-
         .zoom-container:hover .zoom-lens {
             opacity: 1;
         }
-
         .product-info {
             flex: 2 1 300px;
             min-width: 300px;
             padding-top: 0;
         }
-
         .product-title {
             font-size: 20px;
             margin-bottom: 10px;
             color: #333 !important;
             display: inline;
         }
-
         .discount-badge {
             background-color: #d32f2f !important;
             color: #fff !important;
@@ -196,44 +168,48 @@
             font-size: 12px;
             margin-left: 10px;
         }
-
+        .current-price, .discounted-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .original-price {
+            font-size: 14px;
+            color: #666;
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
         .product-description {
             margin-bottom: 20px;
             color: #666 !important;
             line-height: 1.8;
             font-size: 14px;
         }
-
         .product-meta {
             margin-bottom: 20px;
             padding-bottom: 15px;
         }
-
         .meta-item {
             display: flex;
             margin-bottom: 10px;
             font-size: 14px;
         }
-
         .meta-title {
             width: 100px;
             font-weight: bold;
             color: #555 !important;
         }
-
         .quantity-control {
             display: flex;
             align-items: center;
             margin: 20px 0;
         }
-
         .quantity-label {
             margin-right: 15px;
             font-weight: bold;
             color: #555 !important;
             font-size: 14px;
         }
-
         .quantity-input {
             display: flex;
             align-items: center;
@@ -241,7 +217,6 @@
             border-radius: 4px;
             overflow: hidden;
         }
-
         .quantity-btn {
             width: 30px;
             height: 30px;
@@ -254,11 +229,9 @@
             font-size: 16px;
             transition: background 0.3s;
         }
-
         .quantity-btn:hover {
             background-color: #e0e0e0;
         }
-
         .quantity-value {
             width: 50px;
             height: 30px;
@@ -266,13 +239,11 @@
             text-align: center;
             font-size: 14px;
         }
-
         .action-buttons {
             display: flex;
             gap: 10px;
             margin-top: 20px;
         }
-
         .add-to-cart-button {
             flex: 2;
             background-color: #03384d !important;
@@ -286,16 +257,13 @@
             transition: background 0.3s;
             font-size: 14px;
         }
-
         .add-to-cart-button:hover {
             background-color: #1565C0 !important;
         }
-
         .add-to-cart-button:disabled {
             background-color: #90CAF9 !important;
             cursor: not-allowed;
         }
-
         .wishlist-button {
             flex: 1;
             background-color: #fff !important;
@@ -310,22 +278,21 @@
             justify-content: center;
             font-size: 14px;
         }
-
         .wishlist-button:hover {
             background-color: #f5f5f5 !important;
         }
-
+        .wishlist-button.active .fas.fa-heart {
+            color: #d32f2f !important;
+        }
         .product-tabs {
             margin-top: 30px;
             width: 100%;
         }
-
         .tabs-nav {
             display: flex;
             border-bottom: 1px solid #ddd !important;
             margin-bottom: 10px;
         }
-
         .tab-button {
             padding: 10px 20px;
             background: none;
@@ -336,42 +303,34 @@
             margin-right: 10px;
             transition: color 0.3s;
         }
-
         .tab-button.active {
             color: #d32f2f !important;
             border-bottom: 2px solid #d32f2f !important;
         }
-
         .tab-button:hover {
             color: #ff5722;
         }
-
         .tab-content {
             padding: 20px 0;
             border: none;
             background: none;
         }
-
         .tab-pane {
             display: none;
             color: #666 !important;
             font-size: 14px;
         }
-
         .tab-pane.active {
             display: block;
         }
-
         .out-of-stock {
             color: #dc3545 !important;
             font-weight: bold;
         }
-
         .zz-related-products {
             padding: 30px 0;
             overflow-x: auto;
         }
-
         .zz-section-title {
             font-size: 24px;
             font-weight: bold;
@@ -379,7 +338,6 @@
             margin-bottom: 20px;
             text-align: center;
         }
-
         .zz-related-products .row {
             display: flex;
             flex-wrap: nowrap;
@@ -389,16 +347,13 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-
         .zz-related-products .row::-webkit-scrollbar {
             display: none;
         }
-
         .zz-related-products .col-lg-3 {
             flex: 0 0 250px;
             max-width: 250px;
         }
-
         .product-item {
             background-color: #fff !important;
             border: 1px solid #e0e0e0 !important;
@@ -406,63 +361,70 @@
             padding: 15px;
             transition: box-shadow 0.3s;
         }
-
         .product-item:hover {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
         .product-img-wrap {
             position: relative;
             text-align: center;
         }
-
         .product-img-wrap img {
             max-width: 100%;
             height: 200px;
             object-fit: contain;
         }
-
         .wishlist-btn {
             position: absolute;
             top: 10px;
             right: 10px;
         }
-
         .wishlist-btn a {
             color: #666 !important;
             font-size: 18px;
             transition: color 0.3s;
         }
-
         .wishlist-btn a:hover {
             color: #d32f2f !important;
         }
-
         .product-details {
             text-align: center;
             margin-top: 15px;
         }
-
         .product-details h6 {
             font-size: 16px;
             margin-bottom: 10px;
         }
-
         .product-details h6 a {
             color: #333 !important;
         }
-
         .product-details h6 a:hover {
             color: #d32f2f !important;
         }
-
         .price-box {
             font-size: 18px;
             font-weight: bold;
             color: #000000d1 !important;
             margin-bottom: 15px;
         }
-
+        .price-box .discounted-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .price-box .original-price {
+            font-size: 14px;
+            color: #666;
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
+        .price-box .discount-badge {
+            background-color: #d32f2f;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
         .cart-btn {
             display: inline-block;
             background-color: #03384d !important;
@@ -476,82 +438,72 @@
             font-size: 14px;
             transition: background 0.3s;
         }
-
         .cart-btn:hover {
             background-color: #1565C0 !important;
         }
-
         @media (max-width: 768px) {
             body {
                 padding-bottom: 0 !important;
             }
-
             .product-card {
                 padding: 15px;
             }
-
             .product-container {
                 flex-direction: column !important;
             }
-
             .product-images {
                 max-width: 100%;
             }
-
             .main-image img {
                 height: 200px;
             }
-
             .thumbnails {
                 flex-wrap: wrap;
             }
-
             .thumbnail {
                 width: 50px;
                 height: 50px;
             }
-
             .product-info {
                 padding-top: 20px;
             }
-
             .product-title {
                 font-size: 18px;
             }
-
-            .current-price {
+            .current-price, .discounted-price {
                 font-size: 18px;
             }
-
             .original-price {
                 font-size: 14px;
             }
-
             .add-to-cart-button, .wishlist-button {
                 padding: 10px;
                 font-size: 12px;
             }
-
             .meta-title {
                 width: 80px;
             }
-
             .zz-section-title {
                 font-size: 20px;
             }
-
             .product-img-wrap img {
                 height: 150px;
             }
-
             .product-details h6 {
                 font-size: 14px;
             }
-
             .price-box {
                 font-size: 16px;
             }
-
+            .price-box .discounted-price {
+                font-size: 16px;
+            }
+            .price-box .original-price {
+                font-size: 12px;
+            }
+            .price-box .discount-badge {
+                font-size: 0.65rem;
+            }
             .cart-btn {
                 padding: 8px 16px;
                 font-size: 12px;
@@ -603,14 +555,16 @@
                     <div class="product-info">
                         <h1 class="product-title">
                             <%= product?.productName %>
-                            <% if (product?.productOffer && product.productOffer > 0) { %>
-                                <span class="discount-badge"><%= product.productOffer %>% OFF</span>
+                            <% if (product?.hasDiscount) { %>
+                                <span class="discount-badge"><%= product.discountPercentage %>% OFF</span>
                             <% } %>
                         </h1>
                         <div class="price-container">
-                            <span class="current-price">₹<%= (product?.salePrice || product?.regularPrice || 0).toLocaleString('en-IN') %></span>
-                            <% if (product?.regularPrice && product?.salePrice && product.salePrice < product.regularPrice) { %>
-                                <span class="original-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+                            <% if (product?.hasDiscount) { %>
+                                <span class="discounted-price">₹<%= product.discountedPrice.toLocaleString('en-IN') %></span>
+                                <span class="original-price">₹<%= product.originalPrice.toLocaleString('en-IN') %></span>
+                            <% } else { %>
+                                <span class="current-price">₹<%= product.salePrice.toLocaleString('en-IN') %></span>
                             <% } %>
                         </div>
                         <div class="product-description">
@@ -623,11 +577,7 @@
                             </div>
                             <div class="meta-item">
                                 <div class="meta-title">Brand:</div>
-                                <div><%= product?.brand?.name || 'acer' %></div>
-                            </div>
-                            <div class="meta-item">
-                                <div class="meta-title">SKU:</div>
-                                <div><%= product?._id || 'N/A' %></div>
+                                <div><%= product?.brand?.name %></div>
                             </div>
                             <div class="meta-item">
                                 <div class="meta-title">Availability:</div>
@@ -688,7 +638,15 @@
                                     </div>
                                     <div class="product-details">
                                         <h6><a href="/productDetails?id=<%= relatedProduct._id %>" class="text-dark text-decoration-none"><%= relatedProduct.productName %></a></h6>
-                                        <div class="price-box">₹ <%= relatedProduct.salePrice %></div>
+                                        <div class="price-box">
+                                            <% if (relatedProduct.hasDiscount) { %>
+                                                <span class="discounted-price">₹<%= relatedProduct.discountedPrice.toLocaleString('en-IN') %></span>
+                                                <span class="original-price">₹<%= relatedProduct.originalPrice.toLocaleString('en-IN') %></span>
+                                                <span class="discount-badge"><%= relatedProduct.discountPercentage %>% OFF</span>
+                                            <% } else { %>
+                                                <span>₹<%= relatedProduct.salePrice.toLocaleString('en-IN') %></span>
+                                            <% } %>
+                                        </div>
                                         <a href="/addToCart?id=<%= relatedProduct._id %>" class="cart-btn">ADD TO CART</a>
                                     </div>
                                 </div>
@@ -746,13 +704,13 @@
 
             window.addToCart = function(productId) {
                 if (<%= product?.quantity > 0 %>) {
-                    let quantity = document.getElementById('quantity').value
+                    let quantity = document.getElementById('quantity').value;
                     fetch('/addToCart', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ productId,quantity }),
+                        body: JSON.stringify({ productId, quantity }),
                     })
                     .then(response => {
                         if (!response.ok) {
@@ -805,13 +763,58 @@
             };
 
             window.addToWishlist = function(productId) {
-                console.log('Added to wishlist:', productId);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Product added to wishlist!',
-                    timer: 1500,
-                    showConfirmButton: false
+                const wishlistButton = document.querySelector('.wishlist-button');
+                fetch('/addToWishlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ productId }),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.href = '/login';
+                            return;
+                        }
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Failed to add to wishlist');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        wishlistButton.classList.add('active');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Product added to wishlist!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else if (data) {
+                        if (data.message === "Product is already in your wishlist.") {
+                            wishlistButton.classList.add('active');
+                        }
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Info',
+                            text: data.message || 'Product is already in your wishlist.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'An error occurred while adding to wishlist',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 });
             };
 
@@ -821,15 +824,12 @@
 
                 container.addEventListener('mousemove', (e) => {
                     const { left, top, width, height } = container.getBoundingClientRect();
-
                     const posX = e.clientX - left;
                     const posY = e.clientY - top;
-
                     const lensX = posX - (lens.offsetWidth / 2);
                     const lensY = posY - (lens.offsetHeight / 2);
                     lens.style.left = `${lensX}px`;
                     lens.style.top = `${lensY}px`;
-
                     const zoomedImgUrl = img.src;
                     lens.style.backgroundImage = `url(${zoomedImgUrl})`;
                     lens.style.backgroundSize = `${img.width * 2}px ${img.height * 2}px`;

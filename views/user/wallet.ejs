@@ -1,0 +1,364 @@
+<%- include('../../views/partials/user/header') %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wallet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    main, main * {
+      font-family: 'Montserrat', sans-serif;
+    }
+    /* Main container padding */
+    .main {
+      padding: 30px 0;
+      min-height: calc(100vh - 150px);
+    }
+    /* Container for Main Content (With Sidebar) */
+    .account-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 20%;
+      background: #fff;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+    }
+    .sidebar ul {
+      list-style: none;
+    }
+    .sidebar ul li {
+      margin-bottom: 10px;
+    }
+    .sidebar ul li a {
+      text-decoration: none;
+      color: #666;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s, color 0.3s;
+      position: relative;
+    }
+    .sidebar ul li a i {
+      margin-right: 10px;
+      font-size: 1.1rem;
+      color: #666;
+      transition: color 0.3s;
+    }
+    .sidebar ul li a.active {
+      color: #05445E;
+      font-weight: 500;
+    }
+    .sidebar ul li a.active i {
+      color: #05445E;
+    }
+    .sidebar ul li a.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      background-color: #05445E;
+      border-radius: 0 5px 5px 0;
+    }
+    .sidebar ul li a:hover {
+      background-color: #f1f3f6;
+      color: #05445E;
+    }
+    .sidebar ul li a:hover i {
+      color: #05445E;
+    }
+    /* Main Content */
+    .main-content {
+      padding: 40px;
+      flex: 1;
+    }
+    /* Greeting */
+    .greeting {
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    /* Balance Card */
+    .balance-card {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+    .balance-card h2 {
+      font-size: 1.5rem;
+      color: #05445E;
+      margin: 0;
+    }
+    /* Transaction History Section */
+    .history-section {
+      margin-top: 30px;
+    }
+    .history-section h3 {
+      font-size: 1.3rem;
+      color: #05445E;
+      margin-bottom: 15px;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    .history-table th,
+    .history-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .history-table th {
+      background-color: #e3f2fd;
+      color: #333;
+      font-weight: 500;
+    }
+    .history-table tr:hover {
+      background-color: #f1f1f1;
+    }
+    .credit {
+      color: #388e3c;
+      font-weight: 500;
+    }
+    .debit {
+      color: #d32f2f;
+      font-weight: 500;
+    }
+    /* No Transactions Message */
+    .no-transactions {
+      font-size: 1rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .pagination .page-item {
+      margin: 0 4px;
+    }
+    .pagination .page-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      text-decoration: none;
+      color: #05445E;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      background-color: #fff;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .pagination .page-link i {
+      font-size: 0.8rem;
+    }
+    .pagination .page-link:hover {
+      background-color: #05445E;
+      color: #fff;
+    }
+    .pagination .page-item.active .page-link {
+      background-color: #05445E;
+      color: #fff;
+      border-color: #05445E;
+    }
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .account-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+      }
+      .main-content {
+        padding: 20px;
+      }
+      .history-table {
+        font-size: 0.9rem;
+      }
+      .history-table th,
+      .history-table td {
+        padding: 8px;
+      }
+      .pagination .page-link {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .greeting {
+        font-size: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .sidebar ul li a {
+        font-size: 0.9rem;
+        padding: 10px;
+      }
+      .sidebar ul li a i {
+        font-size: 1rem;
+      }
+      .balance-card h2 {
+        font-size: 1.2rem;
+      }
+      .history-section h3 {
+        font-size: 1.1rem;
+      }
+      .history-table {
+        font-size: 0.8rem;
+      }
+      .history-table th,
+      .history-table td {
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="main">
+    <section class="pt-10 pb-10">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-10 m-auto">
+            <div class="account-container">
+              <div class="sidebar">
+                <ul>
+                  <li><a href="/userProfile"><i class="fa-solid fa-user"></i> My Profile</a></li>
+                  <li><a href="/address"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
+                  <li><a href="/orderListing"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
+                  <li><a href="/wallet" class="active"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
+                  <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li>
+                  <li>
+                    <a href="/logout" class="menu-item logout">
+                      <i class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#666" width="20" height="20">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                      </i> 
+                      <span>Logout</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="main-content">
+                <div class="greeting">
+                  My Wallet
+                </div>
+                <!-- Balance Card -->
+                <div class="balance-card">
+                  <h2>Balance: ₹<%= wallet !== undefined ? wallet.balance.toFixed(2) : '0.00' %></h2>
+                </div>
+                <!-- Transaction History -->
+                <div class="history-section">
+                  <h3>Transaction History</h3>
+                  <% if (wallet.transactions && wallet.transactions.length > 0) { %>
+                    <table class="history-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Description</th>
+                          <th>Amount</th>
+                          <th>Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% wallet.transactions.forEach(transaction => { %>
+                          <tr>
+                            <td><%= new Date(transaction.date).toLocaleDateString('en-GB') %></td>
+                            <td><%= transaction.description || 'Transaction' %></td>
+                            <td class="<%= transaction.type === 'credit' ? 'credit' : 'debit' %>">
+                              <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount.toFixed(2) %>
+                            </td>
+                            <td><%= transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) %></td>
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+                  <% } else { %>
+                    <p class="no-transactions">No transactions found.</p>
+                  <% } %>
+                </div>
+                <!-- Pagination -->
+                <% if (wallet.transactions && wallet.transactions.length > 0) { %>
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                      <% if (currentPage > 1) { %>
+                        <li class="page-item">
+                          <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                            <i class="fas fa-chevron-left"></i>
+                          </a>
+                        </li>
+                      <% } %>
+                      <% for(let i = 1; i <= totalPages; i++) { %>
+                        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                          <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                        </li>
+                      <% } %>
+                      <% if (currentPage < totalPages) { %>
+                        <li class="page-item">
+                          <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                            <i class="fas fa-chevron-right"></i>
+                          </a>
+                        </li>
+                      <% } %>
+                    </ul>
+                  </nav>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+<%- include('../../views/partials/user/footer') %>

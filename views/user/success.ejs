@@ -228,7 +228,7 @@
         </div>
         <div class="order-item">
           <span>Payment Method</span>
-          <span><%= order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod %></span>
+          <span><%= order.paymentMethod %></span>
         </div>
         <h3>Items Purchased</h3>
         <% order.orderedItems.forEach(item => { %>
@@ -247,7 +247,7 @@
         <button class="action-btn" onclick="openInvoiceModal()">
           <i class="fa-solid fa-file-pdf"></i> Download Invoice
         </button>
-        <a href="/order/details/<%= order.orderId %>" class="action-btn">
+        <a href="/orderListing %>" class="action-btn">
           <i class="fa-solid fa-list"></i> Order Details
         </a>
         <a href="/shop" class="action-btn">
@@ -318,7 +318,7 @@
       doc.setFont("Helvetica", "normal");
       doc.text(`Order ID: <%= order.orderId %>`, 20, 130);
       doc.text(`Order Date: <%= order.createdOn.toLocaleDateString('en-GB') %>`, 20, 140);
-      doc.text(`Payment Method: <%= order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod %>`, 20, 150);
+      doc.text(`Payment Method: <%= order.paymentMethod %>`, 20, 150);
 
       const tableStartY = 165;
       const columnWidths = { item: 80, qty: 20, price: 30, total: 30 };
