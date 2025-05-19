@@ -706,7 +706,7 @@
 
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData);
-      const url = data.addressId ? '/edit-address' : '/add-address';
+      const url = data.addressId ? '/editAddress' : '/addAddress';
 
       try {
         const response = await fetch(url, {
@@ -772,7 +772,7 @@
       }
 
       try {
-        const response = await fetch('/apply-coupon', {
+        const response = await fetch('/applyCoupon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ couponCode }),
@@ -818,7 +818,7 @@
 
     async function removeCoupon() {
       try {
-        const response = await fetch('/remove-coupon', {
+        const response = await fetch('/removeCoupon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -881,7 +881,7 @@
       };
 
       try {
-        const response = await fetch('/proceed-to-payment', {
+        const response = await fetch('/proceedToPayment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -923,7 +923,7 @@
   couponList.innerHTML = '<p>Loading coupons...</p>';
 
   try {
-    const response = await fetch('/available-coupons', {
+    const response = await fetch('/availableCoupons', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });

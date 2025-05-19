@@ -603,7 +603,7 @@
             async function initiateRazorpayPayment(paymentMethod) {
                 try {
                     // Fetch Razorpay order ID from the server
-                    const response = await fetch('/create-razorpay-order', {
+                    const response = await fetch('/createRazorpayOrder', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ amount: <%= totalPrice %> * 100 }) // Amount in paise
@@ -623,7 +623,7 @@
                         order_id: order.id,
                         handler: async function(response) {
                             // Verify payment on the server
-                            const verifyResponse = await fetch('/verify-razorpay-payment', {
+                            const verifyResponse = await fetch('/verifyRazorpayPayment', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({

@@ -315,7 +315,7 @@ const createRazorpayOrder = async (req, res) => {
       return res.status(400).json({ error: "Invalid amount." });
     }
 
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ error: "Cart is empty." });
     }
@@ -357,6 +357,7 @@ const createRazorpayOrder = async (req, res) => {
     const finalAmount = totalPrice - offerDiscount - (cart.discount || 0);
 
     const order = new Order({
+      user: userId, // Add the user field
       orderId,
       orderedItems: cart.items.map(item => ({
         product: item.productId._id,
@@ -392,7 +393,7 @@ const createRazorpayOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("Error from createRazorpayOrder:", error);
-    res.status(500).json({ error: "Failed to create Razorpay order." });
+    res.status(500).json({ error: error.message || "Failed to create Razorpay order." });
   }
 };
 
@@ -572,6 +573,7 @@ const proceedCheckout = async (req, res) => {
     const orderId = `${year}${month}${day}${seq}`;
 
     const order = new Order({
+      user: userId, // Add the user field
       orderId,
       orderedItems: cart.items.map(item => ({
         product: item.productId._id,
@@ -968,6 +970,87 @@ const returnOrder = async (req, res) => {
     res.status(500).json({ success: false, message: `Server error: ${error.message}` });
   }
 };
+
+// const returnProduct = async (req, res) => {
+//   try {
+//     const userId = req.session.user;
+//     if (!userId) {
+//       return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
+//     }
+
+//     const { id } = req.params; // orderId
+//     const { productId, reason } = req.body;
+//     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(productId)) {
+//       return res.status(400).json({ success: false, message: 'Invalid order or product ID.' });
+//     }
+
+//     if (!reason || reason.trim() === '') {
+//       return res.status(400).json({ success: false, message: 'Return reason is required.' });
+//     }
+
+//     const user = await User.findById(userId);
+//     const order = await Order.findOne({ _id: id }).populate('orderedItems.product');
+//     if (!order || !user.orderHistory.includes(order._id)) {
+//       return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+//     }
+
+//     if (order.status.toLowerCase() !== 'delivered') {
+//       return res.status(400).json({ success: false, message: 'Only delivered orders can be returned.' });
+//     }
+
+//     // Find the ordered item
+//     const item = order.orderedItems.find(item => item._id.toString() === productId);
+//     if (!item) {
+//       return res.status(404).json({ success: false, message: 'Product not found in order.' });
+//     }
+
+//     // Check if the item is already returned
+//     if (order.returnReasons && order.returnReasons.some(r => r.productId.toString() === productId)) {
+//       return res.status(400).json({ success: false, message: 'This product is already returned.' });
+//     }
+
+//     // Add return reason for the product
+//     if (!order.returnReasons) {
+//       order.returnReasons = [];
+//     }
+//     order.returnReasons.push({
+//       productId,
+//       reason: reason.trim(),
+//       requestedAt: new Date()
+//     });
+
+//     // Update order status to 'Return Request' if not already set
+//     if (order.status.toLowerCase() !== 'return request') {
+//       order.status = 'Return Request';
+//     }
+
+//     // Calculate refund amount for the product
+//     const refundAmount = item.quantity * item.price;
+
+//     // Add pending refund transaction to wallet
+//     await Wallet.findOneAndUpdate(
+//       { userId },
+//       {
+//         $push: {
+//           transactions: {
+//             amount: refundAmount,
+//             type: 'credit',
+//             description: `Pending refund for return of product ${item.product.productName} in order ${order.orderId}`,
+//             date: new Date()
+//           }
+//         }
+//       },
+//       { upsert: true }
+//     );
+
+//     await order.save();
+
+//     res.status(200).json({ success: true, message: 'Product return request submitted successfully.' });
+//   } catch (error) {
+//     console.error('Error submitting product return request:', error.message, error.stack);
+//     res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+//   }
+// };
 
 const returnProduct = async (req, res) => {
   try {

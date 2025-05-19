@@ -4,6 +4,7 @@ const Cart = require("../../models/cartSchema");
 const Offer = require("../../models/offerSchema")
 const mongoose = require("mongoose");
 
+
 const getCartPage = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -103,8 +104,9 @@ const getCartPage = async (req, res) => {
       grandTotal,
     });
   } catch (error) {
-    console.error("Error in getCartPage:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+    error.statusCode = 500;
+        next(error);
+
   }
 };
 
@@ -216,8 +218,9 @@ const addToCart = async (req, res) => {
       // remainingStock: updatedProduct.quantity
     });
   } catch (error) {
-    console.error("Error in addToCart:", error.message, error.stack);
-    return res.status(500).json({ success: false, message: "Server error: " + error.message });
+     error.statusCode = 500;
+        next(error);
+
   }
 };
 
@@ -298,8 +301,9 @@ const changeQuantity = async (req, res) => {
       grandTotal,
     });
   } catch (error) {
-    console.error("Error in changeQuantity:", error.message, error.stack);
-    return res.status(500).json({ success: false, message: "Server error: " + error.message });
+     error.statusCode = 500;
+        next(error);
+
   }
 };
 
@@ -373,8 +377,9 @@ const deleteProduct = async (req, res) => {
       message: "Product removed from cart successfully",
     });
   } catch (error) {
-    console.error("Error in deleteProduct:", error.message, error.stack);
-    return res.status(500).json({ success: false, message: "Server error: " + error.message });
+    error.statusCode = 500;
+        next(error);
+
   }
 };
 

@@ -159,7 +159,7 @@
         <h3 class="mb-30 text-center">Email Verification</h3>
       </div>
       <div class="otp-container">
-        <form onsubmit="return validateOtpForm()" action="/verify-email-otp" method="post">
+        <form onsubmit="return validateOtpForm()" action="/verifyEmailOtp" method="post">
           <div class="form-group">
             <label for="otp">Enter OTP:</label>
             <input type="text" id="otp" name="otp" class="form-control" required>
@@ -225,7 +225,7 @@
         const otpInput = document.getElementById('otp').value
         $.ajax({
             type:'POST',
-            url:'/resend-forgot-otp',
+            url:'/resendForgotOtp',
             data:{otp:otpInput},
             success:function(response){
                 if (response.success) {
@@ -235,7 +235,7 @@
                         showConfirmButton:false,
                         timer:1500
                     }).then(()=>{
-                        window.location.href = '/newemailpage'
+                        window.location.href = '/newEmailPage'
                     })
                 }else{
                     Swal.fire({
@@ -262,7 +262,7 @@
         startOtpTimer()
         $.ajax({
             type:'POST',
-            url:'/resend-forgot-otp',
+            url:'/resendForgotOtp',
             success:function(response){
                 if (response.success) {
                     Swal.fire({

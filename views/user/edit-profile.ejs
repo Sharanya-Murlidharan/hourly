@@ -291,7 +291,7 @@
                                 Edit Profile
                             </div>
                             <div class="basic-info">
-                                <form method="post" action="/update-profile" enctype="multipart/form-data">
+                                <form method="post" action="/updateProfile" enctype="multipart/form-data">
                                     <div class="image-upload-container">
                                         <img src="<%= user.ProfilePicture || '/images/default-profile.jpg' %>" alt="Profile Image" id="profile-image" class="profile-image">
                                         <button type="button" class="choose-photo-btn" onclick="document.getElementById('image-input').click()">Choose Photo</button>
@@ -314,14 +314,14 @@
                                                 <label for="username-login">Email</label>
                                                 <input type="text" id="username-login" value="<%= user.email || 'Not available' %>" disabled>
                                                 <div class="change-btn-container">
-                                                    <a href="/change-email" class="change-btn">Change Email</a>
+                                                    <a href="/changeEmail" class="change-btn">Change Email</a>
                                                 </div>
                                             </div>
                                             <div class="input-field">
                                                 <label for="password">Password</label>
                                                 <input type="password" id="password" value="••••••••••••" disabled>
                                                 <div class="change-btn-container">
-                                                    <a href="/change-password" class="change-btn">Change Password</a>
+                                                    <a href="/changePassword" class="change-btn">Change Password</a>
                                                 </div>
                                             </div>
                                         </div>

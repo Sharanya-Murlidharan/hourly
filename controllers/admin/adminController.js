@@ -26,7 +26,7 @@ const login=async(req,res)=>{
             if(passwordmatch){   
                 req.session.admin=admin
                 req.session.Mess="Admin Login Successfully";
-                return res.redirect("/admin/dashBoard");
+                return res.redirect("/admin/dashboard");
             }else{
                 req.session.Mes={type:"error",text:"Password do not match"}
                 return res.redirect("/admin/login");

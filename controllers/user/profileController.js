@@ -94,7 +94,7 @@ const forgotEmailValid = async (req, res) => {
                 req.session.userOtp = otp;
                 req.session.email = email;
                 req.session.otpExpires = Date.now() + 30 * 1000;
-                return res.json({ success: true, redirectUrl: "/forgotpass-otp" });
+                return res.json({ success: true, redirectUrl: "/forgotPassOtp" });
             } else {
                 return res.json({ success: false, message: "Failed to send OTP. Please try again" });
             }
@@ -102,8 +102,9 @@ const forgotEmailValid = async (req, res) => {
             return res.json({ success: false, message: "User with this email does not exist" });
         }
     } catch (error) {
-        console.error("Error in forgotEmailValid:", error);
-        return res.status(500).json({ success: false, message: "An error occurred. Please try again." });
+         error.statusCode = 500;
+        next(error);
+
     }
 };
 
@@ -119,12 +120,14 @@ const verifyForgotPassOtp = async(req,res)=>{
     try {
         const enteredOtp = req.body.otp
         if (enteredOtp === req.session.userOtp) {
-            res.json({success:true,redirectUrl:"/reset-password"})
+            res.json({success:true,redirectUrl:"/resetPassword"})
         }else{
             res.json({success:false,message:"OTP not matching"})
         }
     } catch (error) {
-        res.status(500).json({success:false,message:"An error occured please try again"})
+        error.statusCode = 500;
+        next(error);
+
     }
 }
 
@@ -162,8 +165,9 @@ const postNewPassword = async (req, res) => {
 
         return res.status(200).json({ success: true, message: "Password successfully changed!" });
     } catch (error) {
-        console.error("Error in postNewPassword:", error);
-        return res.status(500).json({ success: false, message: "An error occurred. Please try again." });
+        error.statusCode = 500;
+        next(error);
+
     }
 };
 
@@ -193,8 +197,9 @@ const resendOtp = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Error in resendOtp:', error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
+         error.statusCode = 500;
+        next(error);
+
     }
 };
 
@@ -216,8 +221,9 @@ const userProfile = async (req,res)=>{
             userAddress:addressData
         })
     } catch (error) {
-        console.log('user profile error:',error);
-        res.redirect('/pageNotFound')
+        error.statusCode = 500;
+        next(error);
+
         
     }
 }
@@ -253,7 +259,9 @@ const changeEmailValid = async(req,res)=>{
             })
         }
     } catch (error) {
-        res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
+
     }
 }
 
@@ -262,17 +270,20 @@ const verifyEmailOtp = async(req,res)=>{
         const enteredOtp = req.body.otp
         if (enteredOtp===req.session.userOtp) {
             req.session.userData = req.body.userData
-            res.render('new-email',{
-                userData:req.session.userData
-            })
+            return res.json({
+                success: true,
+                redirectUrl: "/new-email"
+            });
         }else{
-            res.render('change-email-otp',{
-                message:"OTP not matching",
-                userData : req.session.userData
-            })
+           return res.json({
+                success: false,
+                message: "OTP is not correct"
+            });
         }
     } catch (error) {
-        res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
+
     }
 }
 
@@ -283,7 +294,9 @@ const updateEmail = async(req,res)=>{
         await User.findByIdAndUpdate(userId,{email:newEmail})
         res.redirect('/editProfile')
     } catch (error) {
-        res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
+
     }
 }
 
@@ -292,7 +305,9 @@ const newEmailPage = async(req,res)=>{
     try {
         res.render('new-email')
     } catch (error) {
-        console.log('error from newemailpage',error)
+         error.statusCode = 500;
+        next(error);
+
     }
 } 
 
@@ -329,8 +344,9 @@ const changePaawordValid = async(req,res)=>{
           })
         }
     } catch (error) {
-        res.redirect("/pageNotFound")
-        console.log("Error from change password valid",error);
+         error.statusCode = 500;
+        next(error);
+
         
     }
 }
@@ -396,8 +412,9 @@ const updatePassword = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("Error in updatePassword:", error);
-        res.redirect("/pageNotFound");
+        error.statusCode = 500;
+        next(error);
+
     }
 };
 
@@ -409,15 +426,16 @@ const editProfile = async(req,res)=>{
         user:userData
     })
 } catch (error) {
-    console.log('edit profile error:',error);
-    res.redirect('/pageNotFound')
+    error.statusCode = 500;
+        next(error);
+
     
 }
 }
 
 const updateProfile = async (req, res) => {
     try {
-        console.log(req.file,'file')
+        // console.log(req.file,'file')
         const userId = req.session.user;
         if (!userId) {
             return res.render('login', {
@@ -472,15 +490,15 @@ const updateProfile = async (req, res) => {
                 message: 'User not found.'
             });
         }
-         const user = await User.findOne({_id:userId})
-         if(!user){
-            res.render('profile', {
-                user: updatedUser,
-                message: "User Not Found"
-            });
-         }
-         user.ProfilePicture = req.file.path
-         await user.save()
+        //  const user = await User.findOne({_id:userId})
+        //  if(!user){
+        //     res.render('profile', {
+        //         user: updatedUser,
+        //         message: "User Not Found"
+        //     });
+        //  }
+        //  user.ProfilePicture = req.file.path
+        //  await user.save()
         // Render profile page with success message
         res.render('profile', {
             user: updatedUser,
@@ -506,8 +524,9 @@ const getAddress = async(req,res)=>{
             addressSaved: req.query.addressSaved === 'true'
         })
     } catch (error) {
-        res.redirect("/pageNotFound")
-        console.log('error from get address: ',error);
+        error.statusCode = 500;
+        next(error);
+
         
     }
 }
@@ -521,8 +540,9 @@ const addAddress = async(req,res)=>{
             user:userData
         })
     } catch (error) {
-        console.log('error from add address:',error);
-        res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
+
     }
 }
 
@@ -572,8 +592,9 @@ const postAddAddress = async (req, res) => {
       // Otherwise, redirect for addAddress.ejs
       res.redirect("/address?addressSaved=true");
     } catch (error) {
-        console.error('Error in postAddAddress:', error.message, error.stack);
-        res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
+
     }
 };
 
@@ -599,8 +620,9 @@ const editAddress = async(req,res)=>{
             addressId: addressId
         })
     } catch (error) {
-        console.log("error from editAddress: ",error);
-        res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
+
     }
 }
 
@@ -696,8 +718,9 @@ const deleteAddress = async(req,res)=>{
     )
     res.redirect("/address")
     } catch (error) {
-        console.log('error from delete address: ',error);
-        res.redirect("/pageNotFound")
+         error.statusCode = 500;
+        next(error);
+
     }
 }
 

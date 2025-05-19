@@ -18,7 +18,7 @@
 
     router.get('/login',adminController.loadLogin)
     router.post("/login",adminController.login)
-    router.get("/dashBoard",adminController.loadDashboard)
+    router.get("/dashboard",adminController.loadDashboard)
     router.get("/pageError",adminController.pageerror)
     router.get('/logout',adminController.logout)
     //customer
@@ -65,11 +65,11 @@
     router.post('/editOffer', adminAuth, offerController.editOffer);
     router.post('/deleteOffer', adminAuth, offerController.deleteOffer);
 
-    // sales
     // Sales routes
 router.get('/sales', adminAuth, salesController.getSalesReport);
 router.get('/sales/data', adminAuth, salesController.getSalesData);
 router.get('/sales/report/pdf', adminAuth, salesController.generatePDFReport);
 router.get('/sales/report/excel', adminAuth, salesController.generateExcelReport);
+
     router.use(adminErrorHandler)
     module.exports = router

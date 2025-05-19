@@ -159,7 +159,7 @@
         <h3 class="mb-30 text-center">Email Verification</h3>
       </div>
       <div class="otp-container">
-        <form onsubmit="return validateOtpForm()" action="/reset-password">
+        <form onsubmit="return validateOtpForm()" action="/resetPassword">
           <div class="form-group">
             <label for="otp">Enter OTP:</label>
             <input type="text" id="otp" name="otp" class="form-control" required>
@@ -227,7 +227,7 @@
         const otpInput = document.getElementById('otp').value
         $.ajax({
             type:'POST',
-            url:'/verify-passForgot-otp',
+            url:'/verifyPassForgotOtp',
             data:{otp:otpInput},
             success:function(response){
                 if (response.success) {
@@ -264,7 +264,7 @@
         startOtpTimer()
         $.ajax({
             type:'POST',
-            url:'/resend-forgot-otp',
+            url:'/resendForgotOtp',
             success:function(response){
                 if (response.success) {
                     Swal.fire({

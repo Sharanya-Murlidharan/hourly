@@ -252,9 +252,9 @@
                             <ul>
                                 <li><a href="/userProfile"><i class="fa-solid fa-user"></i> My Profile</a></li>
                                 <li><a href="/address" class="active"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
-                                <li><a href="#"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
-                                <li><a href="#"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
-                                <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li>
+                                <li><a href="/orderListing"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
+                                <li><a href="/wallet"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
+                                <!-- <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li> -->
                                 <li>
                                     <a href="/logout" class="menu-item logout">
                                         <i class="icon">
@@ -279,7 +279,7 @@
                             <% } %>
                             <!-- Add Address Form -->
                             <div class="address-form">
-                                <form action="/add-address" method="POST" novalidate id="addressForm">
+                                <form action="/addAddress" method="POST" novalidate id="addressForm">
                                     <div class="form-group">
                                         <label for="fullName">Full Name</label>
                                         <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" value="<%= typeof formData !== 'undefined' ? formData.fullName || '' : '' %>">
