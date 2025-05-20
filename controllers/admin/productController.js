@@ -6,7 +6,7 @@ const path = require("path");
 const sharp = require("sharp");
 
 // Get Product Listing Page
-const getProductListPage = async (req, res) => {
+const getProductListPage = async (req, res, next) => {
     try {
         const categories = await Category.find({ isListed: true });
         const categoryIds = categories.map((category) => category._id.toString());
@@ -24,13 +24,13 @@ const getProductListPage = async (req, res) => {
             products: products
         });
     } catch (error) {
-        console.error("Error fetching products:", error);
-        res.redirect("/404-error");
+        error.statusCode = 500;
+        next(error);
     }
 };
 
 // Get Add Product Page
-const getProductAddPage = async (req, res) => {
+const getProductAddPage = async (req, res, next) => {
     try {
         const category = await Category.find({ isListed: true });
         const brand = await Brand.find({ isListed: false });
@@ -39,12 +39,13 @@ const getProductAddPage = async (req, res) => {
             brands: brand
         });
     } catch (error) {
-        res.redirect("/404-error");
+         error.statusCode = 500;
+        next(error);
     }
 };
 
 // Add Product
-const addProducts= async (req, res) => {
+const addProducts= async (req, res, next) => {
     try {
         const { productName, brand, category, regularPrice, salePrice, quantity, description } = req.body;
         const files = req.files; // Array of uploaded files
@@ -79,35 +80,35 @@ const addProducts= async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Product added successfully!' });
     } catch (error) {
-        console.error('Error adding product:', error);
-        res.status(500).json({ success: false, message: error.message || 'An error occurred on the server.' });
+         error.statusCode = 500;
+        next(error);
     }
 };
 
 
 
-const listProduct = async (req, res) => {
+const listProduct = async (req, res, next) => {
     try {
         await Product.findByIdAndUpdate(req.params.id, { status: 'Available',isBlocked:false });
         res.redirect('/admin/products');
     } catch (error) {
-        console.error("Error listing product:", error);
-        res.redirect("/404-error");
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const unlistProduct = async (req, res) => {
+const unlistProduct = async (req, res, next) => {
     try {
         await Product.findByIdAndUpdate(req.params.id, { status: 'Unavailable',isBlocked:true });
         res.redirect('/admin/products');
     } catch (error) {
-        console.error("Error unlisting product:", error);
-        res.redirect("/404-error");
+         error.statusCode = 500;
+        next(error);
     }
 };
 
 // Get Edit Product Page
-const getProductEditPage = async (req, res) => {
+const getProductEditPage = async (req, res, next) => {
     try {
         const productId = req.params.id;
         const product = await Product.findById(productId);
@@ -125,13 +126,13 @@ const getProductEditPage = async (req, res) => {
             brands: brand
         });
     } catch (error) {
-        console.error("Error fetching product for edit:", error);
-        res.redirect("/404-error");
+         error.statusCode = 500;
+        next(error);
     }
 };
 
 // Update Product
-const editProducts = async (req, res) => {
+const editProducts = async (req, res, next) => {
     try {
         const productId = req.body.productId;
         const { productName, brand, category, regularPrice, salePrice, quantity, description, imagesToDelete } = req.body;
@@ -200,12 +201,12 @@ const editProducts = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Product updated successfully!' });
     } catch (error) {
-        console.error('Error updating product:', error.stack);
-        res.status(500).json({ success: false, message: error.message || 'An error occurred on the server.' });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
     const { productId } = req.body;
     try {
       // Validate productId
@@ -243,26 +244,13 @@ const deleteProduct = async (req, res) => {
       console.log(`Product deleted successfully: ${productId}`);
       res.json({ success: true, message: "Product deleted successfully" });
     } catch (error) {
-      console.error('Error deleting product:', error);
-      res.status(500).json({ success: false, message: "Error deleting product" });
+       error.statusCode = 500;
+        next(error);
     }
   };
 
-  const order = async(req,res)=>{
-    try {
-        res.render("order")
-    } catch (error) {
-        res.redirect("/404-error")
-    }
-  }
+ 
 
-  const viewOrder = async(req,res)=>{
-    try {
-        res.render(vieweOrders)
-    } catch (error) {
-        res.redirect("/404-error")
-    }
-  }
 
 module.exports = {
     getProductListPage,
@@ -273,6 +261,4 @@ module.exports = {
     getProductEditPage,
     editProducts,
     deleteProduct,
-    order,
-    viewOrder
 };

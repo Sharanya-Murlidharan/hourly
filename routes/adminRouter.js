@@ -66,10 +66,10 @@
     router.post('/deleteOffer', adminAuth, offerController.deleteOffer);
 
     // Sales routes
-router.get('/sales', adminAuth, salesController.getSalesReport);
-router.get('/sales/data', adminAuth, salesController.getSalesData);
-router.get('/sales/report/pdf', adminAuth, salesController.generatePDFReport);
-router.get('/sales/report/excel', adminAuth, salesController.generateExcelReport);
+    router.get('/sales', adminAuth, salesController.getSalesReport);
+    router.get('/sales/data', adminAuth, salesController.getSalesData);
+    router.get('/sales/report/pdf', adminAuth, salesController.generatePDFReport);
+    router.get('/sales/report/excel', adminAuth, salesController.generateExcelReport);
 
     router.use(adminErrorHandler)
     module.exports = router

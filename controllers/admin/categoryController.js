@@ -1,6 +1,6 @@
 const Category = require("../../models/categorySchema");
 
-const categoryInfo = async (req, res) => {
+const categoryInfo = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 4; // Define limit here
@@ -39,12 +39,12 @@ const categoryInfo = async (req, res) => {
             searchQuery: search // Pass search query for pagination
         });
     } catch (error) {
-        console.error("Error in categoryInfo:", error);
-        res.redirect("/pageerror");
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const addCategory = async (req, res) => {
+const addCategory = async (req, res, next) => {
     const { name, description } = req.body;
     try {
         const existingCategory = await Category.findOne({ name });
@@ -58,32 +58,35 @@ const addCategory = async (req, res) => {
         await newcategory.save(); // Fixed typo: newcategory instead of newCategory
         return res.json({ message: "Category added successfully" });
     } catch (error) {
-        return res.status(500).json({ error: "Internal Server Error" });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const categoryListed = async (req, res) => {
+const categoryListed = async (req, res, next) => {
     try {
         const id = req.query.id;
         await Category.updateOne({ _id: id }, { $set: { isListed:true } });
         res.redirect("/admin/category");
     } catch (error) {
-        res.redirect("/404-error");
+         error.statusCode = 500;
+        next(error);
     }
 }; 
 
-const categoryunListed = async (req, res) => {
+const categoryunListed = async (req, res,next) => {
     try {
         const id = req.query.id;
         await Category.updateOne({ _id: id }, { $set: {isListed:false } });
         res.redirect("/admin/category");
     } catch (error) {
-        res.redirect("/404-error");
+        error.statusCode = 500;
+        next(error);
     }
 };
 
 
-const editCategory = async (req, res) => {
+const editCategory = async (req, res, next) => {
   try {
     const { categoryId, name, description } = req.body;
 
@@ -106,12 +109,12 @@ const editCategory = async (req, res) => {
     res.json({ success:true, message: "Category updated successfully" });
     
   } catch (error) {
-    console.error("Error in editCategory:", error);
-    res.json({ success:false, message: "Internal Server Error" });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const deleteCategory = async (req, res) => {
+const deleteCategory = async (req, res, next) => {
     const { categoryId } = req.body;
     try {
       await Category.findByIdAndUpdate(
@@ -122,8 +125,8 @@ const deleteCategory = async (req, res) => {
     console.log(`Category ${categoryId} updated to isDeleted: true`);
       res.json({ success: true, message: "Category deleted successfully" });
     } catch (error) {
-        console.error('Error deleting category:', error.message, error.stack);
-      res.status(500).json({ success: false, message: "Error deleting category" });
+         error.statusCode = 500;
+        next(error);
     }
   };
   

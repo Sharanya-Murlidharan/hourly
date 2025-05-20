@@ -3,7 +3,7 @@ const Product = require("../../models/productSchema")
 const Wishlist = require("../../models/wishlistSchema");
 const mongoose = require("mongoose");
 
-const getWishlist = async (req, res) => {
+const getWishlist = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -16,12 +16,12 @@ const getWishlist = async (req, res) => {
 
     res.render('wishlist', { user, wishlistItems });
   } catch (error) {
-    console.error('Error from getWishlist:', error.message, error.stack);
-    res.redirect("/pageNotFound");
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const addToWishlist = async (req, res) => {
+const addToWishlist = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -53,12 +53,12 @@ const addToWishlist = async (req, res) => {
 
     res.status(200).json({ success: true, message: "Product added to wishlist successfully." });
   } catch (error) {
-    console.error("Error from addToWishlist:", error.message, error.stack);
-    res.status(500).json({ success: false, message: "An error occurred while adding to wishlist." });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const removeFromWishlist = async (req, res) => {
+const removeFromWishlist = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -85,8 +85,8 @@ const removeFromWishlist = async (req, res) => {
 
     res.status(200).json({ success: true, message: "Product removed from wishlist successfully." });
   } catch (error) {
-    console.error("Error from removeFromWishlist:", error.message, error.stack);
-    res.status(500).json({ success: false, message: "An error occurred while removing from wishlist." });
+    error.statusCode = 500;
+        next(error);
   }
 };
 

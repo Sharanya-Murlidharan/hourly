@@ -83,7 +83,7 @@ const getForgotPassword = async(req,res)=>{
     }
 }
 
-const forgotEmailValid = async (req, res) => {
+const forgotEmailValid = async (req, res,next) => {
     try {
         const { email } = req.body;
         const findUser = await User.findOne({ email: email });
@@ -116,7 +116,7 @@ const forgotPassOtp = async(req,res)=>{
     }
 }
 
-const verifyForgotPassOtp = async(req,res)=>{
+const verifyForgotPassOtp = async(req,res,next)=>{
     try {
         const enteredOtp = req.body.otp
         if (enteredOtp === req.session.userOtp) {
@@ -139,7 +139,7 @@ const getResetPassPage = async(req,res)=>{
     }
 }
 
-const postNewPassword = async (req, res) => {
+const postNewPassword = async (req, res,next) => {
     try {
         const { newPass1, newPass2 } = req.body;
         const email = req.session.email;
@@ -171,7 +171,7 @@ const postNewPassword = async (req, res) => {
     }
 };
 
-const resendOtp = async (req, res) => {
+const resendOtp = async (req, res,next) => {
     try {
         const otp = generateOtp();
         req.session.userOtp = otp;
@@ -203,7 +203,7 @@ const resendOtp = async (req, res) => {
     }
 };
 
-const userProfile = async (req,res)=>{
+const userProfile = async (req,res,next)=>{
     try {
         const userId = req.session.user
         const userData = await User.findById(userId)
@@ -236,7 +236,7 @@ const changeEmail= async(req,res)=>{
     }
 }
 
-const changeEmailValid = async(req,res)=>{
+const changeEmailValid = async(req,res,next)=>{
     try {
         const {email} = req.body
         const userExists = await User.findOne({email})
@@ -265,7 +265,7 @@ const changeEmailValid = async(req,res)=>{
     }
 }
 
-const verifyEmailOtp = async(req,res)=>{
+const verifyEmailOtp = async(req,res,next)=>{
     try {
         const enteredOtp = req.body.otp
         if (enteredOtp===req.session.userOtp) {
@@ -287,7 +287,7 @@ const verifyEmailOtp = async(req,res)=>{
     }
 }
 
-const updateEmail = async(req,res)=>{
+const updateEmail = async(req,res,next)=>{
     try {
         const newEmail = req.body.newEmail
         const userId = req.session.user
@@ -301,7 +301,7 @@ const updateEmail = async(req,res)=>{
 }
 
 
-const newEmailPage = async(req,res)=>{
+const newEmailPage = async(req,res,next)=>{
     try {
         res.render('new-email')
     } catch (error) {
@@ -319,7 +319,7 @@ const changePassword = async(req,res)=>{
     }
 }
 
-const changePaawordValid = async(req,res)=>{
+const changePaawordValid = async(req,res,next)=>{
     try {
         const {email}=req.body
         const userExists = await User.findOne({email})
@@ -360,7 +360,7 @@ const verifyChangePassOtp = async(req,res)=>{
 }
 
 // New function for direct password update
-const updatePassword = async (req, res) => {
+const updatePassword = async (req, res,next) => {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body;
 
@@ -418,7 +418,7 @@ const updatePassword = async (req, res) => {
     }
 };
 
-const editProfile = async(req,res)=>{
+const editProfile = async(req,res,next)=>{
     try {
     const userId = req.session.user
     const userData = await User.findById(userId)
@@ -513,7 +513,7 @@ const updateProfile = async (req, res) => {
     }
 };
 
-const getAddress = async(req,res)=>{
+const getAddress = async(req,res,next)=>{
     try {
         const userId = req.session.user
         const userData = await User.findById(userId)
@@ -531,7 +531,7 @@ const getAddress = async(req,res)=>{
     }
 }
 
-const addAddress = async(req,res)=>{
+const addAddress = async(req,res,next)=>{
     try {
         const userId = req.session.user
         const userData = await User.findById(userId)
@@ -546,7 +546,7 @@ const addAddress = async(req,res)=>{
     }
 }
 
-const postAddAddress = async (req, res) => {
+const postAddAddress = async (req, res,next) => {
     try {
       const userId = req.session.user;
       if (!userId) {
@@ -598,7 +598,7 @@ const postAddAddress = async (req, res) => {
     }
 };
 
-const editAddress = async(req,res)=>{
+const editAddress = async(req,res,next)=>{
     try {
         const addressId = req.query.id
         const user = req.session.user
@@ -698,7 +698,7 @@ const postEditAddress = async (req, res) => {
     }
 };
 
-const deleteAddress = async(req,res)=>{
+const deleteAddress = async(req,res,next)=>{
     try {
         const addressId = req.query.id
         const findAddress = await Address.findOne({"address._id":addressId})

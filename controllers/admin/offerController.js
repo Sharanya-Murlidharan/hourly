@@ -4,7 +4,7 @@ const Brand = require("../../models/brandSchema");
 const Category = require("../../models/categorySchema");
 const mongoose = require("mongoose");
 
-const getOffer = async (req, res) => {
+const getOffer = async (req, res, next) => {
    try {
         const searchQuery = req.query.search || '';
         const page = parseInt(req.query.page) || 1;
@@ -38,12 +38,12 @@ const getOffer = async (req, res) => {
             totalPages: Math.ceil(totalOffers / limit)
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
+         error.statusCode = 500;
+        next(error);
     }
 };
 
-const addOffer = async (req, res) => {
+const addOffer = async (req, res, next) => {
     try {
         const { offerName, description, offerType, applicable, applicableItem, offerAmount, validFrom, validUpto, status } = req.body;
 
@@ -69,12 +69,12 @@ const addOffer = async (req, res) => {
         await offer.save();
         return res.json({ success: true, message: 'Offer added successfully' });
     } catch (error) {
-        console.error('Error in addOffer:', error);
-        return res.json({ success: false, message: error.message });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const editOffer = async (req, res) => {
+const editOffer = async (req, res, next) => {
     try {
         const { offerId, offerName, description, offerType, applicable, applicableItem, offerAmount, validFrom, validUpto, status } = req.body;
 
@@ -111,12 +111,12 @@ const editOffer = async (req, res) => {
 
         return res.json({ success: true, message: 'Offer updated successfully' });
     } catch (error) {
-        console.error('Error in editOffer:', error);
-        return res.json({ success: false, message: error.message });
+         error.statusCode = 500;
+        next(error);
     }
 };
 
-const deleteOffer = async (req, res) => {
+const deleteOffer = async (req, res, next) => {
     try {
         const { offerId } = req.body;
 
@@ -136,9 +136,14 @@ const deleteOffer = async (req, res) => {
 
         return res.json({ success: true, message: 'Offer deleted successfully' });
     } catch (error) {
-        console.error('Error in deleteOffer:', error);
-        return res.json({ success: false, message: error.message });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-module.exports = { getOffer, addOffer, editOffer, deleteOffer };
+module.exports = {
+    getOffer,
+    addOffer,
+    editOffer,
+    deleteOffer 
+    };

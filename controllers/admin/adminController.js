@@ -13,7 +13,7 @@ const loadLogin = (req, res) => {
     res.render('admin-login', { message: null });
 };
 
-const login=async(req,res)=>{
+const login=async(req,res,next)=>{
     try{
         const {email,password}=req.body;
         console.log(email,password);
@@ -36,13 +36,13 @@ const login=async(req,res)=>{
             return res.redirect("/admin/login")
         }
     }catch(error){
-       console.error("login error",error);
-       return res.redirect("/admin/pagenotFounderror");
+       error.statusCode = 500;
+        next(error);
     }
 }
 
 
-const loadDashboard = async (req, res) => {
+const loadDashboard = async (req, res,) => {
     if (req.session.admin) {
         try {
             res.render("dashBoard");
@@ -50,11 +50,13 @@ const loadDashboard = async (req, res) => {
             res.redirect("/pageerror");
         }
     } else {
+        console.error("error from loadDashboard",error);
+        
         res.redirect("/admin/login"); // Redirect to login if not admin
     }
 };
 
-const logout = async(req,res)=>{
+const logout = async(req,res,next)=>{
     try {
         req.session.destroy(err=>{
             if(err){
@@ -64,8 +66,8 @@ const logout = async(req,res)=>{
             res.redirect("/admin/login")
         })
     } catch (error) {
-        console.log("unexpected error during logout",error);
-        res.redirect("/pageerror")
+         error.statusCode = 500;
+        next(error);
     }
 }
 

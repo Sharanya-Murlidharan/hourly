@@ -1,7 +1,7 @@
 const Brand = require("../../models/brandSchema")
 const Product = require("../../models/productSchema")
 
-const getBrandPage = async(req,res)=>{
+const getBrandPage = async(req,res,next)=>{
     try {
         const page = parseInt(req.query.page) || 1
         const limit = 4
@@ -36,12 +36,12 @@ const getBrandPage = async(req,res)=>{
                 searchQuery:search
             })
     } catch (error) {
-        console.error("error in brandInfo",error);
-        res.redirect("/pageerror")
+         error.statusCode = 500;
+        next(error);
     }
 }
 
-const addBrand = async (req, res) => {
+const addBrand = async (req, res, next) => {
     const { name, description } = req.body;
     try {
       console.log("Add Brand Request Received:", { name, description });
@@ -58,32 +58,34 @@ const addBrand = async (req, res) => {
       console.log("Brand saved successfully");
       return res.json({ message: "Brand added successfully" });
     } catch (error) {
-      //console.error("🔥 Error while adding brand:", error);
-      return res.status(500).json({ error: "Internal server error" });
+       error.statusCode = 500;
+        next(error);
     }
   };
   
-const brandListed = async(req,res)=>{
+const brandListed = async(req,res,next)=>{
     try {
         const id = req.query.id
         await Brand.updateOne({_id:id},{$set:{isListed:true}})
         res.redirect("/admin/brands")
     } catch (error) {
-        res.redirect("/404-error")
+         error.statusCode = 500;
+        next(error);
     }
 }
 
-const brandunListed = async(req,res)=>{
+const brandunListed = async(req,res,next)=>{
     try {
         const id = req.query.id
         await Brand.updateOne({_id:id},{$set:{isListed:false}})
         res.redirect("/admin/brands")
     } catch (error) {
-        res.redirect("/404-error")
+        error.statusCode = 500;
+        next(error);
     }
 }
 
-const editBrand = async(req,res)=>{
+const editBrand = async(req,res,next)=>{
     try {
         const {brandId,name,description}=req.body
         const existingBrand = await Brand.findOne({name,_id:{$ne:brandId}})
@@ -100,13 +102,13 @@ const editBrand = async(req,res)=>{
         }
         res.json({success:true,message:"Brand updated successfully"})
     } catch (error) {
-        console.error("Error in editBrand:",error);
-        res.json({success:false,message:"Internal Server Error"})
+         error.statusCode = 500;
+        next(error);
         
     }
 }
 
-const deleteBrand = async(req,res)=>{
+const deleteBrand = async(req,res,next)=>{
     const {brandId} = req.body
     try {
         await Brand.findByIdAndUpdate(
@@ -116,7 +118,8 @@ const deleteBrand = async(req,res)=>{
         )
         res.json({success:true,message:"Brand deleted successfully"})
     } catch (error) {
-        res.status(500).json({success:false,message:"Error deleting brand"})
+        error.statusCode = 500;
+        next(error);
     }
 }
 

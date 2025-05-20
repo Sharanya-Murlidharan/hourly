@@ -564,9 +564,10 @@
                 </div>
                 <div class="total-payment">
                   <h3>Payment Summary</h3>
-                  <p>Total Price: ₹<%= order.orderedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0) %></p>
+                  <p>Total Price: ₹<%= order.orderedItems.reduce((sum, item) => sum + (item.quantity * item.regularPrice), 0)  %></p>
                   <p>Discount: ₹<%= order.discount %></p>
-                  <p class="final-amount">Final Amount: ₹<%= order.orderedItems.reduce((sum, item) => item.quantity > 0 ? sum + (item.quantity * item.price) : sum, 0) %></p>
+                  <p>Coupon Discount: ₹<%= order.couponDiscount %></p>
+                  <p class="final-amount">Final Amount: ₹<%= order.finalAmount %></p>
                   <p>Coupon Applied: <%= order.couponApplied ? 'Yes' : 'No' %></p>
                   <p>Payment Method: <%= order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1) %></p>
                 </div>

@@ -66,9 +66,10 @@ const calculateProductDiscount = async (product, currentDate) => {
             hasDiscount: false,
         };
     }
+
 };
 
-const productDetails = async (req, res) => {
+const productDetails = async (req, res, next) => {
     try {
         const userId = req.session.user;
         const userData = userId ? await User.findById(userId) : null;
@@ -138,12 +139,11 @@ const productDetails = async (req, res) => {
             totalRelatedProducts,
         });
     } catch (error) {
-        console.error('Error in productDetails:', error);
-        res.redirect('/pageNotFound');
+         error.statusCode = 500;
+        next(error);
     }
 };
 
 module.exports = {
     productDetails,
-    // ... other exports
 };

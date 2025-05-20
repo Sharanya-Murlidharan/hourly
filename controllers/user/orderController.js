@@ -11,6 +11,9 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const env = require('dotenv').config();
 
+
+
+
 const calculateOfferDiscount = async (cart) => {
   try {
 
@@ -85,7 +88,7 @@ const razorpayInstance = new Razorpay({
 //   return new mongoose.Types.ObjectId(id);
 // };
 
-const getCheckout = async (req, res) => {
+const getCheckout = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -100,13 +103,18 @@ const getCheckout = async (req, res) => {
       return res.redirect("/cart");
     }
 
-    const subtotal = cart.items.reduce((total, item) => {
-      return total + item.totalPrice;
+    const totalBeforeOffer = cart.items.reduce((total, item) => {
+      return total + (item.price * item.quantity );
     }, 0);
 
-    const offerDiscount = await calculateOfferDiscount(cart);
+    const totalAfterOffer  = cart.items.reduce((total, item) => {
+      return total + item.totalPrice
+    }, 0);
+
+    const offerDiscount = totalBeforeOffer - totalAfterOffer;
+
     const couponDiscount = cart.discount || 0;
-    const totalPrice = subtotal - offerDiscount - couponDiscount;
+    const totalPrice = totalAfterOffer - couponDiscount;
 
     const isCouponApplied = !!cart.appliedCoupon;
 
@@ -114,19 +122,19 @@ const getCheckout = async (req, res) => {
       user,
       addresses,
       items: cart.items,
-      subtotal,
+      subtotal:totalBeforeOffer,
       offerDiscount,
       discount: couponDiscount,
       totalPrice,
       isCouponApplied,
     });
   } catch (error) {
-    console.error("Error from getCheckout:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const applyCoupon = async (req, res) => {
+const applyCoupon = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -167,24 +175,33 @@ const applyCoupon = async (req, res) => {
     cart.discount = coupon.amount;
     await cart.save();
 
-    const offerDiscount = await calculateOfferDiscount(cart);
-    const totalPrice = subtotal - offerDiscount - coupon.amount;
 
+    const totalBeforeOffer = cart.items.reduce((total, item) => {
+      return total + (item.price * item.quantity );
+    }, 0);
+
+    const offerDiscount = totalBeforeOffer - subtotal;
+    const couponDiscount = cart.discount || 0;
+    const totalPrice = subtotal - couponDiscount;
+
+    const isCouponApplied = !!cart.appliedCoupon;
+   
     res.json({
       success: true,
       message: "Coupon applied successfully.",
-      subtotal,
+      subtotal:totalBeforeOffer,
       offerDiscount,
+      isCouponApplied,
       discount: coupon.amount,
       totalPrice
     });
   } catch (error) {
-    console.error("Error from applyCoupon:", error.message, error.stack);
-    res.status(500).json({ success: false, error: "An error occurred. Please try again." });
+    error.statusCode = 500;
+        next(error);
   }
 };
 
-const removeCoupon = async (req, res) => {
+const removeCoupon = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -205,25 +222,34 @@ const removeCoupon = async (req, res) => {
     cart.appliedCoupon = null;
     cart.discount = 0;
     await cart.save();
+    
+    const totalBeforeOffer = cart.items.reduce((total, item) => {
+      return total + (item.price * item.quantity );
+    }, 0);
 
-    const offerDiscount = await calculateOfferDiscount(cart);
-    const totalPrice = subtotal - offerDiscount;
+    const offerDiscount = totalBeforeOffer - subtotal;
+    const couponDiscount = cart.discount || 0;
+    const totalPrice = subtotal - couponDiscount;
 
-    res.status(200).json({
+    const isCouponApplied = !!cart.appliedCoupon;
+   
+    res.json({
       success: true,
       message: "Coupon removed successfully.",
-      subtotal,
+      subtotal:totalBeforeOffer,
       offerDiscount,
-      discount: 0,
+      isCouponApplied,
+      discount: couponDiscount,
       totalPrice
     });
+
   } catch (error) {
-    console.error("Error from removeCoupon:", error.message, error.stack);
-    res.status(500).json({ success: false, error: "An error occurred. Please try again." });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const proceedToPaymentPage = async (req, res) => {
+const proceedToPaymentPage = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -254,12 +280,12 @@ const proceedToPaymentPage = async (req, res) => {
 
     res.json({ redirect: "/payment" });
   } catch (error) {
-    console.error("Error from proceedToPaymentPage:", error.message, error.stack);
-    res.status(500).json({ success: false, error: "An error occurred. Please try again." });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const getPaymentPage = async (req, res) => {
+const getPaymentPage = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -277,12 +303,21 @@ const getPaymentPage = async (req, res) => {
     if (!cart || cart.items.length === 0) {
       return res.redirect("/cart");
     }
+    const totalBeforeOffer = cart.items.reduce((total, item) => {
+      return total + (item.price * item.quantity );
+    }, 0);
 
-    const subtotal = cart.items.reduce((total, item) => total + item.totalPrice, 0);
-    const offerDiscount = await calculateOfferDiscount(cart);
-    const discount = cart.discount || 0;
-    const totalPrice = subtotal - offerDiscount - discount;
+    const totalAfterOffer  = cart.items.reduce((total, item) => {
+      return total + item.totalPrice
+    }, 0);
+
+    const offerDiscount = totalBeforeOffer - totalAfterOffer;
+
+    const couponDiscount = cart.discount || 0;
+    const totalPrice = totalAfterOffer - couponDiscount;
+
     const isCouponApplied = !!cart.appliedCoupon;
+
     const wallet = await Wallet.findOne({ userId });
     const walletBalance = wallet ? wallet.balance : 0;
 
@@ -290,20 +325,22 @@ const getPaymentPage = async (req, res) => {
       user,
       addresses,
       items: cart.items,
-      subtotal,
+      subtotal:totalBeforeOffer,
       offerDiscount,
-      discount,
+      discount: couponDiscount,
       totalPrice,
       isCouponApplied,
       walletBalance
     });
   } catch (error) {
-    console.error("Error from getPaymentPage:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+    error.statusCode = 500;
+        next(error);
   }
 };
 
-const createRazorpayOrder = async (req, res) => {
+const createRazorpayOrder = async (req, res, next) => {
+
+  console.log("creating order on razorpay:,,,343")
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -311,6 +348,8 @@ const createRazorpayOrder = async (req, res) => {
     }
 
     const { amount } = req.body;
+
+    console.log("total cart amount:",amount);
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount." });
     }
@@ -353,8 +392,10 @@ const createRazorpayOrder = async (req, res) => {
     const orderId = `${year}${month}${day}${seq}`;
 
     const totalPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0);
-    const offerDiscount = await calculateOfferDiscount(cart);
-    const finalAmount = totalPrice - offerDiscount - (cart.discount || 0);
+    const finalAmount = totalPrice - (cart.discount || 0);
+
+    const  subtotal  = cart.items.reduce((total, item) => total + ( item.price  *  item.quantity ), 0);
+    const totalDiscount = subtotal - finalAmount ; 
 
     const order = new Order({
       user: userId, // Add the user field
@@ -362,10 +403,12 @@ const createRazorpayOrder = async (req, res) => {
       orderedItems: cart.items.map(item => ({
         product: item.productId._id,
         quantity: item.quantity,
-        price: item.price,
+        regularPrice:item.price,
+        price: ( item.totalPrice /item.quantity ),
       })),
       totalPrice,
-      discount: cart.discount || 0,
+      discount: totalDiscount,
+      couponDiscount: cart.discount || 0,
       finalAmount,
       address: {
         name: selectedAddress.name,
@@ -392,12 +435,12 @@ const createRazorpayOrder = async (req, res) => {
       currency: razorpayOrder.currency
     });
   } catch (error) {
-    console.error("Error from createRazorpayOrder:", error);
-    res.status(500).json({ error: error.message || "Failed to create Razorpay order." });
+    error.statusCode = 500;
+        next(error);
   }
 };
 
-const verifyRazorpayPayment = async (req, res) => {
+const verifyRazorpayPayment = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -451,12 +494,12 @@ const verifyRazorpayPayment = async (req, res) => {
 
     res.json({ success: true, redirect: "/orderSuccess" });
   } catch (error) {
-    console.error("Error from verifyRazorpayPayment:", error)
-    res.status(500).json({ success: false, error: "Payment verification failed." });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const retryRazorpayPayment = async (req, res) => {
+const retryRazorpayPayment = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -490,12 +533,12 @@ const retryRazorpayPayment = async (req, res) => {
       currency: "INR"
     });
   } catch (error) {
-    console.error("Error from retryRazorpayPayment:", error.message, error.stack);
-    res.status(500).json({ error: "Failed to retry payment." });
+    error.statusCode = 500;
+        next(error);
   }
 };
 
-const proceedCheckout = async (req, res) => {
+const proceedCheckout = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -533,9 +576,10 @@ const proceedCheckout = async (req, res) => {
       return res.status(400).json({ success: false, error: "Duplicate products detected in cart. Please clear cart and try again." });
     }
 
-    const offerDiscount = await calculateOfferDiscount(cart);
     const totalPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0);
-    const finalAmount = totalPrice - offerDiscount - (cart.discount || 0);
+    const finalAmount = totalPrice  - (cart.discount || 0);
+    const  subtotal  = cart.items.reduce((total, item) => total + ( item.price  *  item.quantity ), 0);
+    const totalDiscount = subtotal - finalAmount ; 
 
     if (paymentMethod === 'wallet') {
       const wallet = await Wallet.findOne({ userId });
@@ -573,15 +617,17 @@ const proceedCheckout = async (req, res) => {
     const orderId = `${year}${month}${day}${seq}`;
 
     const order = new Order({
-      user: userId, // Add the user field
+      user: userId, 
       orderId,
       orderedItems: cart.items.map(item => ({
         product: item.productId._id,
         quantity: item.quantity,
-        price: item.price,
+        regularPrice:item.price,
+        price:( item.totalPrice / item.quantity) ,
       })),
       totalPrice,
-      discount: cart.discount || 0,
+      discount: totalDiscount,
+      couponDiscount: cart.discount || 0,
       finalAmount,
       address: {
         name: selectedAddress.name,
@@ -632,12 +678,12 @@ const proceedCheckout = async (req, res) => {
 
     res.json({ redirect: "/orderSuccess" });
   } catch (error) {
-    console.error("Error from proceedCheckout:", error.message, error.stack);
-    res.status(500).json({ success: false, error: error.message || "An error occurred. Please try again." });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const getSuccess = async (req, res) => {
+const getSuccess = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -658,12 +704,12 @@ const getSuccess = async (req, res) => {
        order 
       });
   } catch (error) {
-    console.error("Error from getSuccess:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const getOrderList = async (req, res) => {
+const getOrderList = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -718,12 +764,12 @@ const getOrderList = async (req, res) => {
       totalPages: totalPages
     });
   } catch (error) {
-    console.error("Error in getOrderList:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+    error.statusCode = 500;
+        next(error);
   }
 };
 
-const orderDetail = async (req, res) => {
+const orderDetail = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -741,12 +787,12 @@ const orderDetail = async (req, res) => {
       order
     });
   } catch (error) {
-    console.error("Error from orderDetail:", error);
-    res.redirect("/pageNotFound");
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const cancelOrder = async (req, res) => {
+const cancelOrder = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -817,12 +863,12 @@ const cancelOrder = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Order canceled successfully.' });
   } catch (error) {
-    console.error('Error canceling order:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const cancelProduct = async (req, res) => {
+const cancelProduct = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -912,12 +958,12 @@ const cancelProduct = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Product canceled successfully.' });
   } catch (error) {
-    console.error('Error canceling product:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const returnOrder = async (req, res) => {
+const returnOrder = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -966,8 +1012,8 @@ const returnOrder = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Return request submitted successfully.' });
   } catch (error) {
-    console.error('Error submitting return request:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+    error.statusCode = 500;
+        next(error);
   }
 };
 
@@ -1052,7 +1098,7 @@ const returnOrder = async (req, res) => {
 //   }
 // };
 
-const returnProduct = async (req, res) => {
+const returnProduct = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -1118,12 +1164,12 @@ const returnProduct = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Product return request submitted successfully.' });
   } catch (error) {
-    console.error('Error submitting product return request:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const getWallet = async (req, res) => {
+const getWallet = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -1148,6 +1194,9 @@ const getWallet = async (req, res) => {
     const transactions = walletData.transactions
       .sort((a, b) => b.date - a.date)
       .slice(skip, skip + limit);
+
+      // console.log("dhfkjf",walletData);
+      
       
 
     res.render("wallet", {
@@ -1158,12 +1207,12 @@ const getWallet = async (req, res) => {
       totalPages
     });
   } catch (error) {
-    console.error("Error from getWallet:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const getPaymentFail = async (req, res) => {
+const getPaymentFail = async (req, res, next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -1175,12 +1224,12 @@ const getPaymentFail = async (req, res) => {
 
     res.render("paymentFail", { order });
   } catch (error) {
-    console.error("Error from getPaymentFail:", error.message, error.stack);
-    res.redirect("/pageNotFound");
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const getAvailableCoupons = async (req, res) => {
+const getAvailableCoupons = async (req, res,next) => {
   try {
     const userId = req.session.user;
     if (!userId) {
@@ -1199,11 +1248,8 @@ const getAvailableCoupons = async (req, res) => {
       coupons,
     });
   } catch (error) {
-    console.error("Error from getAvailableCoupons:", error.message, error.stack);
-    res.status(500).json({
-      success: false,
-      error: "An error occurred. Please try again.",
-    });
+     error.statusCode = 500;
+        next(error);
   }
 };
 

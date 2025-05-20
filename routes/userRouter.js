@@ -30,7 +30,7 @@ router.get('/auth/google/callback',
 )
 // homepage
 router.get('/',userAuth,userController.LoadHomepage)
-router.post('/search',userAuth,userController.searchProducts)
+// router.post('/search',userAuth,userController.searchProducts)
 
 // shopping page
 router.get('/shop',userAuth,userController.loadShoppingPage)
@@ -66,14 +66,14 @@ router.post('/verifyChangePasswordOtp',userAuth,profileController.verifyChangePa
 router.post('/updatePassword', userAuth, profileController.updatePassword); 
 // edit profile
 router.get('/editProfile',userAuth,uploadProfilePicture,profileController.editProfile)
-router.post('/updateProfile',uploadProfilePicture, profileController.updateProfile);
+router.post('/updateProfile',userAuth,uploadProfilePicture, profileController.updateProfile);
 // address management
 router.get('/address',userAuth,profileController.getAddress)
-router.get('/addAddress',userAuth,profileController.addAddress)//userAuth
-router.post('/addAddress',userAuth,profileController.postAddAddress)//userAuth
-router.get('/editAddress',userAuth,profileController.editAddress)//userAuth
-router.post('/editAddress',userAuth,profileController.postEditAddress)//userAuth
-router.get('/deleteAddress',userAuth,profileController.deleteAddress)//userAuth
+router.get('/addAddress',userAuth,profileController.addAddress)
+router.post('/addAddress',userAuth,profileController.postAddAddress)
+router.get('/editAddress',userAuth,profileController.editAddress)
+router.post('/editAddress',userAuth,profileController.postEditAddress)
+router.get('/deleteAddress',userAuth,profileController.deleteAddress)
 //cart management
 router.get("/cart", userAuth, cartController.getCartPage)
 router.post("/addToCart",userAuth, cartController.addToCart)

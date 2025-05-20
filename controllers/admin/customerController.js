@@ -1,6 +1,6 @@
 const User = require("../../models/userSchema")
 
-const customerInfo = async (req,res)=>{
+const customerInfo = async (req,res,next)=>{
     try {
        let search = ""
        if(req.query.search){
@@ -37,27 +37,30 @@ const customerInfo = async (req,res)=>{
         searchQuery: search,
     });
     } catch (error) {
-        
+         error.statusCode = 500;
+        next(error);
     }
 }
 
-const customerBlocked = async(req,res)=>{
+const customerBlocked = async(req,res,next)=>{
     try {
         let id=req.query.id
         await User.updateOne({_id:id},{$set:{isBlocked:true}})
         res.redirect("/admin/users")
     } catch (error) {
-        res.redirect("/pageerror")
+       error.statusCode = 500;
+        next(error);
     }
 }
 
-const customerunBlocked = async(req,res)=>{
+const customerunBlocked = async(req,res,next)=>{
     try {
         let id=req.query.id
         await User.updateOne({_id:id},{$set:{isBlocked:false}})
         res.redirect("/admin/users")
     } catch (error) {
-        res.redirect("/pageerror")
+        error.statusCode = 500;
+        next(error);
     }
 }
 

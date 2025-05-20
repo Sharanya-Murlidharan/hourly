@@ -5,98 +5,113 @@ const Offer = require("../../models/offerSchema")
 const mongoose = require("mongoose");
 
 
-const getCartPage = async (req, res) => {
+
+const calculateOfferPrice = async (product, quantity, price) => {
+  const currentDate = new Date();
+
+  const offers = await Offer.find({
+    isDeleted: false,
+    isListed: true,
+    validFrom: { $lte: currentDate },
+    validUpto: { $gte: currentDate }
+  }).populate('applicableItem');
+
+  const productOffers = offers.filter(offer =>
+    offer.applicable === 'Product' && offer.applicableItem._id.toString() === product._id.toString()
+  );
+
+  const categoryOffers = offers.filter(offer =>
+    offer.applicable === 'Category' && offer.applicableItem._id.toString() === product.category.toString()
+  );
+
+  const brandOffers = offers.filter(offer =>
+    offer.applicable === 'Brand' && offer.applicableItem._id.toString() === product.brand.toString()
+  );
+
+  const allOffers = [...productOffers, ...categoryOffers, ...brandOffers];
+
+  let highestDiscount = 0;
+  let selectedOffer = null;
+
+  for (const offer of allOffers) {
+    let discount = 0;
+    if (offer.offerType === 'Percentage') {
+      discount = (price * offer.offerAmount) / 100;
+    } else if (offer.offerType === 'Fixed') {
+      discount = offer.offerAmount;
+    }
+
+    if (discount > highestDiscount) {
+      highestDiscount = discount;
+      selectedOffer = {
+        type: offer.offerType,
+        amount: offer.offerAmount,
+        discount: offer.offerType === 'Percentage'
+          ? offer.offerAmount
+          : Math.round((discount / price) * 100)
+      };
+    }
+  }
+
+  if (product.productOffer > 0) {
+    const productOfferDiscount = (price * product.productOffer) / 100;
+    if (productOfferDiscount > highestDiscount) {
+      highestDiscount = productOfferDiscount;
+      selectedOffer = {
+        type: 'Percentage',
+        amount: product.productOffer,
+        discount: product.productOffer
+      };
+    }
+  }
+
+  const discountedPrice = Math.round(price - highestDiscount);
+  const totalPrice = discountedPrice * quantity;
+
+  return { discountedPrice, offer: selectedOffer || { discount: 0 }, totalPrice };
+};
+
+
+const getCartPage = async (req, res, next) => {
   try {
     const userId = req.session.user;
-    if (!userId) {
-      return res.redirect("/login");
-    }
+    if (!userId) return res.redirect("/login");
 
     const user = await User.findById(userId).populate({
       path: 'cart',
       populate: { path: 'items.productId', model: 'Product' }
     });
 
-    if (!user) {
-      return res.redirect("/pageNotFound");
-    }
+    if (!user) return res.redirect("/pageNotFound");
 
-    let cart = user.cart[0]; // Since cart is an array, take the first cart (if any)
+    let cart = user.cart[0];
     let quantity = 0;
     let grandTotal = 0;
     let cartItems = [];
 
     if (cart && cart.items) {
       cartItems = cart.items;
-      const currentDate = new Date();
-
-      // Fetch all active offers
-      const offers = await Offer.find({
-        isDeleted: false,
-        isListed: true,
-        validFrom: { $lte: currentDate },
-        validUpto: { $gte: currentDate }
-      }).populate('applicableItem');
 
       for (const item of cartItems) {
         if (item.productId) {
           quantity += item.quantity;
-          // Find applicable offers
-          const productOffers = offers.filter(offer =>
-            offer.applicable === 'Product' && offer.applicableItem._id.toString() === item.productId._id.toString()
-          );
-          const categoryOffers = offers.filter(offer =>
-            offer.applicable === 'Category' && offer.applicableItem._id.toString() === item.productId.category.toString()
-          );
-          const brandOffers = offers.filter(offer =>
-            offer.applicable === 'Brand' && offer.applicableItem._id.toString() === item.productId.brand.toString()
+
+          const { discountedPrice, offer, totalPrice } = await calculateOfferPrice(
+            item.productId,
+            item.quantity,
+            item.price
           );
 
-          const allOffers = [...productOffers, ...categoryOffers, ...brandOffers];
-
-          let highestDiscount = 0;
-          let selectedOffer = null;
-
-          for (const offer of allOffers) {
-            let discount = 0;
-            if (offer.offerType === 'Percentage') {
-              discount = (item.price * offer.offerAmount) / 100;
-            } else if (offer.offerType === 'Fixed') {
-              discount = offer.offerAmount;
-            }
-            if (discount > highestDiscount) {
-              highestDiscount = discount;
-              selectedOffer = {
-                type: offer.offerType,
-                amount: offer.offerAmount,
-                discount: offer.offerType === 'Percentage' ? offer.offerAmount : Math.round((discount / item.price) * 100)
-              };
-            }
-          }
-
-          // Apply productOffer from productSchema if higher
-          if (item.productId.productOffer > 0) {
-            const productOfferDiscount = (item.price * item.productId.productOffer) / 100;
-            if (productOfferDiscount > highestDiscount) {
-              highestDiscount = productOfferDiscount;
-              selectedOffer = {
-                type: 'Percentage',
-                amount: item.productId.productOffer,
-                discount: item.productId.productOffer
-              };
-            }
-          }
-
-          // Calculate discounted price
-          item.discountedPrice = Math.round(item.price - highestDiscount);
-          item.offer = selectedOffer || { discount: 0 };
-          item.totalPrice = item.discountedPrice * item.quantity;
-          grandTotal += item.totalPrice;
+          item.discountedPrice = discountedPrice;
+          item.offer = offer;
+          item.totalPrice = totalPrice;
+          grandTotal += totalPrice;
         }
       }
     }
 
     req.session.grandTotal = grandTotal;
+
     res.render("cart", {
       user,
       quantity,
@@ -105,12 +120,119 @@ const getCartPage = async (req, res) => {
     });
   } catch (error) {
     error.statusCode = 500;
-        next(error);
-
+    next(error);
   }
 };
 
-const addToCart = async (req, res) => {
+// const getCartPage = async (req, res) => {
+//   try {
+//     const userId = req.session.user;
+//     if (!userId) {
+//       return res.redirect("/login");
+//     }
+
+//     const user = await User.findById(userId).populate({
+//       path: 'cart',
+//       populate: { path: 'items.productId', model: 'Product' }
+//     });
+
+//     if (!user) {
+//       return res.redirect("/pageNotFound");
+//     }
+
+//     let cart = user.cart[0]; // Since cart is an array, take the first cart (if any)
+//     let quantity = 0;
+//     let grandTotal = 0;
+//     let cartItems = [];
+
+//     if (cart && cart.items) {
+//       cartItems = cart.items;
+//       const currentDate = new Date();
+
+//       // Fetch all active offers
+//       const offers = await Offer.find({
+//         isDeleted: false,
+//         isListed: true,
+//         validFrom: { $lte: currentDate },
+//         validUpto: { $gte: currentDate }
+//       }).populate('applicableItem');
+
+//       for (const item of cartItems) {
+//         if (item.productId) {
+//           quantity += item.quantity;
+//           // Find applicable offers
+//           const productOffers = offers.filter(offer =>
+//             offer.applicable === 'Product' && offer.applicableItem._id.toString() === item.productId._id.toString()
+//           );
+//           const categoryOffers = offers.filter(offer =>
+//             offer.applicable === 'Category' && offer.applicableItem._id.toString() === item.productId.category.toString()
+//           );
+//           const brandOffers = offers.filter(offer =>
+//             offer.applicable === 'Brand' && offer.applicableItem._id.toString() === item.productId.brand.toString()
+//           );
+
+//           const allOffers = [...productOffers, ...categoryOffers, ...brandOffers];
+
+//           let highestDiscount = 0;
+//           let selectedOffer = null;
+
+//           for (const offer of allOffers) {
+//             let discount = 0;
+//             if (offer.offerType === 'Percentage') {
+//               discount = (item.price * offer.offerAmount) / 100;
+//             } else if (offer.offerType === 'Fixed') {
+//               discount = offer.offerAmount;
+//             }
+//             if (discount > highestDiscount) {
+//               highestDiscount = discount;
+//               selectedOffer = {
+//                 type: offer.offerType,
+//                 amount: offer.offerAmount,
+//                 discount: offer.offerType === 'Percentage' ? offer.offerAmount : Math.round((discount / item.price) * 100)
+//               };
+//             }
+//           }
+
+//           // Apply productOffer from productSchema if higher
+//           if (item.productId.productOffer > 0) {
+//             const productOfferDiscount = (item.price * item.productId.productOffer) / 100;
+//             if (productOfferDiscount > highestDiscount) {
+//               highestDiscount = productOfferDiscount;
+//               selectedOffer = {
+//                 type: 'Percentage',
+//                 amount: item.productId.productOffer,
+//                 discount: item.productId.productOffer
+//               };
+//             }
+//           }
+
+//           // Calculate discounted price
+//           item.discountedPrice = Math.round(item.price - highestDiscount);
+//           item.offer = selectedOffer || { discount: 0 };
+//           item.totalPrice = item.discountedPrice * item.quantity;
+//           grandTotal += item.totalPrice;
+//         }
+//       }
+//     }
+
+//     req.session.grandTotal = grandTotal;
+//     res.render("cart", {
+//       user,
+//       quantity,
+//       data: cartItems,
+//       grandTotal,
+//     });
+//   } catch (error) {
+//     error.statusCode = 500;
+//         next(error);
+
+//   }
+// };
+
+const addToCart = async (req, res , next) => {
+
+      // console.log("add to cart function ......")
+
   try {
     // Validate user session
     const userId = req.session.user;
@@ -175,13 +297,21 @@ const addToCart = async (req, res) => {
       if(quantity > 3){
         return res.status(400).json({ success: false, message: "Cannot add more than 3 products" });
       }
-      // Product not in cart, add new item
+      
+
+      const { discountedPrice, offer, totalPrice } =await calculateOfferPrice( product, quantity ,product.salePrice );
+
+      console.log ({
+        discountedPrice,offer,totalPrice
+      })
+
       newQuantity = quantity;
+
       cart.items.push({
         productId: productId,
         quantity: newQuantity,
         price: product.salePrice,
-        totalPrice: product.salePrice * newQuantity,
+        totalPrice: discountedPrice * newQuantity,
         status: 'placed',
         cancellationReason: 'none'
       });
@@ -224,68 +354,140 @@ const addToCart = async (req, res) => {
   }
 };
 
-const changeQuantity = async (req, res) => {
+// const changeQuantity = async (req, res) => {
+//   try {
+//     const productId = req.body.productId;
+//     const userId = req.session.user;
+//     const count = parseInt(req.body.count);
+
+//     if (!userId) {
+//       return res.status(401).json({ success: false, message: "User not logged in" });
+//     }
+
+//     if (!mongoose.Types.ObjectId.isValid(productId)) {
+//       return res.status(400).json({ success: false, message: "Invalid product ID" });
+//     }
+
+//     if (count !== 1 && count !== -1) {
+//       return res.status(400).json({ success: false, message: "Invalid count" });
+//     }
+
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     const cart = await Cart.findOne({ userId }).populate('items.productId');
+//     if (!cart) {
+//       return res.status(404).json({ success: false, message: "Cart not found" });
+//     }
+
+//     const itemIndex = cart.items.findIndex(item => item.productId._id.toString() === productId);
+//     if (itemIndex === -1) {
+//       return res.status(404).json({ success: false, message: "Product not in cart" });
+//     }
+
+//     const cartItem = cart.items[itemIndex];
+
+//     if(count > 0){
+//       if(cartItem.quantity >= 3){
+//         return res.status(400).json({ success: false, message: "Cannot add more than 3 products" });
+//       }
+//     }
+
+//     const product = cartItem.productId;
+
+//     const newQuantity = cartItem.quantity + count;
+//     if (newQuantity <= 0) {
+//       return res.status(400).json({ success: false, message: "Quantity cannot be less than 1" });
+//     }
+
+//     if(count > 0){
+//       if (newQuantity > product.quantity) {
+//         return res.status(400).json({ success: false, message: "Out of stock" });
+//       }
+//     }
+
+//     cartItem.quantity = newQuantity;
+//     cartItem.totalPrice = cartItem.price * newQuantity;
+//     await cart.save();
+
+//     // Update product stock
+//     // await Product.findByIdAndUpdate(productId, {
+//     //   $inc: { quantity: count === 1 ? -1 : 1 }
+//     // });
+
+//     let grandTotal = 0;
+//     for (const item of cart.items) {
+//       grandTotal += item.totalPrice;
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Quantity updated successfully",
+//       quantityInput: newQuantity,
+//       count,
+//       totalAmount: cartItem.price * newQuantity,
+//       grandTotal,
+//     });
+//   } catch (error) {
+//      error.statusCode = 500;
+//         next(error);
+
+//   }
+// };
+
+
+
+const changeQuantity = async (req, res, next) => {
   try {
-    const productId = req.body.productId;
+    const { productId, count } = req.body;
     const userId = req.session.user;
-    const count = parseInt(req.body.count);
 
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "User not logged in" });
-    }
+    if (!userId) return res.status(401).json({ success: false, message: "User not logged in" });
 
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
+    if (!mongoose.Types.ObjectId.isValid(productId))
       return res.status(400).json({ success: false, message: "Invalid product ID" });
-    }
 
-    if (count !== 1 && count !== -1) {
+    const change = parseInt(count);
+    if (![1, -1].includes(change))
       return res.status(400).json({ success: false, message: "Invalid count" });
-    }
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
     const cart = await Cart.findOne({ userId }).populate('items.productId');
-    if (!cart) {
-      return res.status(404).json({ success: false, message: "Cart not found" });
-    }
+    if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
 
     const itemIndex = cart.items.findIndex(item => item.productId._id.toString() === productId);
-    if (itemIndex === -1) {
-      return res.status(404).json({ success: false, message: "Product not in cart" });
-    }
+    if (itemIndex === -1) return res.status(404).json({ success: false, message: "Product not in cart" });
 
     const cartItem = cart.items[itemIndex];
-
-    if(count > 0){
-      if(cartItem.quantity >= 3){
-        return res.status(400).json({ success: false, message: "Cannot add more than 3 products" });
-      }
-    }
-
     const product = cartItem.productId;
 
-    const newQuantity = cartItem.quantity + count;
-    if (newQuantity <= 0) {
-      return res.status(400).json({ success: false, message: "Quantity cannot be less than 1" });
-    }
+    if (change > 0 && cartItem.quantity >= 3)
+      return res.status(400).json({ success: false, message: "Cannot add more than 3 products" });
 
-    if(count > 0){
-      if (newQuantity > product.quantity) {
-        return res.status(400).json({ success: false, message: "Out of stock" });
-      }
-    }
+    const newQuantity = cartItem.quantity + change;
+    if (newQuantity <= 0)
+      return res.status(400).json({ success: false, message: "Quantity cannot be less than 1" });
+
+    if (change > 0 && newQuantity > product.quantity)
+      return res.status(400).json({ success: false, message: "Out of stock" });
 
     cartItem.quantity = newQuantity;
-    cartItem.totalPrice = cartItem.price * newQuantity;
-    await cart.save();
 
-    // Update product stock
-    // await Product.findByIdAndUpdate(productId, {
-    //   $inc: { quantity: count === 1 ? -1 : 1 }
-    // });
+    const { discountedPrice, offer, totalPrice } = await calculateOfferPrice(
+      product,
+      newQuantity,
+      cartItem.price
+    );
+
+    cartItem.totalPrice = totalPrice;
+    cartItem.discountedPrice = discountedPrice;
+    cartItem.offer = offer;
+
+    await cart.save();
 
     let grandTotal = 0;
     for (const item of cart.items) {
@@ -296,18 +498,18 @@ const changeQuantity = async (req, res) => {
       success: true,
       message: "Quantity updated successfully",
       quantityInput: newQuantity,
-      count,
-      totalAmount: cartItem.price * newQuantity,
+      count: change,
+      totalAmount: totalPrice,
       grandTotal,
     });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
-
+    error.statusCode = 500;
+    next(error);
   }
 };
 
-const deleteProduct = async (req, res) => {
+
+const deleteProduct = async (req, res, next) => {
   try {
     const productId = req.body.productId;
     const userId = req.session.user;

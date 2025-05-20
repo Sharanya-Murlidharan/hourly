@@ -25,6 +25,10 @@ const orderSchema = new Schema({
     price: {
       type: Number,
       default: 0
+    },
+    regularPrice:{
+      type: Number,
+      default: 0
     }
   }],
   totalPrice: {
@@ -33,6 +37,10 @@ const orderSchema = new Schema({
   },
   discount: {
     type: Number,
+    default: 0
+  },
+  couponDiscount:{
+       type: Number,
     default: 0
   },
   finalAmount: {

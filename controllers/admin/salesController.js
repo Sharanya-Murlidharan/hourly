@@ -5,7 +5,7 @@ const ExcelJS = require('exceljs');
 const moment = require('moment');
 
 // Render sales report page with paginated data
-const getSalesReport = async (req, res) => {
+const getSalesReport = async (req, res, next) => {
   try {
     const { startDate, endDate, page = 1 } = req.query;
     const currentPage = parseInt(page);
@@ -53,7 +53,7 @@ const getSalesReport = async (req, res) => {
       orderId: order.orderId,
       amount: order.totalPrice,
       discount: order.discount,
-      coupon: order.couponApplied ? order.discount : 0,
+      coupon: order.couponDiscount,
       finalAmount: order.finalAmount,
       paymentMethod: order.paymentMethod,
       returnOrCancelled: ['Canceled', 'Returned'].includes(order.status) ? order.finalAmount : 0,
@@ -81,13 +81,13 @@ const getSalesReport = async (req, res) => {
       totalPages,
     });
   } catch (error) {
-    console.error('Error fetching sales report:', error);
-    res.status(500).send('Server Error');
+     error.statusCode = 500;
+        next(error);
   }
 };
 
 // Fetch sales data for Fetch API (dynamic updates)
-const getSalesData = async (req, res) => {
+const getSalesData = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
     let dateFilter = {};
@@ -191,7 +191,7 @@ const getSalesData = async (req, res) => {
       orderId: order.orderId,
       amount: order.totalPrice,
       discount: order.discount,
-      coupon: order.couponApplied ? order.discount : 0,
+      coupon: order.couponDiscount,
       finalAmount: order.finalAmount,
       paymentMethod: order.paymentMethod,
       returnOrCancelled: ['Canceled', 'Returned'].includes(order.status) ? order.finalAmount : 0,
@@ -210,13 +210,13 @@ const getSalesData = async (req, res) => {
       orders: formattedOrders,
     });
   } catch (error) {
-    console.error('Error fetching sales data:', error);
-    res.status(500).json({ success: false, message: 'Error fetching sales data' });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
 // Generate PDF report
-const generatePDFReport = async (req, res) => {
+const generatePDFReport = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
 
@@ -285,13 +285,13 @@ const generatePDFReport = async (req, res) => {
 
     doc.end();
   } catch (error) {
-    console.error('Error generating PDF report:', error);
-    res.status(500).send('Error generating PDF report');
+    error.statusCode = 500;
+        next(error);
   }
 };
 
 // Generate Excel report
-const generateExcelReport = async (req, res) => {
+const generateExcelReport = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
 
@@ -367,8 +367,8 @@ const generateExcelReport = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    console.error('Error generating Excel report:', error);
-    res.status(500).send('Error generating Excel report');
+    error.statusCode = 500;
+        next(error);
   }
 };
 

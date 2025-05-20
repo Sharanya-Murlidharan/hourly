@@ -62,7 +62,7 @@ const loadSignup = async(req,res)=>{
     try {
         return res.render('signup')
     } catch (error) {
-        console.log('home page not loading',error)
+        console.log('error from loadSignup',error)
         res.status(500).send('Server Error')
     }
 }
@@ -105,7 +105,7 @@ async function sendVerificationEmail(email,otp) {
     }
 }
 
-const signup = async (req,res) => {
+const signup = async (req,res,next) => {
     try {
       
         console.log('Received body:', req.body);
@@ -150,8 +150,8 @@ const signup = async (req,res) => {
         // console.log('OTP Sent',otp);
         
     } catch (error) {
-        console.error("signup error",error)
-        res.redirect("/pageNotFound")
+         error.statusCode = 500;
+        next(error);
         }
 }
 
@@ -165,7 +165,7 @@ const securePassword = async(password)=>{
     }
 }
 
-const verifyOtp = async(req,res)=>{
+const verifyOtp = async(req,res,next)=>{
     try {
         const{otp} = req.body
         console.log(otp);
@@ -262,12 +262,12 @@ const verifyOtp = async(req,res)=>{
         }
         
     } catch (error) {
-        console.error("Error verifying otp",error)
-        res.status(500).json({success:false,message:"An error occured"})
+        error.statusCode = 500;
+        next(error);
     }
 }
 
-const resendOtp = async (req,res)=>{
+const resendOtp = async (req,res,next)=>{
     try {
         console.log('Session data:', req.session.userData)
         const {email} = req.session.userData
@@ -289,8 +289,8 @@ const resendOtp = async (req,res)=>{
             res.status(500).json({success:false,message:"Failed to resend OTP. Please try again"})
         }
     } catch (error) {
-        console.error("Error resending Otp",error);
-        res.status(500).json({success:false,message:"Internal Server Error. Please try again"})
+         error.statusCode = 500;
+        next(error);
         
     }
 }
@@ -303,11 +303,12 @@ const loadLogin = async (req,res)=>{
         res.redirect("/")
     }
     } catch (error) {
+        console.error("error from loadLogin",error);  
         res.redirect("/pageNotFound")
     }
 }
 
-const login = async(req,res)=>{
+const login = async(req,res, next)=>{
     try {
         const {email,password} = req.body
         
@@ -336,12 +337,12 @@ const login = async(req,res)=>{
             res.redirect( '/')
         
     } catch (error) {
-       console.error("login error",error) 
-       res.redirect("/pageNotFound")
+        error.statusCode = 500;
+        next(error);
     }
 }
 
-const LoadHomepage = async (req, res) => {
+const LoadHomepage = async (req, res, next) => {
     try {
         let userData = null;
 
@@ -376,13 +377,13 @@ const LoadHomepage = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Home page is not working", error);
-        res.status(500).send("Server error");
+        error.statusCode = 500;
+        next(error);
     }
 };
 
 
-const logout = async(req,res)=>{
+const logout = async(req,res, next)=>{
     try {
         req.session.destroy((err)=>{
             if(err){
@@ -392,8 +393,8 @@ const logout = async(req,res)=>{
             return res.redirect("/login")
         })
     } catch (error) {
-        console.log("Logout error",error);
-        res.redirect("/pageNotFound")
+         error.statusCode = 500;
+        next(error);
     }
 }
 
@@ -401,6 +402,8 @@ const getForgotPassword = async(req,res)=>{
     try {
         res.render('forgot-password')
     } catch (error) {
+        console.error("error from getForgotPassword",error);
+        
     res.redirect('/pageNotFound')        
     }
 }
@@ -468,7 +471,7 @@ const calculateProductDiscount = async (product, currentDate) => {
     }
 };
 
-const loadShoppingPage = async (req, res) => {
+const loadShoppingPage = async (req, res, next) => {
     try {
         const user = req.session.user;
         const userData = user ? await User.findOne({ _id: user }) : null;
@@ -577,12 +580,12 @@ const loadShoppingPage = async (req, res) => {
             wishlistProductIds,
         });
     } catch (error) {
-        console.error('Error in loadShoppingPage:', error);
-        res.redirect('/pageNotFound');
+         error.statusCode = 500;
+        next(error);
     }
 };
 
-const filterProduct = async (req, res) => {
+const filterProduct = async (req, res, next) => {
     try {
         const user = req.session.user;
         const category = req.query.category;
@@ -684,12 +687,12 @@ const filterProduct = async (req, res) => {
             wishlistProductIds,
         });
     } catch (error) {
-        console.error('Error in filterProduct:', error);
-        res.redirect('/pageNotFound');
+         error.statusCode = 500;
+        next(error);
     }
 };
 
-const filterByPrice = async (req, res) => {
+const filterByPrice = async (req, res, next) => {
     try {
         const user = req.session.user;
         const userData = user ? await User.findOne({ _id: user }) : null;
@@ -796,12 +799,12 @@ const filterByPrice = async (req, res) => {
             wishlistProductIds,
         });
     } catch (error) {
-        console.error('Error in filterByPrice:', error);
-        res.redirect('/pageNotFound');
+         error.statusCode = 500;
+        next(error);
     }
 };
 
-const searchProducts = async (req, res) => {
+const searchProducts = async (req, res,next) => {
     try {
         const user = req.session.user;
         const userData = user ? await User.findOne({ _id: user }) : null;
@@ -909,8 +912,8 @@ const searchProducts = async (req, res) => {
             searchQuery,
         });
     } catch (error) {
-        console.error('Error in searchProducts:', error);
-        res.redirect('/pageNotFound');
+        error.statusCode = 500;
+        next(error);
     }
 };
 

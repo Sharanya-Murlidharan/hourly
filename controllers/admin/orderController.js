@@ -2,7 +2,7 @@ const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema')
 
-const getOrdersPage = async (req, res) => {
+const getOrdersPage = async (req, res, next) => {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = 6;
@@ -74,12 +74,12 @@ const getOrdersPage = async (req, res) => {
         searchQuery: searchQuery,
       });
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      res.status(500).render('pageerror', { message: 'Error fetching orders' });
+       error.statusCode = 500;
+        next(error);
     }
   };
 
-const getOrderDetailPage = async (req, res) => {
+const getOrderDetailPage = async (req, res, next) => {
   try {
     const { orderId } = req.params;
 
@@ -103,12 +103,12 @@ const getOrderDetailPage = async (req, res) => {
       searchQuery: req.query.search || ''
     });
   } catch (error) {
-    console.error('Error fetching order details:', error);
-    res.status(500).render('pageerror', { message: 'Error fetching order details' });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const updateOrderStatus = async (req, res) => {
+const updateOrderStatus = async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
@@ -130,12 +130,12 @@ const updateOrderStatus = async (req, res) => {
 
     res.status(200).json({ message: 'Status updated successfully', status });
   } catch (error) {
-    console.error('Error updating order status:', error);
-    res.status(500).json({ message: 'Failed to update status' });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
-const verifyReturn = async (req, res) => {
+const verifyReturn = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { action, rejectReason } = req.body;
@@ -194,17 +194,12 @@ const verifyReturn = async (req, res) => {
     await order.save();
     res.status(200).json({ success: true, message: `Return ${action}d successfully.` });
   } catch (error) {
-    console.error("Error in verifyReturn:", error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+     error.statusCode = 500;
+        next(error);
   }
 };
 
 
-
-
-module.exports = {
-  verifyReturn
-};
   
 
 

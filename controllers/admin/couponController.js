@@ -1,6 +1,6 @@
 const Coupon = require('../../models/couponSchema');
 
-const getCoupon = async (req, res) => {
+const getCoupon = async (req, res, next) => {
     try {
         const searchTerm = req.query.search || ''; // Get search term from query parameter
         const page = parseInt(req.query.page) || 1; // Get page number from query parameter, default to 1
@@ -37,12 +37,12 @@ const getCoupon = async (req, res) => {
             searchQuery: searchTerm // Pass search term for pagination links
         });
     } catch (error) {
-        console.error('Error fetching coupons:', error.message, error.stack);
-        res.status(500).json({ success: false, error: 'Server Error' });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const addCoupon = async (req, res) => {
+const addCoupon = async (req, res, next) => {
     try {
         const { name, description, code, minCartValue, amount, validFrom, validUpto } = req.body;
 
@@ -95,17 +95,12 @@ const addCoupon = async (req, res) => {
         console.log('Coupon saved successfully'); // Debug log
         res.json({ success: true, message: 'Coupon added successfully' });
     } catch (error) {
-        console.error('Error adding coupon:', {
-           error
-        });
-         res.status(500).json({ 
-            success: false, 
-            error: error.message || 'Server Error while adding coupon' 
-        });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const editCoupon = async (req, res) => {
+const editCoupon = async (req, res,next) => {
     try {
         const { couponId, name, description, code, minCartValue, amount, validFrom, validUpto } = req.body;
         console.log('Received data:', req.body); // Debug log
@@ -157,12 +152,12 @@ const editCoupon = async (req, res) => {
         }
         res.json({ success: true, message: 'Coupon updated successfully' });
     } catch (error) {
-        console.error('Error updating coupon:', error.message, error.stack);
-        res.status(500).json({ success: false, error: `Server Error: ${error.message}` });
+        error.statusCode = 500;
+        next(error);
     }
 };
 
-const deleteCoupon = async (req, res) => {
+const deleteCoupon = async (req, res, next) => {
     try {
         const { couponId } = req.body;
         console.log('Received data:', req.body); // Debug log
@@ -180,8 +175,8 @@ const deleteCoupon = async (req, res) => {
         }
         res.json({ success: true, message: 'Coupon deleted successfully' });
     } catch (error) {
-        console.error('Error deleting coupon:', error.message, error.stack);
-        res.status(500).json({ success: false, error: `Server Error: ${error.message}` });
+         error.statusCode = 500;
+        next(error);
     }
 };
 
