@@ -144,64 +144,101 @@
     }
 
     .price-container {
-        margin: 8px 0;
+        margin: 10px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
     .original-price {
-        font-size: 0.85rem;
-        color: #666;
+        font-size: 0.9rem;
+        color: #e57373;
         text-decoration: line-through;
-        margin-right: 8px;
+        font-weight: 500;
     }
 
     .discounted-price {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #d32f2f;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2e7d32;
     }
 
     .price {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #000000c4;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #212121;
     }
 
     .discount-badge {
-        background-color: #d32f2f;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #e74c3c;
         color: #fff;
-        padding: 3px 8px;
-        border-radius: 3px;
+        padding: 4px 8px;
+        border-radius: 4px;
         font-size: 0.75rem;
-        margin-left: 8px;
+        font-weight: 600;
+        z-index: 10;
     }
 
     .button-container {
         display: flex;
         gap: 8px;
         margin-top: 8px;
+        justify-content: center;
     }
 
-    .add-to-cart-btn,
-    .wishlist-btn {
+    .add-to-cart-btn {
         flex: 1;
-        padding: 8px;
+        padding: 10px;
         border: none;
-        border-radius: 5px;
-        font-size: 0.85rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.3s ease;
-        background-color: #05445E;
+        background-color: #28a745;
         color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
-    .add-to-cart-btn:hover,
+    .add-to-cart-btn:hover {
+        background-color: #218838;
+        transform: scale(1.02);
+    }
+
+    .wishlist-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .wishlist-btn i {
+        font-size: 1rem;
+        color: #888;
+    }
+
+    .wishlist-btn.active i {
+        color: #dc3545;
+    }
+
     .wishlist-btn:hover {
-        background-color: #03384d;
-    }
-
-    .wishlist-btn.active {
-        background-color: #05445E;
-        color: #fff;
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
     }
 
     .pagination {
@@ -310,21 +347,30 @@
         }
 
         .original-price {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
 
         .discounted-price, .price {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         .discount-badge {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
+            padding: 3px 6px;
         }
 
-        .add-to-cart-btn,
+        .add-to-cart-btn {
+            font-size: 0.85rem;
+            padding: 8px;
+        }
+
         .wishlist-btn {
-            font-size: 0.8rem;
-            padding: 6px;
+            width: 28px;
+            height: 28px;
+        }
+
+        .wishlist-btn i {
+            font-size: 0.9rem;
         }
 
         .pagination .page-link {
@@ -352,8 +398,7 @@
             gap: 5px;
         }
 
-        .add-to-cart-btn,
-        .wishlist-btn {
+        .add-to-cart-btn {
             width: 100%;
         }
     }
@@ -370,9 +415,123 @@
         text-align: center;
         font-weight: bold;
     }
+
+    .search-bar {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .search-bar form {
+        display: flex;
+        align-items: center;
+        position: relative;
+        width: 100%;
+    }
+
+    .search-bar input[type="text"] {
+        padding: 10px 35px 10px 40px;
+        border: 1.5px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 100%;
+        max-width: 200px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .search-bar input[type="text"]:focus {
+        outline: none;
+        border-color: #05445E;
+        box-shadow: 0 0 5px rgba(5, 68, 94, 0.3);
+    }
+
+    .search-bar input[type="text"]::placeholder {
+        color: #555;
+        opacity: 0.8;
+    }
+
+    .search-bar button[type="submit"] {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        color: #05445E;
+        font-size: 1.1rem;
+        position: absolute;
+        right: 5px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    .search-bar button[type="submit"]:hover {
+        background: #05445E;
+        color: #fff;
+        border-radius: 50%;
+    }
+
+    .search-bar .clear-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        color: #666;
+        font-size: 1.1rem;
+        position: absolute;
+        right: 30px;
+        display: none;
+        transition: color 0.3s;
+    }
+
+    .search-bar .clear-btn.show {
+        display: block;
+    }
+
+    .search-bar .clear-btn:hover {
+        color: #05445E;
+    }
+
+    @media (max-width: 768px) {
+        .search-bar input[type="text"] {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
 </style>
 
-<!-- Debug: Log product data to check discount fields -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+
+        function toggleClearButton() {
+            if (searchInput.value.trim() !== '') {
+                clearBtn.classList.add('show');
+            } else {
+                clearBtn.classList.remove('show');
+            }
+        }
+
+        toggleClearButton();
+
+        searchInput.addEventListener('input', toggleClearButton);
+
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearBtn.classList.remove('show');
+            window.location.href = '/shop';
+        });
+
+        searchInput.form.addEventListener('submit', function(event) {
+            if (searchInput.value.trim() === '') {
+                event.preventDefault();
+                searchInput.focus();
+            }
+        });
+    });
+</script>
+
 <script>
     <% products.forEach(product => { %>
         console.log('Product <%= product._id %>:', {
@@ -388,6 +547,13 @@
 
 <div class="container">
     <aside class="sidebar ms-1">
+        <div class="search-bar">
+            <form action="/search" method="POST">
+                <input type="text" name="query" id="searchInput" placeholder="Search" value="<%= locals.query || '' %>">
+                <button type="button" class="clear-btn" id="clearSearch"><i class="fas fa-times"></i></button>
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
         <h3>Filter</h3>
         <div class="filter-section">
             <h3>Categories</h3>
@@ -442,14 +608,24 @@
             <% } else { %>
                 <% products.forEach(product => { %>
                 <div class="product-card" data-product-id="<%= product._id %>">
+                    <div style="position: relative;">
+                        <a href="/productDetails?id=<%= product._id %>">
+                            <img src="/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                            <% if (product.hasDiscount) { %>
+                                <span class="discount-badge"><%= product.discountPercentage %>% OFF</span>
+                            <% } %>
+                        </a>
+                        <button class="wishlist-btn <%= wishlistProductIds.includes(product._id.toString()) ? 'active' : '' %>" 
+                                onclick="toggleWishlist('<%= product._id %>', this, event)">
+                            <i class="<%= wishlistProductIds.includes(product._id.toString()) ? 'fas' : 'far' %> fa-heart"></i>
+                        </button>
+                    </div>
                     <a href="/productDetails?id=<%= product._id %>">
-                        <img src="/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                         <h4><%= product.productName %></h4>
                         <div class="price-container">
                             <% if (product.hasDiscount) { %>
                                 <span class="original-price">₹<%= product.salePrice.toLocaleString('en-IN') %></span>
                                 <span class="discounted-price">₹<%= product.discountedPrice.toLocaleString('en-IN') %></span>
-                                <span class="discount-badge"><%= product.discountPercentage %>% OFF</span>
                             <% } else { %>
                                 <p class="price">₹<%= product.salePrice.toLocaleString('en-IN') %></p>
                             <% } %>
@@ -458,19 +634,9 @@
                     <% if (product.quantity > 0) { %>
                     <div class="button-container">
                         <button class="add-to-cart-btn" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
-                        <button class="wishlist-btn <%= wishlistProductIds.includes(product._id.toString()) ? 'active' : '' %>" 
-                                onclick="toggleWishlist('<%= product._id %>', this)">
-                            <%= wishlistProductIds.includes(product._id.toString()) ? 'Remove from Wishlist' : 'Add to Wishlist' %>
-                        </button>
                     </div>
                     <% } else { %>
                         <div class="out-of-stock">Out of Stock</div>
-                        <div class="button-container">
-                            <button class="wishlist-btn <%= wishlistProductIds.includes(product._id.toString()) ? 'active' : '' %>" 
-                                    onclick="toggleWishlist('<%= product._id %>', this)">
-                                <%= wishlistProductIds.includes(product._id.toString()) ? 'Remove from Wishlist' : 'Add to Wishlist' %>
-                            </button>
-                        </div>
                     <% } %>
                 </div>
                 <% }) %>
@@ -564,7 +730,8 @@
         });
     }
 
-    function toggleWishlist(productId, button) {
+    function toggleWishlist(productId, button, event) {
+        event.stopPropagation();
         const isInWishlist = button.classList.contains('active');
         const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
         
@@ -580,7 +747,7 @@
             if (data.success) {
                 if (isInWishlist) {
                     button.classList.remove('active');
-                    button.textContent = 'Add to Wishlist';
+                    button.querySelector('i').classList.replace('fas', 'far');
                     Swal.fire({
                         icon: 'success',
                         title: 'Removed',
@@ -590,7 +757,7 @@
                     });
                 } else {
                     button.classList.add('active');
-                    button.textContent = 'Remove from Wishlist';
+                    button.querySelector('i').classList.replace('far', 'fas');
                     Swal.fire({
                         icon: 'success',
                         title: 'Added',

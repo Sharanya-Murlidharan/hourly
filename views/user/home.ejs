@@ -1,5 +1,7 @@
 <%-include('../../views/partials/user/header')%>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     * {
         margin: 0;
@@ -234,7 +236,37 @@
         transform: scale(1.15);
     }
 
-    .wishlist-btn {
+    .product-content-wrap button.add-to-cart-btn {
+        display: inline-block;
+        background-color: #05445E;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.95rem;
+        font-weight: 400;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .product-content-wrap button.add-to-cart-btn:hover {
+        background-color: #043b52;
+        transform: translateY(-2px);
+    }
+
+    .product-content-wrap .out-of-stock {
+        display: inline-block;
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+  .wishlist-btn {
         position: absolute;
         top: 12px;
         right: 12px;
@@ -252,6 +284,11 @@
         background: #05445E;
         color: #fff;
         transform: scale(1.1);
+    }
+
+    .wishlist-btn.active {
+        background: #05445E;
+        color: #fff;
     }
 
     .product-content-wrap {
@@ -272,7 +309,7 @@
 
     .product-content-wrap h5 {
         font-size: 1.2rem;
-        color: #05445E;
+        color: #333;
         margin-bottom: 12px;
         font-weight: 400;
         letter-spacing: 1px;
@@ -318,6 +355,11 @@
             font-size: 0.9rem;
             padding: 8px 16px;
         }
+
+         .product-content-wrap button.add-to-cart-btn {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
     }
 
     @media (max-width: 480px) {
@@ -338,6 +380,11 @@
         }
 
         .product-content-wrap a {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+
+        .product-content-wrap button.add-to-cart-btn {
             font-size: 0.85rem;
             padding: 8px 16px;
         }
@@ -479,22 +526,163 @@
                              src="/<%=products[i].productImage[0]%>" 
                              alt="<%=products[i].productName%>">
                         <!-- Debugging: Log image path -->
-                        <script>console.log("Image path: /Uploads/<%=products[i].productImage[0] || 'default.jpg' %>");</script>
+                        <!-- <script>console.log("Image path: /Uploads/<%=products[i].productImage[0] || 'default.jpg' %>");</script> -->
                     </a>
                 </div>
-                <a href="/addToWishlist" class="wishlist-btn">
+                <button class="wishlist-btn" 
+                        data-product-id="<%= products[i]._id %>"
+                        onclick="toggleWishlist('<%= products[i]._id %>', this)">
                     <i class="fa-solid fa-heart" style="color: #e02200;"></i>
-                </a>
+                </button>
             </div>
             <div class="product-content-wrap">
                 <h6><%=products[i].productName%></h6>
-                <h5><%=products[i].salePrice%></h5>
-                <a href="/addToCart?id=<%=products[i]._id%>">Add To Cart</a>
+                <h5>₹<%=products[i].salePrice%></h5>
+                <% if (products[i].quantity > 0) { %>
+                    <button class="add-to-cart-btn" onclick="addToCart('<%= products[i]._id %>')">Add To Cart</button>
+                <% } else { %>
+                    <div class="out-of-stock">Out of Stock</div>
+                <% } %>
             </div>
         </div>
         <% } %>
     </div>
 </section>
+
+<script>
+     // Fetch wishlist to determine initial button states
+    let wishlistProductIds = [];
+    fetch('/wishlist', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch wishlist');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.wishlistItems) {
+            wishlistProductIds = data.wishlistItems.map(item => item.productId._id.toString());
+            document.querySelectorAll('.wishlist-btn').forEach(button => {
+                const productId = button.getAttribute('data-product-id');
+                if (wishlistProductIds.includes(productId)) {
+                    button.classList.add('active');
+                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> ';
+                } else {
+                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> Add to Wishlist';
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching wishlist:', error);
+    });
+
+    function addToCart(productId) {
+        fetch('/addToCart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Product added to cart!',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/cart';
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to add to cart',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while adding to cart',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+    }
+
+    function toggleWishlist(productId, button) {
+        const isInWishlist = button.classList.contains('active');
+        const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isInWishlist) {
+                    button.classList.remove('active');
+                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> Add to Wishlist';
+                    wishlistProductIds = wishlistProductIds.filter(id => id !== productId);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Removed',
+                        text: 'Product removed from wishlist!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    button.classList.add('active');
+                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> ';
+                    wishlistProductIds.push(productId);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added',
+                        text: 'Product added to wishlist!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update wishlist',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while updating the wishlist',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+    }
+</script>
 
 <!-- footer begins -->
 <%-include('../../views/partials/user/footer')%>

@@ -790,6 +790,10 @@ $(document).ready(() => {
             displayAddErrorMessage('add-offerAmount-error', 'Please enter a valid offer amount');
             isValid = false;
         }
+         if ( offerAmount > 25) {
+            displayEditErrorMessage('edit-offerAmount-error', 'Cannot add more than 25%');
+            isValid = false;
+        }
         if (validFrom === '') {
             displayAddErrorMessage('add-validFrom-error', 'Please enter a valid from date');
             isValid = false;
@@ -853,7 +857,7 @@ $(document).ready(() => {
             isValid = false;
         }
 
-        if ( offerAmount < 25) {
+        if ( offerAmount > 25) {
             displayEditErrorMessage('edit-offerAmount-error', 'Cannot add more than 25%');
             isValid = false;
         }
