@@ -306,31 +306,39 @@
             color: #991B1B;
         }
 
+        /* Pagination Styles */
         .pagination {
             display: flex;
             justify-content: center;
-            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            padding: 0;
+            list-style: none;
         }
-
-        .pagination a {
+        .pagination .page-item {
             margin: 0 5px;
+        }
+        .pagination .page-link {
             padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
             text-decoration: none;
             color: var(--text-dark);
-            font-size: 14px;
-            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
         }
-
-        .pagination a.active {
-            background-color: var(--primary-color);
-            color: var(--white);
-            border-color: var(--primary-color);
-        }
-
-        .pagination a:hover {
+        .pagination .page-link:hover {
             background-color: var(--primary-light);
+            color: var(--text-dark);
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #3D639E;
+            color: var(--white);
+            border-color: #3D639E;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: var(--text-light);
+            background-color: var(--white);
+            cursor: not-allowed;
         }
 
         @media (max-width: 992px) {
@@ -481,211 +489,240 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <% if (totalPages > 1) { %>
-                <div class="pagination">
-                    <% for (let i = 1; i <= totalPages; i++) { %>
-                        <a href="/admin/sales?startDate=<%= startDate %>&endDate=<%= endDate %>&page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+            <!-- Pagination Section -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <% if (currentPage > 1) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<%= currentPage - 1 %><%= startDate && endDate ? '&startDate=' + startDate + '&endDate=' + endDate : '' %>" aria-label="Previous">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
                     <% } %>
-                </div>
-            <% } %>
+                    
+                    <% for(let i = 1; i <= totalPages; i++) { %>
+                        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+                            <a class="page-link" href="?page=<%= i %><%= startDate && endDate ? '&startDate=' + startDate + '&endDate=' + endDate : '' %>">
+                                <%= i %>
+                            </a>
+                        </li>
+                    <% } %>
+                    
+                    <% if (currentPage < totalPages) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<%= currentPage + 1 %><%= startDate && endDate ? '&startDate=' + startDate + '&endDate=' + endDate : '' %>" aria-label="Next">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    <% } %>
+                </ul>
+            </nav>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Flatpickr
-            flatpickr('#startDate', {
-                dateFormat: 'd-m-Y',
-                maxDate: 'today',
-                onChange: function(selectedDates, dateStr) {
-                    endDatePicker.set('minDate', dateStr);
-                }
-            });
-
-            const endDatePicker = flatpickr('#endDate', {
-                dateFormat: 'd-m-Y',
-                maxDate: 'today'
-            });
-
-            const dateRangeSelect = document.getElementById('dateRangeSelect');
-            const startDateInput = document.getElementById('startDate');
-            const endDateInput = document.getElementById('endDate');
-            const applyFilterBtn = document.getElementById('applyFilter');
-            const clearFilterBtn = document.getElementById('clearFilter');
-            const exportPDFBtn = document.getElementById('exportPDF');
-            const exportExcelBtn = document.getElementById('exportExcel');
-
-            // Format number as currency
-            function formatCurrency(value) {
-                return `₹ ${Number(value).toLocaleString('en-IN')}`;
-            }
-
-            // Update summary cards
-            function updateSummary(summary) {
-                document.getElementById('grossSales').textContent = formatCurrency(summary.grossSales);
-                document.getElementById('cancelledOrRefunded').textContent = formatCurrency(summary.cancelledOrRefunded);
-                document.getElementById('couponsRedeemed').textContent = formatCurrency(summary.couponsRedeemed);
-                document.getElementById('discounts').textContent = formatCurrency(summary.discounts);
-                document.getElementById('netSales').textContent = formatCurrency(summary.netSales);
-                document.getElementById('totalOrders').textContent = summary.totalOrders;
-            }
-
-            // Update table
-            function updateTable(orders) {
-                const tbody = document.getElementById('salesTableBody');
-                tbody.innerHTML = '';
-                orders.forEach(order => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${order.orderId}</td>
-                        <td>${formatCurrency(order.amount)}</td>
-                        <td>${formatCurrency(order.discount)}</td>
-                        <td>${formatCurrency(order.coupon)}</td>
-                        <td>${formatCurrency(order.finalAmount)}</td>
-                        <td>${formatCurrency(order.returnOrCancelled)}</td>
-                        <td>${order.paymentMethod}</td>
-                        <td>${order.date}</td>
-                        <td><span class="status status-${order.status.replace(' ', '')}">${order.status}</span></td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            }
-
-            // Fetch sales data using Fetch API
-            async function fetchSalesData() {
-                const range = dateRangeSelect.value;
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-
-                if (range === 'custom' && (!startDate || !endDate)) {
-                    Swal.fire('Error', 'Please select a date range', 'error');
-                    return;
-                }
-
-                applyFilterBtn.textContent = 'Loading...';
-                applyFilterBtn.disabled = true;
-
-                try {
-                    const params = new URLSearchParams({ range, startDate, endDate });
-                    const response = await fetch(`/admin/sales/data?${params}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        updateSummary(data.summary);
-                        updateTable(data.orders);
-                        Swal.fire('Success', 'Sales data loaded', 'success');
-                    } else {
-                        Swal.fire('Error', data.message, 'error');
-                    }
-                } catch (error) {
-                    console.error('Error fetching sales data:', error);
-                    Swal.fire('Error', 'Failed to fetch sales data', 'error');
-                } finally {
-                    applyFilterBtn.textContent = 'Apply';
-                    applyFilterBtn.disabled = false;
-                }
-            }
-
-            // Set date range based on selection
-            dateRangeSelect.addEventListener('change', function() {
-                const today = new Date();
-                let startDate = new Date();
-                let endDate = new Date();
-
-                switch (this.value) {
-                    case 'today':
-                        break;
-                    case 'yesterday':
-                        startDate.setDate(today.getDate() - 1);
-                        endDate.setDate(today.getDate() - 1);
-                        break;
-                    case 'last7days':
-                        startDate.setDate(today.getDate() - 6);
-                        break;
-                    case 'last30days':
-                        startDate.setDate(today.getDate() - 29);
-                        break;
-                    case 'thisMonth':
-                        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                        break;
-                    case 'lastMonth':
-                        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
-                        break;
-                    case 'thisYear':
-                        startDate = new Date(today.getFullYear(), 0, 1);
-                        endDate = new Date(today.getFullYear(), 11, 31);
-                        break;
-                    case 'custom':
-                        startDateInput.value = '';
-                        endDateInput.value = '';
-                        return;
-                    default:
-                        startDateInput.value = '';
-                        endDateInput.value = '';
-                        return;
-                }
-
-                startDateInput.value = flatpickr.formatDate(startDate, 'd-m-Y');
-                endDateInput.value = flatpickr.formatDate(endDate, 'd-m-Y');
-            });
-
-            // Apply filter
-            applyFilterBtn.addEventListener('click', fetchSalesData);
-
-            // Clear filter
-            clearFilterBtn.addEventListener('click', function() {
-                dateRangeSelect.value = '';
-                startDateInput.value = '';
-                endDateInput.value = '';
-                updateSummary({
-                    grossSales: 0,
-                    cancelledOrRefunded: 0,
-                    couponsRedeemed: 0,
-                    discounts: 0,
-                    netSales: 0,
-                    totalOrders: 0
-                });
-                updateTable([]);
-            });
-
-            // Export PDF
-            exportPDFBtn.addEventListener('click', function() {
-                const range = dateRangeSelect.value;
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-
-                if (range === 'custom' && (!startDate || !endDate)) {
-                    Swal.fire('Error', 'Please select a date range', 'error');
-                    return;
-                }
-
-                window.location.href = `/admin/sales/report/pdf?range=${range}&startDate=${startDate}&endDate=${endDate}`;
-            });
-
-            // Export Excel
-            exportExcelBtn.addEventListener('click', function() {
-                const range = dateRangeSelect.value;
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-
-                if (range === 'custom' && (!startDate || !endDate)) {
-                    Swal.fire('Error', 'Please select a date range', 'error');
-                    return;
-                }
-
-                window.location.href = `/admin/sales/report/excel?range=${range}&startDate=${startDate}&endDate=${endDate}`;
-            });
-        });
-    </script>
 </body>
 </html>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Flatpickr
+        flatpickr('#startDate', {
+            dateFormat: 'd-m-Y',
+            maxDate: 'today',
+            onChange: function(selectedDates, dateStr) {
+                endDatePicker.set('minDate', dateStr);
+            }
+        });
+
+        const endDatePicker = flatpickr('#endDate', {
+            dateFormat: 'd-m-Y',
+            maxDate: 'today'
+        });
+
+        const dateRangeSelect = document.getElementById('dateRangeSelect');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const applyFilterBtn = document.getElementById('applyFilter');
+        const clearFilterBtn = document.getElementById('clearFilter');
+        const exportPDFBtn = document.getElementById('exportPDF');
+        const exportExcelBtn = document.getElementById('exportExcel');
+
+        // Format number as currency
+        function formatCurrency(value) {
+            return `₹ ${Number(value).toLocaleString('en-IN')}`;
+        }
+
+        // Update summary cards
+        function updateSummary(summary) {
+            document.getElementById('grossSales').textContent = formatCurrency(summary.grossSales);
+            document.getElementById('cancelledOrRefunded').textContent = formatCurrency(summary.cancelledOrRefunded);
+            document.getElementById('couponsRedeemed').textContent = formatCurrency(summary.couponsRedeemed);
+            document.getElementById('discounts').textContent = formatCurrency(summary.discounts);
+            document.getElementById('netSales').textContent = formatCurrency(summary.netSales);
+            document.getElementById('totalOrders').textContent = summary.totalOrders;
+        }
+
+        // Update table
+        function updateTable(orders) {
+            const tbody = document.getElementById('salesTableBody');
+            tbody.innerHTML = '';
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.orderId}</td>
+                    <td>${formatCurrency(order.amount)}</td>
+                    <td>${formatCurrency(order.discount)}</td>
+                    <td>${formatCurrency(order.coupon)}</td>
+                    <td>${formatCurrency(order.finalAmount)}</td>
+                    <td>${formatCurrency(order.returnOrCancelled)}</td>
+                    <td>${order.paymentMethod}</td>
+                    <td>${order.date}</td>
+                    <td><span class="status status-${order.status.replace(' ', '')}">${order.status}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Fetch sales data using Fetch API
+        async function fetchSalesData(page = 1) {
+            const range = dateRangeSelect.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            if (range === 'custom' && (!startDate || !endDate)) {
+                Swal.fire('Error', 'Please select both start and end dates for custom range', 'error');
+                return;
+            }
+
+            applyFilterBtn.textContent = 'Loading...';
+            applyFilterBtn.disabled = true;
+
+            try {
+                const params = new URLSearchParams();
+                if (range) params.append('range', range);
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
+                params.append('page', page);
+
+                const response = await fetch(`/admin/sales/data?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateSummary(data.summary);
+                    updateTable(data.orders);
+                    window.history.pushState({}, '', `/admin/sales?page=${page}${range ? '&range=' + range : ''}${startDate ? '&startDate=' + startDate : ''}${endDate ? '&endDate=' + endDate : ''}`);
+                    Swal.fire('Success', 'Sales data loaded', 'success');
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to load sales data', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching sales data:', error);
+                Swal.fire('Error', 'Failed to fetch sales data', 'error');
+            } finally {
+                applyFilterBtn.textContent = 'Apply';
+                applyFilterBtn.disabled = false;
+            }
+        }
+
+        // Set date range based on selection
+        dateRangeSelect.addEventListener('change', function() {
+            const today = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+
+            switch (this.value) {
+                case 'today':
+                    break;
+                case 'yesterday':
+                    startDate.setDate(today.getDate() - 1);
+                    endDate.setDate(today.getDate() - 1);
+                    break;
+                case 'last7days':
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'last30days':
+                    startDate.setDate(today.getDate() - 29);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'thisYear':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                    break;
+                case 'custom':
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                    return;
+                default:
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                    return;
+            }
+
+            startDateInput.value = flatpickr.formatDate(startDate, 'd-m-Y');
+            endDateInput.value = flatpickr.formatDate(endDate, 'd-m-Y');
+        });
+
+        // Apply filter
+        applyFilterBtn.addEventListener('click', () => fetchSalesData(1));
+
+        // Clear filter
+        clearFilterBtn.addEventListener('click', function() {
+            dateRangeSelect.value = '';
+            startDateInput.value = '';
+            endDateInput.value = '';
+            fetchSalesData(1); // Fetch all Delivered orders
+        });
+
+        // Export PDF
+        exportPDFBtn.addEventListener('click', function() {
+            const range = dateRangeSelect.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            if (range === 'custom' && (!startDate || !endDate)) {
+                Swal.fire('Error', 'Please select both start and end dates for custom range', 'error');
+                return;
+            }
+
+            const params = new URLSearchParams();
+            if (range) params.append('range', range);
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+
+            window.location.href = `/admin/sales/report/pdf?${params}`;
+        });
+
+        // Export Excel
+        exportExcelBtn.addEventListener('click', function() {
+            const range = dateRangeSelect.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            if (range === 'custom' && (!startDate || !endDate)) {
+                Swal.fire('Error', 'Please select both start and end dates for custom range', 'error');
+                return;
+            }
+
+            const params = new URLSearchParams();
+            if (range) params.append('range', range);
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+
+            window.location.href = `/admin/sales/report/excel?${params}`;
+        });
+    });
+</script>

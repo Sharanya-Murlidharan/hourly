@@ -1,9 +1,996 @@
+
 <%- include("../../views/partials/admin/header") %>
-<!-- <section class="content-main">
-    <div class="content-header">
-        <div>
-            <h2 class="content-title card-title">Dashboard </h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Dashboard</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Amarante&family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <style>
+            :root {
+                --primary-color: #FFAA8A;
+                --primary-dark: #FF8C61;
+                --primary-light: #FFD4C5;
+                --secondary-color: #2D3047;
+                --text-dark: #2D3047;
+                --text-light: #6B7280;
+                --background-light: #FFF5F2;
+                --white: #FFFFFF;
+                --menu-icon-color: #2D3047;
+                --active-item-bg: #EEEEFF;
+                --active-menu-color: #2D3047;
+                --toggle-color: #3D639E;
+                --border-color: #E5E7EB;
+                --card-bg: #1e2139;
+                --success-color: #10B981;
+                --error-color: #ef4444;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Poppins', sans-serif;
+            }
+
+            body {
+                background-color: var(--background-light);
+            }
+
+            /* Sidebar and Header Styles from header.ejs */
+            .sidebar-toggle {
+                position: fixed;
+                top: 25px;
+                left: 25px;
+                width: 40px;
+                height: 40px;
+                background-color: var(--toggle-color);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 1000;
+                box-shadow: 0 4px 8px rgba(61, 99, 158, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .sidebar-toggle:hover {
+                background-color: #2D4A8A;
+            }
+
+            .sidebar-toggle svg {
+                color: var(--white);
+                width: 24px;
+                height: 24px;
+            }
+
+            aside.sidebar {
+                width: 240px;
+                height: 100vh;
+                background-color: #DBE4F0;
+                box-shadow: 0 10px 20px rgba(45, 48, 71, 0.08);
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0;
+                left: 0;
+                overflow-y: auto;
+                border-radius: 0 15px 15px 0;
+                transition: all 0.3s ease;
+                z-index: 999;
+            }
+
+            aside.sidebar.collapsed {
+                width: 80px;
+            }
+
+            .logo-container {
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 10px;
+                position: relative;
+                transition: all 0.3s ease;
+            }
+        }
+
+        .sidebar.collapsed .logo-container {
+            padding: 20px 10px;
+        }
+
+        .brand-name {
+            font-family: 'Amarante', cursive;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-top: 5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar.collapsed .brand-name {
+            font-size: 0;
+            opacity: 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 2px 8px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .sidebar.collapsed .menu-item {
+            padding: 12px 15px;
+            justify-content: center;
+        }
+
+        .menu-item:hover {
+            background-color: var(--active-item-bg);
+            color: var(--active-menu-color);
+        }
+
+        .menu-item.active {
+            background-color: var(--active-item-bg);
+            color: var(--active-menu-color);
+        }
+
+        .menu-item i, .menu-item .icon svg {
+            font-size: 18px;
+            min-width: 28px;
+            color: var(--menu-icon-color);
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .menu-item i {
+            min-width: 24px;
+            margin: 0;
+        }
+
+        .menu-item.active i,
+        .menu-item.active .icon svg {
+            color: var(--active-menu-color);
+        }
+
+        .menu-item span {
+            font-size: 14px;
+            margin-left: 10px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .menu-item span {
+            width: 0;
+            margin-left: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .logout {
+            margin-top: auto;
+            color: #ff3b30;
+            margin: 2px 8px;
+        }
+
+        .logout i, .logout svg {
+            color: #ff3b30;
+        }
+
+        .sidebar.collapsed .logout {
+            padding: 12px 0;
+            justify-content: center;
+        }
+
+        .admin-header {
+            background: #DBE4F0;
+            box-shadow: 0 2px 4px rgba(45, 48, 71, 0.1);
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0;
+            left: 240px;
+            right: 0;
+            z-index: 998;
+            transition: all 0.3s ease;
+        }
+
+        .main-content.expanded + .admin-header,
+        .sidebar.collapsed ~ .admin-header {
+            left: 80px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo-section h1 {
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .account-section {
+            position: relative;
+        }
+
+        .account-btn {
+            background: var(--background-light);
+            border: none;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            color: var(--text-dark);
+            font-size: 1rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .account-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .admin-name {
+            margin: 0 5px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 120%;
+            background: var(--white);
+            min-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(45, 48, 71, 0.1);
+            padding: 8px 0;
+            z-index: 1001;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: var(--text-dark);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--primary-light);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--primary-light);
+            margin: 8px 0;
+        }
+
+        .logout-btn {
+            color: #FF4B4B !important;
+        }
+
+        .logout-btn:hover {
+            background-color: #FFF0F0 !important;
+        }
+
+        .admin-profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            padding: 2px;
+        }
+
+        /* Dashboard-specific Styles */
+        .main-content {
+            margin-left: 240px;
+            padding-top: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 80px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .view-all {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+        .chart-canvas {
+            max-height: 300px;
+        }
+
+        .table-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--secondary-color);
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+
+        .data-table th {
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .data-table td {
+            color: var(--white);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-delivered {
+            background-color: var(--success-color);
+            color: var(--white);
+        }
+
+        .status-pending {
+            background-color: var(--error-color);
+            color: var(--white);
+        }
+
+        .date-filter {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .filter-dropdown {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .filter-dropdown select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--white);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-dark);
+            appearance: none;
+        }
+
+        .filter-dropdown select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .filter-dropdown::after {
+            content: '\f078';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .date-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .date-input {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .date-input input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-dark);
+            background-color: var(--white);
+        }
+
+        .date-input input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .date-input .calendar-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            color: var(--white);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(45, 48, 71, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #5B6473;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .sidebar-toggle {
+                display: flex;
+                top: 8px;
+                left: 25px;
+            }
+
+            aside.sidebar {
+                transform: translateX(-100%);
+            }
+
+            aside.sidebar.mobile-visible {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .admin-header {
+                left: 0;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .account-section {
+                margin-top: 1rem;
+                align-self: flex-end;
+            }
+
+            .admin-header {
+                padding: 1rem;
+            }
+
+            .date-input {
+                min-width: 100%;
+            }
+
+            .filter-actions {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .btn {
+                width: calc(50% - 5px);
+            }
+
+            .data-table {
+                font-size: 0.9rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chart-container,
+            .table-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Date Range Filter Section -->
+        <div class="date-filter">
+            <div class="filter-dropdown">
+                <select id="dateRangeSelect">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="last7days">Last 7 Days</option>
+                    <option value="thisMonth">This Month</option>
+                    <option value="thisYear">This Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            <div class="date-inputs">
+                <div class="date-input">
+                    <input type="text" id="startDate" placeholder="dd-mm-yyyy" readonly>
+                    <i class="fas fa-calendar calendar-icon"></i>
+                </div>
+                <div class="date-input">
+                    <input type="text" id="endDate" placeholder="dd-mm-yyyy" readonly>
+                    <i class="fas fa-calendar calendar-icon"></i>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-primary" id="applyFilter">Apply</button>
+                <button class="btn btn-secondary" id="clearFilter">Clear</button>
+            </div>
         </div>
-       
+
+        <!-- Charts and Tables -->
+        <div class="dashboard-grid">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Sales Overview</h3>
+                    <a href="/admin/sales" class="view-all">View All</a>
+                </div>
+                <canvas id="salesChart" class="chart-canvas"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Top Categories</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Category Name</th>
+                            <th>Quantity Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCategoriesTable">
+                        <% topCategories.forEach(category => { %>
+                            <tr>
+                                <td><%= category.name %></td>
+                                <td><%= category.totalSold %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="table-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Top Products</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsTable">
+                        <% topProducts.forEach(product => { %>
+                            <tr>
+                                <td><%= product.productName %></td>
+                                <td><%= product.totalSold %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Top Brands</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Brand Name</th>
+                            <th>Quantity Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topBrandsTable">
+                        <% topBrands.forEach(brand => { %>
+                            <tr>
+                                <td><%= brand.name %></td>
+                                <td><%= brand.totalSold %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="chart-header">
+                <h3 class="chart-title">Recent Orders</h3>
+                <a href="/admin/orders" class="view-all">View All</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% recentOrders.forEach(order => { %>
+                        <% order.orderedItems.forEach(item => { %>
+                            <tr>
+                                <td><%= item.productName %></td>
+                                <td><%= item.categoryName %></td>
+                                <td><%= order.createdOn.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+                                <td>₹<%= item.price.toFixed(2) %></td>
+                                <td>
+                                    <span class="status-badge <%= order.status === 'Delivered' ? 'status-delivered' : 'status-pending' %>">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
     </div>
-</section>
+</body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Flatpickr
+        flatpickr('#startDate', {
+            dateFormat: 'd-m-Y',
+            maxDate: 'today',
+            onChange: function(selectedDates, dateStr) {
+                endDatePicker.set('minDate', dateStr);
+            }
+        });
+
+        const endDatePicker = flatpickr('#endDate', {
+            dateFormat: 'd-m-Y',
+            maxDate: 'today'
+        });
+
+        const dateRangeSelect = document.getElementById('dateRangeSelect');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const applyFilterBtn = document.getElementById('applyFilter');
+        const clearFilterBtn = document.getElementById('clearFilter');
+        let salesChart;
+
+        // Initialize Chart.js
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: <%- JSON.stringify(chartData.labels) %>,
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: <%- JSON.stringify(chartData.values) %>,
+                    backgroundColor: 'rgba(255, 170, 138, 0.6)',
+                    borderColor: 'rgba(255, 140, 97, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { color: '#2a2d47' },
+                        ticks: { color: '#6B7280' }
+                    },
+                    y: {
+                        grid: { color: '#2a2d47' },
+                        ticks: { color: '#6B7280' },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Update chart
+        function updateChart(labels, values) {
+            salesChart.data.labels = labels;
+            salesChart.data.datasets[0].data = values;
+            salesChart.update();
+        }
+
+        // Update tables
+        function updateTable(tableId, items) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = '';
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name || item.productName}</td>
+                    <td>${item.totalSold}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Fetch dashboard data
+        async function fetchDashboardData() {
+            const range = dateRangeSelect.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            if (range === 'custom' && (!startDate || !endDate)) {
+                Swal.fire('Error', 'Please select both start and end dates', 'error');
+                return;
+            }
+
+            applyFilterBtn.textContent = 'Loading...';
+            applyFilterBtn.disabled = true;
+
+            try {
+                const params = new URLSearchParams();
+                if (range) params.append('range', range);
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
+
+                const response = await fetch(`/admin/dashboard/data?${params}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateChart(data.chartData.labels, data.chartData.values);
+                    updateTable('topProductsTable', data.topProducts);
+                    updateTable('topCategoriesTable', data.topCategories);
+                    updateTable('topBrandsTable', data.topBrands);
+                    Swal.fire('Success', 'Dashboard data loaded', 'success');
+
+                    // Update recent orders via DOM manipulation
+                    const recentOrdersTbody = document.querySelector('.data-table tbody');
+                    recentOrdersTbody.innerHTML = '';
+                    data.recentOrders.forEach(order => {
+                        order.orderedItems.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${item.productName}</td>
+                                <td>${item.categoryName}</td>
+                                <td>${new Date(order.createdOn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                <td>₹${item.price.toFixed(2)}</td>
+                                <td><span class="status-badge ${order.status === 'Delivered' ? 'status-delivered' : 'status-pending'}">${order.status}</span></td>
+                            `;
+                            recentOrdersTbody.appendChild(row);
+                        });
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Failed to fetch data', 'error');
+            } finally {
+                applyFilterBtn.textContent = 'Apply';
+                applyFilterBtn.disabled = false;
+            }
+        }
+
+        // Set date range
+        dateRangeSelect.addEventListener('change', function() {
+            const today = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+
+            switch (this.value) {
+                case 'today':
+                    break;
+                case 'last7days':
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'thisYear':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                    break;
+                case 'custom':
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                    return;
+                default:
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                    return;
+            }
+
+            startDateInput.value = flatpickr.formatDate(startDate, 'd-m-Y');
+            endDateInput.value = flatpickr.formatDate(endDate, 'd-m-Y');
+        });
+
+        // Apply filter
+        applyFilterBtn.addEventListener('click', fetchDashboardData);
+
+        // Clear filter
+        clearFilterBtn.addEventListener('click', function() {
+            dateRangeSelect.value = '';
+            startDateInput.value = '';
+            endDateInput.value = '';
+            fetchDashboardData();
+        });
+
+        // Sidebar toggle and dropdown logic from header.ejs
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const adminHeader = document.querySelector('.admin-header');
+        const mainContent = document.querySelector('.main-content');
+
+        function updateLayout() {
+            if (window.innerWidth <= 992) {
+                adminHeader.style.left = '0';
+                mainContent.style.marginLeft = '0';
+                mainContent.classList.remove('expanded');
+            } else {
+                if (sidebar.classList.contains('collapsed')) {
+                    adminHeader.style.left = '80px';
+                    mainContent.style.marginLeft = '80px';
+                    mainContent.classList.add('expanded');
+                } else {
+                    adminHeader.style.left = '240px';
+                    mainContent.style.marginLeft = '240px';
+                    mainContent.classList.remove('expanded');
+                }
+            }
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.toggle('mobile-visible');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                    updateLayout();
+                }
+            });
+        }
+
+        window.addEventListener('resize', updateLayout);
+        updateLayout();
+
+        const accountBtn = document.getElementById('accountBtn');
+        const accountDropdown = document.getElementById('accountDropdown');
+        if (accountBtn && accountDropdown) {
+            accountBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                accountDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!accountBtn.contains(e.target)) {
+                    accountDropdown.classList.remove('show');
+                }
+            });
+        }
+
+        const currentPath = window.location.pathname;
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.classList.remove('active');
+            const href = item.getAttribute('href');
+            if ((href === '/admin' && currentPath === '/admin') || 
+                (href !== '/admin' && currentPath.includes(href))) {
+                item.classList.add('active');
+            }
+        });
+    });
+</script>

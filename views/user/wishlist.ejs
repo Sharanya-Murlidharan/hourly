@@ -187,6 +187,9 @@
       margin-top: 10px;
     }
   }
+  .original-price { text-decoration: line-through; color: #666; }
+.discounted-price { color: #e74c3c; }
+.offer-badge { background: #e74c3c; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; }
 </style>
 
 <div class="container">
@@ -222,7 +225,15 @@
                 </div>
               </div>
             </td>
-            <td data-label="Price" class="item-price">₹<%= item.productId.salePrice.toLocaleString('en-IN') %></td>
+<td data-label="Price" class="item-price">
+  <% if (item.offerDetails && item.offerDetails.offer.discount > 0) { %>
+    <span class="original-price">₹<%= item.productId.salePrice.toLocaleString('en-IN') %></span>
+    <span class="discounted-price">₹<%= item.offerDetails.discountedPrice.toLocaleString('en-IN') %></span>
+    <span class="offer-badge"><%= item.offerDetails.offer.discount %>% OFF</span>
+  <% } else { %>
+    ₹<%= item.productId.salePrice.toLocaleString('en-IN') %>
+  <% } %>
+</td>
             <td data-label="Action" class="cart-action">
               <% if (item.productId.quantity > 0) { %>
                 <button class="add-to-cart" onclick="addToCart('<%= item.productId._id %>', this)">Add to Cart</button>

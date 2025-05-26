@@ -1,7 +1,73 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema")
 const Wishlist = require("../../models/wishlistSchema");
+const Offer = require("../../models/offerSchema")
 const mongoose = require("mongoose");
+
+const calculateOfferPrice = async (product, quantity, price) => {
+  const currentDate = new Date();
+
+  const offers = await Offer.find({
+    isDeleted: false,
+    isListed: true,
+    validFrom: { $lte: currentDate },
+    validUpto: { $gte: currentDate }
+  }).populate('applicableItem');
+
+  const productOffers = offers.filter(offer =>
+    offer.applicable === 'Product' && offer.applicableItem._id.toString() === product._id.toString()
+  );
+
+  const categoryOffers = offers.filter(offer =>
+    offer.applicable === 'Category' && offer.applicableItem._id.toString() === product.category.toString()
+  );
+
+  const brandOffers = offers.filter(offer =>
+    offer.applicable === 'Brand' && offer.applicableItem._id.toString() === product.brand.toString()
+  );
+
+  const allOffers = [...productOffers, ...categoryOffers, ...brandOffers];
+
+  let highestDiscount = 0;
+  let selectedOffer = null;
+
+  for (const offer of allOffers) {
+    let discount = 0;
+    if (offer.offerType === 'Percentage') {
+      discount = (price * offer.offerAmount) / 100;
+    } else if (offer.offerType === 'Fixed') {
+      discount = offer.offerAmount;
+    }
+
+    if (discount > highestDiscount) {
+      highestDiscount = discount;
+      selectedOffer = {
+        type: offer.offerType,
+        amount: offer.offerAmount,
+        discount: offer.offerType === 'Percentage'
+          ? offer.offerAmount
+          : Math.round((discount / price) * 100)
+      };
+    }
+  }
+
+  if (product.productOffer > 0) {
+    const productOfferDiscount = (price * product.productOffer) / 100;
+    if (productOfferDiscount > highestDiscount) {
+      highestDiscount = productOfferDiscount;
+      selectedOffer = {
+        type: 'Percentage',
+        amount: product.productOffer,
+        discount: product.productOffer
+      };
+    }
+  }
+
+  const discountedPrice = Math.round(price - highestDiscount);
+  const totalPrice = discountedPrice * quantity;
+
+  return { discountedPrice, offer: selectedOffer || { discount: 0 }, totalPrice };
+};
 
 const getWishlist = async (req, res, next) => {
   try {
@@ -13,6 +79,17 @@ const getWishlist = async (req, res, next) => {
     const user = await User.findById(userId);
     const wishlist = await Wishlist.findOne({ userId }).populate("products.productId");
     const wishlistItems = wishlist ? wishlist.products : [];
+
+    for (const item of wishlistItems) {
+      if (item.productId) {
+        const { discountedPrice, offer } = await calculateOfferPrice(
+          item.productId,
+          1, // Assuming quantity: 1
+          item.productId.salePrice // Assuming salePrice
+        );
+        item.offerDetails = { discountedPrice, offer };
+      }
+    }
 
     res.render('wishlist', { user, wishlistItems });
   } catch (error) {

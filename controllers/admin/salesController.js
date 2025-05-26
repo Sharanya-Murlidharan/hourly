@@ -12,8 +12,8 @@ const getSalesReport = async (req, res, next) => {
     const limit = 5;
     const skip = (currentPage - 1) * limit;
 
-    // Build the query for filtering orders by date range
-    let dateFilter = {};
+    // Build the query for filtering orders by date range and Delivered status
+    let dateFilter = { status: "Delivered" };
     if (startDate && endDate) {
       const startDateObj = moment(startDate, 'DD-MM-YYYY').startOf('day').toDate();
       const endDateObj = moment(endDate, 'DD-MM-YYYY').endOf('day').toDate();
@@ -28,23 +28,17 @@ const getSalesReport = async (req, res, next) => {
     const totalPages = Math.ceil(totalOrdersCount / limit);
 
     // Fetch orders for the current page
-    // Either use the user field if it exists, or remove populate if it doesn't
     const orders = await Order.find(dateFilter)
-      // Comment out or modify this line if user field doesn't exist in your schema yet
-      //.populate('user', 'name') 
       .sort({ createdOn: -1 })
       .skip(skip)
       .limit(limit);
 
-    // Calculate summary stats (based on all orders)
+    // Calculate summary stats (based on all Delivered orders)
     const allOrders = await Order.find(dateFilter);
     const grossSales = allOrders.reduce((sum, order) => sum + order.totalPrice, 0);
-    const couponsRedeemed = allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.discount : 0), 0);
+    const couponsRedeemed = allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.couponDiscount : 0), 0);
     const discounts = allOrders.reduce((sum, order) => sum + order.discount, 0);
-    const cancelledOrRefunded = allOrders.reduce(
-      (sum, order) => sum + (['Canceled', 'Returned'].includes(order.status) ? order.finalAmount : 0),
-      0
-    );
+    const cancelledOrRefunded = 0; // Delivered orders cannot be Canceled or Returned
     const netSales = grossSales - discounts;
     const totalOrders = totalOrdersCount;
 
@@ -56,8 +50,7 @@ const getSalesReport = async (req, res, next) => {
       coupon: order.couponDiscount,
       finalAmount: order.finalAmount,
       paymentMethod: order.paymentMethod,
-      returnOrCancelled: ['Canceled', 'Returned'].includes(order.status) ? order.finalAmount : 0,
-      revisedCoupon: 0, // Placeholder; adjust if you have logic
+      returnOrCancelled: 0, // Delivered orders have no return/cancellation
       date: order.createdOn.toLocaleDateString('en-US', {
         day: '2-digit',
         month: 'short',
@@ -81,121 +74,110 @@ const getSalesReport = async (req, res, next) => {
       totalPages,
     });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
 
 // Fetch sales data for Fetch API (dynamic updates)
 const getSalesData = async (req, res, next) => {
   try {
-    const { startDate, endDate, range } = req.query;
-    let dateFilter = {};
+    const { startDate, endDate, range, page = 1 } = req.query;
+    const currentPage = parseInt(page);
+    const limit = 5;
+    const skip = (currentPage - 1) * limit;
+    let dateFilter = { status: "Delivered" };
 
     // Handle date range
     if (range === 'custom' && startDate && endDate) {
       const startDateObj = moment(startDate, 'DD-MM-YYYY').startOf('day').toDate();
       const endDateObj = moment(endDate, 'DD-MM-YYYY').endOf('day').toDate();
-      dateFilter = {
-        createdOn: {
-          $gte: startDateObj,
-          $lte: endDateObj,
-        },
+      dateFilter.createdOn = {
+        $gte: startDateObj,
+        $lte: endDateObj,
       };
-    } else {
+    } else if (range) {
       const today = moment().startOf('day');
       switch (range) {
         case 'today':
-          dateFilter = {
-            createdOn: {
-              $gte: today.toDate(),
-              $lte: today.endOf('day').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.toDate(),
+            $lte: today.endOf('day').toDate(),
           };
           break;
         case 'yesterday':
-          dateFilter = {
-            createdOn: {
-              $gte: today.subtract(1, 'days').startOf('day').toDate(),
-              $lte: today.endOf('day').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.subtract(1, 'days').startOf('day').toDate(),
+            $lte: today.endOf('day').toDate(),
           };
           break;
         case 'last7days':
-          dateFilter = {
-            createdOn: {
-              $gte: today.subtract(6, 'days').startOf('day').toDate(),
-              $lte: moment().endOf('day').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.subtract(6, 'days').startOf('day').toDate(),
+            $lte: moment().endOf('day').toDate(),
           };
           break;
         case 'last30days':
-          dateFilter = {
-            createdOn: {
-              $gte: today.subtract(29, 'days').startOf('day').toDate(),
-              $lte: moment().endOf('day').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.subtract(29, 'days').startOf('day').toDate(),
+            $lte: moment().endOf('day').toDate(),
           };
           break;
         case 'thisMonth':
-          dateFilter = {
-            createdOn: {
-              $gte: today.startOf('month').toDate(),
-              $lte: today.endOf('month').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.startOf('month').toDate(),
+            $lte: today.endOf('month').toDate(),
           };
           break;
         case 'lastMonth':
-          dateFilter = {
-            createdOn: {
-              $gte: today.subtract(1, 'month').startOf('month').toDate(),
-              $lte: today.subtract(1, 'month').endOf('month').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.subtract(1, 'month').startOf('month').toDate(),
+            $lte: today.subtract(1, 'month').endOf('month').toDate(),
           };
           break;
         case 'thisYear':
-          dateFilter = {
-            createdOn: {
-              $gte: today.startOf('year').toDate(),
-              $lte: today.endOf('year').toDate(),
-            },
+          dateFilter.createdOn = {
+            $gte: today.startOf('year').toDate(),
+            $lte: today.endOf('year').toDate(),
           };
           break;
         default:
-          dateFilter = {};
+          // No range filter, include all Delivered orders
+          break;
       }
     }
 
-    // Fetch all orders for stats (no pagination for Fetch API)
-    // Remove or modify the populate method if user field doesn't exist
-    const allOrders = await Order.find(dateFilter)
-      //.populate('user', 'name')
-      .sort({ createdOn: -1 });
+    // Get total number of orders for pagination
+    const totalOrdersCount = await Order.countDocuments(dateFilter);
+    const totalPages = Math.ceil(totalOrdersCount / limit);
 
-    // Calculate summary stats
+    // Fetch paginated orders
+    const orders = await Order.find(dateFilter)
+      .sort({ createdOn: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Calculate summary stats (based on all Delivered orders)
+    const allOrders = await Order.find(dateFilter);
     const summary = {
       grossSales: allOrders.reduce((sum, order) => sum + order.totalPrice, 0),
-      cancelledOrRefunded: allOrders.reduce(
-        (sum, order) => sum + (['Canceled', 'Returned'].includes(order.status) ? order.finalAmount : 0),
-        0
-      ),
-      couponsRedeemed: allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.discount : 0), 0),
+      cancelledOrRefunded: 0, // Delivered orders cannot be Canceled or Returned
+      couponsRedeemed: allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.couponDiscount : 0), 0),
       discounts: allOrders.reduce((sum, order) => sum + order.discount, 0),
       netSales: allOrders.reduce((sum, order) => sum + order.totalPrice, 0) -
                 allOrders.reduce((sum, order) => sum + order.discount, 0),
-      totalOrders: allOrders.length,
+      totalOrders: totalOrdersCount,
     };
 
     // Format orders for table
-    const formattedOrders = allOrders.map((order) => ({
+    const formattedOrders = orders.map((order) => ({
       orderId: order.orderId,
       amount: order.totalPrice,
       discount: order.discount,
       coupon: order.couponDiscount,
       finalAmount: order.finalAmount,
       paymentMethod: order.paymentMethod,
-      returnOrCancelled: ['Canceled', 'Returned'].includes(order.status) ? order.finalAmount : 0,
-      revisedCoupon: 0, // Placeholder
+      returnOrCancelled: 0, // Delivered orders have no return/cancellation
       date: order.createdOn.toLocaleDateString('en-US', {
         day: '2-digit',
         month: 'short',
@@ -208,10 +190,13 @@ const getSalesData = async (req, res, next) => {
       success: true,
       summary,
       orders: formattedOrders,
+      currentPage,
+      totalPages,
     });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    res.json({ success: false, message: error.message });
+    error.statusCode = 500;
+    next(error);
   }
 };
 
@@ -220,10 +205,10 @@ const generatePDFReport = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
 
-    // Mock res.json to reuse getSalesData logic
+    // Mock res.json to reuse getSalesData logic (fetch all orders, no pagination)
     let data;
     await getSalesData(
-      { query: { startDate, endDate, range } },
+      { query: { startDate, endDate, range, page: 1, limit: Infinity } }, // Override pagination
       {
         json: (result) => {
           data = result;
@@ -240,7 +225,7 @@ const generatePDFReport = async (req, res, next) => {
     // Header
     doc.fontSize(20).text('HOURLY Sales Report', { align: 'center' });
     doc.moveDown();
-    doc.fontSize(12).text(`Date Range: ${startDate || 'All'} to ${endDate || 'All'}`, { align: 'center' });
+    doc.fontSize(12).text(`Date Range: ${startDate && endDate ? startDate + ' to ' + endDate : 'All Data'}`, { align: 'center' });
     doc.moveDown();
 
     // Summary
@@ -286,7 +271,7 @@ const generatePDFReport = async (req, res, next) => {
     doc.end();
   } catch (error) {
     error.statusCode = 500;
-        next(error);
+    next(error);
   }
 };
 
@@ -295,10 +280,10 @@ const generateExcelReport = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
 
-    // Mock res.json to reuse getSalesData logic
+    // Mock res.json to reuse getSalesData logic (fetch all orders, no pagination)
     let data;
     await getSalesData(
-      { query: { startDate, endDate, range } },
+      { query: { startDate, endDate, range, page: 1, limit: Infinity } }, // Override pagination
       {
         json: (result) => {
           data = result;
@@ -311,7 +296,7 @@ const generateExcelReport = async (req, res, next) => {
 
     // Summary
     worksheet.addRow(['HOURLY Sales Report']);
-    worksheet.addRow([`Date Range: ${startDate || 'All'} to ${endDate || 'All'}`]);
+    worksheet.addRow([`Date Range: ${startDate && endDate ? startDate + ' to ' + endDate : 'All Data'}`]);
     worksheet.addRow([]);
     worksheet.addRow(['Summary']);
     worksheet.addRow(['Gross Sales', `₹ ${data.summary.grossSales.toLocaleString()}`]);
@@ -368,13 +353,13 @@ const generateExcelReport = async (req, res, next) => {
     res.end();
   } catch (error) {
     error.statusCode = 500;
-        next(error);
+    next(error);
   }
 };
 
 module.exports = {
-    getSalesReport,
-    getSalesData,
-    generatePDFReport,
-    generateExcelReport
+  getSalesReport,
+  getSalesData,
+  generatePDFReport,
+  generateExcelReport
 };

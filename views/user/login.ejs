@@ -18,6 +18,18 @@
         .alert-danger.blocked-message {
             color: red; /* Bright red for the blocked message */
         }
+
+        /* Ensure error messages are red and match form style */
+        .error-message {
+            color: red;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none; /* Hidden by default, shown when error exists */
+        }
+
+        .error-message.active {
+            display: block; /* Show when error is set */
+        }
     </style>
 </head>
 <body>
@@ -59,46 +71,80 @@
     <script>
         function handleLogin(event) {
             event.preventDefault();
-            const email = $('#email').val();
-            const password = $('#password').val();
+            const email = $('#email').val().trim();
+            const password = $('#password').val().trim();
+            const error1 = $('#error1');
+            const error2 = $('#error2');
+            let isValid = true;
 
-            $.ajax({
-                type: 'POST',
-                url: '/login',
-                data: { email, password },
-                success: function(response) {
-                    if (response.success) {
+            // Clear previous error messages
+            error1.removeClass('active').text('');
+            error2.removeClass('active').text('');
+
+            // Validate email
+            if (!email) {
+                error1.text('Email is required').addClass('active');
+                isValid = false;
+            }
+
+            // Validate password
+            if (!password) {
+                error2.text('Password is required').addClass('active');
+                isValid = false;
+            }
+
+            // Proceed with fetch if valid
+            if (isValid) {
+                fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Login failed. Please try again.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Login Successful',
                             showConfirmButton: false,
                             timer: 1500
                         }).then(() => {
-                            window.location.href = response.redirectUrl || '/';
+                            window.location.href = data.redirectUrl || '/';
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: response.message || 'Invalid credentials'
+                            text: data.message || 'Invalid credentials'
                         });
                     }
-                },
-                error: function(xhr, status, error) {
+                })
+                .catch(error => {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Login failed. Please try again.'
+                        text: error.message || 'Login failed. Please try again.'
                     });
-                    console.error('AJAX Error:', status, error);
-                }
-            });
+                    console.error('Fetch Error:', error);
+                });
+            }
+
             return false;
         }
 
         function handleGoogleLogin() {
             window.location.href = '/auth/google';
         }
+
+        // Attach handleLogin to form submit
+        $('#loginForm').on('submit', handleLogin);
     </script>
 </body>
 </html>

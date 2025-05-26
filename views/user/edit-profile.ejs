@@ -293,7 +293,11 @@
                             <div class="basic-info">
                                 <form method="post" action="/updateProfile" enctype="multipart/form-data">
                                     <div class="image-upload-container">
-                                        <img src="<%= user.ProfilePicture || '/images/default-profile.jpg' %>" alt="Profile Image" id="profile-image" class="profile-image">
+                                        <%if(user.ProfilePicture){%>
+                                        <img src="<%= user.ProfilePicture%>" alt="Profile Image" id="profile-image" class="profile-image">
+                                        <%}else{%>
+                                        <img src="/Uploads/profile-images/default-image.jpg" alt="Profile Image" id="profile-image" class="profile-image">
+                                        <%}%>
                                         <button type="button" class="choose-photo-btn" onclick="document.getElementById('image-input').click()">Choose Photo</button>
                                         <input type="file" id="image-input" name="profileImage" accept="image/jpeg,image/png,image/webp" style="display: none;">
                                     </div>

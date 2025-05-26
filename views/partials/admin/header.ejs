@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amarante&family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
         * {
@@ -28,10 +28,10 @@
             --text-light: #6B7280;
             --background-light: #FFF5F2;
             --white: #FFFFFF;
-            --menu-icon-color: #2D3047; /* Updated to #2D3047 for icons */
+            --menu-icon-color: #2D3047;
             --active-item-bg: #EEEEFF;
-            --active-menu-color: #2D3047; /* Updated to #2D3047 for active icons */
-            --toggle-color: #3D639E; /* Kept for toggle button */
+            --active-menu-color: #2D3047;
+            --toggle-color: #3D639E;
         }
 
         body {
@@ -44,19 +44,19 @@
             left: 13px;
             width: 40px;
             height: 40px;
-            background-color: var(--toggle-color); /* Kept as #3D639E */
+            background-color: var(--toggle-color);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 1000;
-            box-shadow: 0 4px 8px rgba(61, 99, 158, 0.2); /* Adjusted shadow color */
+            box-shadow: 0 4px 8px rgba(61, 99, 158, 0.2);
             transition: all 0.3s ease;
         }
 
         .sidebar-toggle:hover {
-            background-color: #2D4A8C; /* Darker shade of #3D639E */
+            background-color: #2D4A8C;
         }
 
         .sidebar-toggle svg {
@@ -98,7 +98,7 @@
         }
 
         .brand-name {
-            font-family: 'Amarante', cursive; /* Updated to Amarante font */
+            font-family: 'Amarante', cursive;
             font-size: 32px;
             font-weight: 600;
             color: var(--text-dark);
@@ -147,7 +147,7 @@
         .menu-item i, .menu-item .icon svg {
             font-size: 18px;
             min-width: 28px;
-            color: var(--menu-icon-color); /* Updated to #2D3047 */
+            color: var(--menu-icon-color);
             transition: all 0.3s ease;
             display: flex;
             justify-content: center;
@@ -160,7 +160,7 @@
 
         .menu-item.active i,
         .menu-item.active .icon svg {
-            color: var(--active-menu-color); /* Updated to #2D3047 */
+            color: var(--active-menu-color);
         }
 
         .menu-item span {
@@ -201,7 +201,6 @@
             margin-top: auto;
             color: #ff3b30;
             margin: 2px 8px;
-            margin-top: auto;
         }
 
         .logout i, .logout svg {
@@ -396,6 +395,15 @@
             <span>Dashboard</span>
         </a>
 
+        <a href="/admin/sales" class="menu-item">
+            <i class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </i>
+            <span>Sales</span>
+        </a>
+
         <a href="/admin/users" class="menu-item">
             <i class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
@@ -422,7 +430,7 @@
             </i>
             <span>Brands</span>
         </a>
-        
+
         <a href="/admin/products" class="menu-item">
             <i class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
@@ -431,22 +439,7 @@
             </i>
             <span>Products</span>
         </a>
-        
-       
-       
-       
-        
-        <a href="/admin/offers" class="menu-item">
-            <i class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                </svg>
-            </i>
-            <span>Offers</span>
-        </a>
-        
-       
-        
+
         <a href="/admin/orders" class="menu-item">
             <i class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
@@ -455,17 +448,16 @@
             </i>
             <span>Orders</span>
         </a>
-        
-      <a href="/admin/sales" class="menu-item">
-    <i class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-    </i>
-    <span>Sales</span>
-</a>
-</a>
-        
+
+        <a href="/admin/offers" class="menu-item">
+            <i class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                </svg>
+            </i>
+            <span>Offers</span>
+        </a>
+
         <a href="/admin/coupon" class="menu-item">
             <i class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
@@ -474,16 +466,16 @@
             </i>
             <span>Coupons</span>
         </a>
-        
-        <a href="/banners" class="menu-item">
+
+        <!-- <a href="/banners" class="menu-item">
             <i class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#2D3047" width="20" height="20">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
             </i>
             <span>Banner</span>
-        </a>
-        
+        </a> -->    
+
         <a href="/admin/logout" class="menu-item logout">
             <i class="icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#ff3b30" width="20" height="20">

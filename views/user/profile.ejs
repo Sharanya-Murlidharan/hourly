@@ -374,7 +374,11 @@
                                 Hi <%= user.name || 'User' %>
                             </div>
                             <div class="basic-info">
-                                <img class="image-placeholder" src="<%= user.ProfilePicture || '/images/default-profile.png' %>" alt="Profile Picture">
+                                <%if(user.ProfilePicture){%>
+                                <img class="image-placeholder" src="<%= user.ProfilePicture%>" alt="Profile Picture">
+                                <%}else{%>
+                                     <img class="image-placeholder" src="/Uploads/profile-images/default-image.jpg" alt="Profile Picture">
+                                    <%}%>
                                 <div class="form-group basic-info-group">
                                     <div class="input-field">
                                         <label for="username">Full Name</label>

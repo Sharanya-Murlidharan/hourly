@@ -19,6 +19,7 @@
     router.get('/login',adminController.loadLogin)
     router.post("/login",adminController.login)
     router.get("/dashboard",adminController.loadDashboard)
+    router.get("/dashboard/data", adminAuth, adminController.getDashboardData);
     router.get("/pageError",adminController.pageerror)
     router.get('/logout',adminController.logout)
     //customer

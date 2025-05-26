@@ -319,35 +319,7 @@
             display: none;
             color: #666 !important;
             font-size: 14px;
-        }
-        .tab-pane.active {
-            display: block;
-        }
-        .out-of-stock {
-            color: #dc3545 !important;
-            font-weight: bold;
-        }
-        .zz-related-products {
-            padding: 30px 0;
-            overflow-x: auto;
-        }
-        .zz-section-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333 !important;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .zz-related-products .row {
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            gap: 20px;
-            padding-bottom: 10px;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .zz-related-products .row::-webkit-scrollbar {
+       ROLLBAR) {
             display: none;
         }
         .zz-related-products .col-lg-3 {
@@ -541,12 +513,18 @@
                             <% if (product?.productImage && product.productImage.length > 0) { %>
                                 <% product.productImage.forEach((image, index) => { %>
                                     <div class="thumbnail <%= index === 0 ? 'active' : '' %>" data-image="/<%= image %>">
-                                        <img src="/<%= image %>" alt="<%= product.productName %>">
+                                        <div class="zoom-container">
+                                            <img src="/<%= image %>" class="zoom-image" alt="<%= product.productName %>">
+                                            <div class="zoom-lens"></div>
+                                        </div>
                                     </div>
                                 <% }); %>
                             <% } else { %>
                                 <div class="thumbnail active" data-image="/images/no-image.jpg">
-                                    <img src="/images/no-image.jpg" alt="No Image">
+                                    <div class="zoom-container">
+                                        <img src="/images/no-image.jpg" class="zoom-image" alt="No Image">
+                                        <div class="zoom-lens"></div>
+                                    </div>
                                 </div>
                             <% } %>
                         </div>
@@ -822,22 +800,39 @@
                 const img = container.querySelector('.zoom-image');
                 const lens = container.querySelector('.zoom-lens');
 
+                if (!img || !lens) return; // Skip if elements are missing
+
+                // Adjust lens size for thumbnails (smaller images)
+                if (container.parentElement.classList.contains('thumbnail')) {
+                    lens.style.width = '50px';
+                    lens.style.height = '50px';
+                }
+
                 container.addEventListener('mousemove', (e) => {
-                    const { left, top, width, height } = container.getBoundingClientRect();
+                    const rect = container.getBoundingClientRect();
+                    const { left, top, width, height } = rect;
+
                     const posX = e.clientX - left;
                     const posY = e.clientY - top;
-                    const lensX = posX - (lens.offsetWidth / 2);
-                    const lensY = posY - (lens.offsetHeight / 2);
+
+                    const lensX = Math.max(0, Math.min(posX - (lens.offsetWidth / 2), width - lens.offsetWidth));
+                    const lensY = Math.max(0, Math.min(posY - (lens.offsetHeight / 2), height - lens.offsetHeight));
+
                     lens.style.left = `${lensX}px`;
                     lens.style.top = `${lensY}px`;
-                    const zoomedImgUrl = img.src;
-                    lens.style.backgroundImage = `url(${zoomedImgUrl})`;
+
+                    const zoomedImgUrl = img.src || '/images/no-image.jpg'; // Fallback image
+                    lens.style.backgroundImage = `url("${zoomedImgUrl}")`;
                     lens.style.backgroundSize = `${img.width * 2}px ${img.height * 2}px`;
                     lens.style.backgroundPosition = `-${posX * 2}px -${posY * 2}px`;
                 });
 
                 container.addEventListener('mouseleave', () => {
                     lens.style.opacity = '0';
+                });
+
+                container.addEventListener('mouseenter', () => {
+                    lens.style.opacity = '1';
                 });
             });
         });

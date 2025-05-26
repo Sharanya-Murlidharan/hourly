@@ -5,18 +5,14 @@ const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema");
 const Wallet = require("../../models/walletSchema");
 const Coupon = require("../../models/couponSchema");
-const Offer = require("../../models/offerSchema")
+const Offer = require("../../models/offerSchema");
 const mongoose = require("mongoose");
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const env = require('dotenv').config();
 
-
-
-
 const calculateOfferDiscount = async (cart) => {
   try {
-
     console.log('1234567890',cart)
     const currentDate = new Date();
     let offerDiscount = 0;
@@ -32,19 +28,16 @@ const calculateOfferDiscount = async (cart) => {
 
       let maxDiscount = 0;
 
-      // 1. Product-specific offer (productOffer)
       if (product.productOffer > 0) {
         const productDiscount = (product.salePrice * product.productOffer) / 100;
         maxDiscount = Math.max(maxDiscount, productDiscount);
       }
 
-      // 2. Category offer (categoryOffer)
       if (product.category && product.category.categoryOffer > 0) {
         const categoryDiscount = (product.salePrice * product.category.categoryOffer) / 100;
         maxDiscount = Math.max(maxDiscount, categoryDiscount);
       }
 
-      // 3. Offers from Offer model
       const offers = await Offer.find({
         isListed: true,
         isDeleted: false,
@@ -67,7 +60,6 @@ const calculateOfferDiscount = async (cart) => {
         maxDiscount = Math.max(maxDiscount, offerDiscountAmount);
       }
 
-      // Apply the highest discount for this item
       offerDiscount += maxDiscount * item.quantity;
     }
 
@@ -78,15 +70,10 @@ const calculateOfferDiscount = async (cart) => {
   }
 };
 
-// Initialize Razorpay instance
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-
-// const getOBjofId = (id) => {
-//   return new mongoose.Types.ObjectId(id);
-// };
 
 const getCheckout = async (req, res, next) => {
   try {
@@ -165,39 +152,41 @@ const applyCoupon = async (req, res, next) => {
       return res.status(400).json({ success: false, error: "Coupon has expired." });
     }
 
-    const subtotal = cart.items.reduce((total, item) => total + item.totalPrice, 0);
-
-    if (subtotal < coupon.minCartValue) {
-      return res.status(400).json({ success: false, error: `Minimum cart value of ₹${coupon.minCartValue} is required to apply this coupon.` });
+    const totalAfterOffer = cart.items.reduce((total, item) => total + item.totalPrice, 0);
+    const grandTotal = totalAfterOffer - (cart.discount || 0);
+    if (grandTotal < coupon.minCartValue) {
+      return res.status(400).json({
+        success: false,
+        error: `Minimum grand total of ₹${coupon.minCartValue} required for this coupon`,
+      });
     }
 
     cart.appliedCoupon = coupon._id;
     cart.discount = coupon.amount;
     await cart.save();
 
-
     const totalBeforeOffer = cart.items.reduce((total, item) => {
-      return total + (item.price * item.quantity );
+      return total + (item.price * item.quantity);
     }, 0);
 
-    const offerDiscount = totalBeforeOffer - subtotal;
+    const offerDiscount = totalBeforeOffer - totalAfterOffer;
     const couponDiscount = cart.discount || 0;
-    const totalPrice = subtotal - couponDiscount;
+    const totalPrice = totalAfterOffer - couponDiscount;
 
     const isCouponApplied = !!cart.appliedCoupon;
-   
+
     res.json({
       success: true,
       message: "Coupon applied successfully.",
-      subtotal:totalBeforeOffer,
+      subtotal: totalBeforeOffer,
       offerDiscount,
       isCouponApplied,
       discount: coupon.amount,
-      totalPrice
+      totalPrice,
     });
   } catch (error) {
     error.statusCode = 500;
-        next(error);
+    next(error);
   }
 };
 
@@ -339,7 +328,6 @@ const getPaymentPage = async (req, res, next) => {
 };
 
 const createRazorpayOrder = async (req, res, next) => {
-
   console.log("creating order on razorpay:,,,343")
   try {
     const userId = req.session.user;
@@ -348,7 +336,6 @@ const createRazorpayOrder = async (req, res, next) => {
     }
 
     const { amount } = req.body;
-
     console.log("total cart amount:",amount);
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount." });
@@ -398,7 +385,7 @@ const createRazorpayOrder = async (req, res, next) => {
     const totalDiscount = subtotal - finalAmount ; 
 
     const order = new Order({
-      user: userId, // Add the user field
+      user: userId,
       orderId,
       orderedItems: cart.items.map(item => ({
         product: item.productId._id,
@@ -467,7 +454,7 @@ const verifyRazorpayPayment = async (req, res, next) => {
       return res.status(404).json({ success: false, error: "Order not found." });
     }
 
-    order.status = "Processing";
+    order.status = "Pending";
     order.razorpayPaymentId = razorpay_payment_id;
     await order.save();
 
@@ -577,9 +564,18 @@ const proceedCheckout = async (req, res, next) => {
     }
 
     const totalPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0);
-    const finalAmount = totalPrice  - (cart.discount || 0);
-    const  subtotal  = cart.items.reduce((total, item) => total + ( item.price  *  item.quantity ), 0);
-    const totalDiscount = subtotal - finalAmount ; 
+    const finalAmount = totalPrice - (cart.discount || 0);
+    const subtotal = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const totalDiscount = subtotal - finalAmount;
+
+    // Added: Restrict COD for orders above ₹1000
+    if (paymentMethod === 'cod' && finalAmount > 1000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cash on Delivery is not available for orders above ₹1000'
+      });
+    }
+    // End of addition
 
     if (paymentMethod === 'wallet') {
       const wallet = await Wallet.findOne({ userId });
@@ -617,13 +613,13 @@ const proceedCheckout = async (req, res, next) => {
     const orderId = `${year}${month}${day}${seq}`;
 
     const order = new Order({
-      user: userId, 
+      user: userId,
       orderId,
       orderedItems: cart.items.map(item => ({
         product: item.productId._id,
         quantity: item.quantity,
-        regularPrice:item.price,
-        price:( item.totalPrice / item.quantity) ,
+        regularPrice: item.price,
+        price: (item.totalPrice / item.quantity),
       })),
       totalPrice,
       discount: totalDiscount,
@@ -639,7 +635,7 @@ const proceedCheckout = async (req, res, next) => {
         altPhone: selectedAddress.altPhone,
         country: selectedAddress.country
       },
-      status: paymentMethod === 'razorpay' ? 'Pending' : 'Processing',
+      status: paymentMethod === 'razorpay' ? 'Pending' : 'Pending',
       paymentMethod,
       invoiceDate: new Date(),
       couponApplied: !!cart.appliedCoupon
@@ -678,8 +674,8 @@ const proceedCheckout = async (req, res, next) => {
 
     res.json({ redirect: "/orderSuccess" });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
 
@@ -1017,87 +1013,6 @@ const returnOrder = async (req, res, next) => {
   }
 };
 
-// const returnProduct = async (req, res) => {
-//   try {
-//     const userId = req.session.user;
-//     if (!userId) {
-//       return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
-//     }
-
-//     const { id } = req.params; // orderId
-//     const { productId, reason } = req.body;
-//     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(productId)) {
-//       return res.status(400).json({ success: false, message: 'Invalid order or product ID.' });
-//     }
-
-//     if (!reason || reason.trim() === '') {
-//       return res.status(400).json({ success: false, message: 'Return reason is required.' });
-//     }
-
-//     const user = await User.findById(userId);
-//     const order = await Order.findOne({ _id: id }).populate('orderedItems.product');
-//     if (!order || !user.orderHistory.includes(order._id)) {
-//       return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
-//     }
-
-//     if (order.status.toLowerCase() !== 'delivered') {
-//       return res.status(400).json({ success: false, message: 'Only delivered orders can be returned.' });
-//     }
-
-//     // Find the ordered item
-//     const item = order.orderedItems.find(item => item._id.toString() === productId);
-//     if (!item) {
-//       return res.status(404).json({ success: false, message: 'Product not found in order.' });
-//     }
-
-//     // Check if the item is already returned
-//     if (order.returnReasons && order.returnReasons.some(r => r.productId.toString() === productId)) {
-//       return res.status(400).json({ success: false, message: 'This product is already returned.' });
-//     }
-
-//     // Add return reason for the product
-//     if (!order.returnReasons) {
-//       order.returnReasons = [];
-//     }
-//     order.returnReasons.push({
-//       productId,
-//       reason: reason.trim(),
-//       requestedAt: new Date()
-//     });
-
-//     // Update order status to 'Return Request' if not already set
-//     if (order.status.toLowerCase() !== 'return request') {
-//       order.status = 'Return Request';
-//     }
-
-//     // Calculate refund amount for the product
-//     const refundAmount = item.quantity * item.price;
-
-//     // Add pending refund transaction to wallet
-//     await Wallet.findOneAndUpdate(
-//       { userId },
-//       {
-//         $push: {
-//           transactions: {
-//             amount: refundAmount,
-//             type: 'credit',
-//             description: `Pending refund for return of product ${item.product.productName} in order ${order.orderId}`,
-//             date: new Date()
-//           }
-//         }
-//       },
-//       { upsert: true }
-//     );
-
-//     await order.save();
-
-//     res.status(200).json({ success: true, message: 'Product return request submitted successfully.' });
-//   } catch (error) {
-//     console.error('Error submitting product return request:', error.message, error.stack);
-//     res.status(500).json({ success: false, message: `Server error: ${error.message}` });
-//   }
-// };
-
 const returnProduct = async (req, res, next) => {
   try {
     const userId = req.session.user;
@@ -1194,10 +1109,6 @@ const getWallet = async (req, res, next) => {
     const transactions = walletData.transactions
       .sort((a, b) => b.date - a.date)
       .slice(skip, skip + limit);
-
-      // console.log("dhfkjf",walletData);
-      
-      
 
     res.render("wallet", {
       user,

@@ -119,6 +119,13 @@ const forgotPassOtp = async(req,res)=>{
 const verifyForgotPassOtp = async(req,res,next)=>{
     try {
         const enteredOtp = req.body.otp
+        if (!enteredOtp || enteredOtp.trim() === '') {
+            return res.json({ success: false, message: "Please enter OTP" });
+        }
+        // Check if OTP is exactly 6 digits
+        if (!/^\d{6}$/.test(enteredOtp)) {
+            return res.json({ success: false, message: "OTP must be exactly 6 digits" });
+        }
         if (enteredOtp === req.session.userOtp) {
             res.json({success:true,redirectUrl:"/resetPassword"})
         }else{

@@ -1,375 +1,1033 @@
-const User = require("../../models/userSchema");
-const Product = require("../../models/productSchema");
-const Cart = require("../../models/cartSchema");
-const Address = require("../../models/addressSchema");
-const Order = require("../../models/orderSchema");
-const Wallet = require("../../models/walletSchema");
-const mongoose = require("mongoose");
+<!DOCTYPE html>
+<html lang="en">
 
-const getOBjofId = (id) => {
-  return new mongoose.Types.ObjectId(id);
-};
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin/dashboard.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
 
-// Other existing functions (getCheckout, proceedCheckout, etc.) remain unchanged
+<style>
+:root {
+    --primary-color: #FFAA8A;
+    --primary-dark: #FF8C61;
+    --primary-light: #FFD4C5;
+    --secondary-color: #2D3047;
+    --text-dark: #2D3047;
+    --text-light: #6B7280;
+    --background-light: #FFF5F2;
+    --white: #FFFFFF;
+    --menu-icon-color: #2D3047;
+    --active-item-bg: #EEEEFF;
+    --active-menu-color: #2D3047;
+    --toggle-color: #3D639E;
+    --border-color: #E5E7EB;
+    --shadow: 0 4px 12px rgba(45, 48, 71, 0.08);
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --card-bg: #1e2139; /* Dark card background for charts/tables */
+}
 
-const getOrderList = async (req, res) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.redirect("/login");
+body {
+    font-family: 'Poppins', Roboto, Arial, sans-serif;
+    background-color: var(--background-light);
+    margin: 0;
+    padding: 80px 20px 20px;
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    margin-left: 240px;
+    transition: margin-left 0.3s ease;
+}
+
+.dashboard-container.expanded {
+    margin-left: 80px;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 15px 20px;
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.filter-controls select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--white);
+    font-size: 14px;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-controls select:hover {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+}
+
+.filter-controls select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.filter-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+    flex: 1 1 45%;
+    max-width: 48%;
+    min-width: 300px;
+    margin-bottom: 24px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--secondary-color);
+}
+
+.chart-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(45, 48, 71, 0.12);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 15px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    margin: 0;
+}
+
+.chart-subtitle {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 4px 0 0 0;
+}
+
+.charts-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.big-chart {
+    max-width: 100%;
+    margin-bottom: 30px;
+}
+
+canvas {
+    background-color: #2a2d47;
+    border-radius: 10px;
+}
+
+.table-container {
+    margin-top: 40px;
+    background: var(--card-bg);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--secondary-color);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.orders-table th {
+    background-color: #2a2d47;
+    padding: 14px 12px;
+    text-align: center;
+    font-weight: 500;
+    color: var(--text-light);
+    font-size: 14px;
+    border-bottom: 1px solid var(--secondary-color);
+}
+
+.orders-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--secondary-color);
+    font-size: 14px;
+    color: var(--white);
+    text-align: center;
+}
+
+.orders-table tr:last-child td {
+    border-bottom: none;
+}
+
+.orders-table tr:hover {
+    background-color: rgba(255, 170, 138, 0.1);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: var(--white);
+    font-weight: 500;
+    font-size: 13px;
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+}
+
+.status-delivered {
+    background-color: var(--success-color);
+}
+
+.status-processing {
+    background-color: var(--warning-color);
+    color: var(--text-dark);
+}
+
+.status-cancelled {
+    background-color: var(--danger-color);
+}
+
+.action-btn {
+    cursor: pointer;
+    margin: 0 5px;
+    padding: 8px;
+    color: var(--text-light);
+    transition: color 0.3s ease;
+}
+
+.action-btn:hover {
+    color: var(--primary-color);
+}
+
+.amount {
+    font-weight: 600;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 6px;
+}
+
+.data-label {
+    position: absolute;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--white);
+    text-shadow: 0 1px 1px rgba(45, 48, 71, 0.7);
+    pointer-events: none;
+}
+
+/* Modal Styling */
+.modal-content {
+    background-color: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    background-color: var(--primary-light);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    color: var(--text-dark);
+}
+
+.modal-body {
+    color: var(--text-dark);
+}
+
+.modal-footer .btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-footer .btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.modal-footer .btn-secondary {
+    background-color: var(--text-light);
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-footer .btn-secondary:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .dashboard-container {
+        margin-left: 0;
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const skip = (page - 1) * limit;
-
-    const user = await User.findById(userId);
-    const totalOrders = await Order.countDocuments({ _id: { $in: user.orderHistory } });
-    const totalPages = Math.ceil(totalOrders / limit);
-
-    const orders = await Order.find({ _id: { $in: user.orderHistory } })
-      .populate("orderedItems.product")
-      .sort({ createdOn: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const formattedOrders = orders.map(order => {
-      return {
-        orderId: order.orderId,
-        orderDate: order.createdOn.toLocaleDateString('en-GB'),
-        status: order.status,
-        paymentMethod: order.paymentMethod,
-        totalAmount: order.finalAmount,
-        items: order.orderedItems.map(item => ({
-          productName: item.product ? item.product.productName : 'Unknown Product',
-          productImage: item.product && item.product.productImage && item.product.productImage.length > 0
-            ? `/${item.product.productImage[0]}`
-            : '/images/placeholder.jpg',
-          quantity: item.quantity,
-          price: item.price,
-          subtotal: item.quantity * item.price
-        }))
-      };
-    });
-
-    res.render("orderListing", {
-      user,
-      orders: formattedOrders,
-      currentPage: page,
-      totalPages: totalPages
-    });
-  } catch (error) {
-    console.error("Error in getOrderList:", error.message, error.stack);
-    res.redirect("/pageNotFound");
-  }
-};
-
-const orderDetail = async (req, res) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.redirect("/login");
-    }
-    const orderId = req.params.id;
-    const user = await User.findById(userId);
-    const order = await Order.findOne({ orderId, _id: { $in: user.orderHistory } })
-      .populate("orderedItems.product");
-    if (!order) {
-      return res.redirect("/pageNotFound");
-    }
-    res.render("orderDetail", {
-      user,
-      order
-    });
-  } catch (error) {
-    console.error("Error from orderDetail:", error);
-    res.redirect("/pageNotFound");
-  }
-};
-
-const cancelOrder = async (req, res) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
+    .chart-card {
+        max-width: 100%;
     }
 
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid order ID.' });
+    .filter-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
     }
 
-    const user = await User.findById(userId);
-    const order = await Order.findOne({ _id: id }).populate('orderedItems.product');
-    if (!order || !user.orderHistory.includes(order._id)) {
-      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
+    .orders-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
     }
 
-    if (order.status.toLowerCase() === 'canceled' || order.status.toLowerCase() === 'delivered') {
-      return res.status(400).json({ success: false, message: 'Order cannot be canceled.' });
+    .filter-controls {
+        width: 100%;
     }
 
-    // Restore stock
-    for (const item of order.orderedItems) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        product.quantity += item.quantity;
-        await product.save();
-      }
+    .filter-controls select {
+        width: 100%;
     }
 
-    // Refund to wallet if payment was made
-    if (order.finalAmount > 0 && order.paymentMethod !== 'COD') {
-      const wallet = await Wallet.findOneAndUpdate(
-        { userId },
-        {
-          $inc: { balance: order.finalAmount },
-          $push: {
-            transactions: {
-              amount: order.finalAmount,
-              type: 'credit',
-              description: `Refund for cancelled order ${order.orderId}`,
-              date: new Date()
+    .chart-container {
+        height: 250px;
+    }
+}
+
+</style>
+
+<body>
+    <%-include("../../views/partials/admin/header")%>
+
+        <div class="modal" id="myModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-dark">Modal title</h5>
+                    </div>
+                    <div class="modal-body" id="modalBodyContent"></div>
+                    <div class="modal-footer">
+                        <button id="okbutton" type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="dashboard-container">
+            <div class="top-bar">
+                <h1 class="page-title">Sales Dashboard</h1>
+                <div class="filter-controls">
+                    <div>
+                        <span class="filter-label">Time Period:</span>
+                        <select id="time-filter" onchange="updateCharts()">
+                            <option value="daily">Last Day</option>
+                            <option value="weekly" selected>Last Week</option>
+                            <option value="monthly">Last Month</option>
+                            <option value="yearly">Last Year</option>
+                        </select>
+                    </div>
+                    <div style="display: none;">
+                        <span class="filter-label">Year:</span>
+                        <select id="year-filter" onchange="updateCharts()">
+                            <option value="2025" selected>2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card big-chart">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">Sales Overview</h2>
+                        <p class="chart-subtitle">Monthly revenue performance</p>
+                    </div>
+                    <div id="sales-total"></div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <h2 class="chart-title">Best Selling Products</h2>
+                            <p class="chart-subtitle">Top 10 products by units sold</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="productsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <h2 class="chart-title">Best Selling Categories</h2>
+                            <p class="chart-subtitle">Revenue distribution by category</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                    <div class="chart-legend" id="categories-legend"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <h2 class="chart-title">Best Selling Brands</h2>
+                            <p class="chart-subtitle">Revenue distribution by brand</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="brandsChart"></canvas>
+                    </div>
+                    <div class="chart-legend" id="brands-legend"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div>
+                            <h2 class="chart-title">Order Status Distribution</h2>
+                            <p class="chart-subtitle">Current month order statuses</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="chart-legend" id="status-legend"></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <div>
+                        <h2 class="chart-title">Recent Orders</h2>
+                        <p class="chart-subtitle">Last 10 orders from all channels</p>
+                    </div>
+                    <div>
+                        <select id="orders-filter" style="padding: 5px; border-radius: 10px;">
+                            <option value="all">All Orders</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="processing">Processing</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <!-- <th>Actions</th> -->
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        <tr>
+                            <td>#ORD-5543</td>
+                            <td>John Smith</td>
+                            <td>04 Apr 2025</td>
+                            <td class="amount">₹329.95</td>
+                            <td><span class="status-badge status-delivered">Delivered</span></td>
+                            <td>
+                                <i class="fas fa-eye action-btn" title="View Details"></i>
+                                <i class="fas fa-print action-btn" title="Print Invoice"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <script>
+            let salesChart, productsChart, categoriesChart, brandsChart, statusChart;
+
+            const chartColors = [
+                '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0',
+                '#ff9e00', '#38b000', '#9d4edd', '#d90429', '#0077b6'
+            ];
+
+            // Format currency
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    maximumFractionDigits: 2,
+                }).format(amount);
             }
-          }
-        },
-        { upsert: true, new: true }
-      );
-    }
 
-    order.status = 'Canceled';
-    order.totalPrice = 0;
-    order.finalAmount = 0;
-    order.discount = 0;
-    await order.save();
+            // Format number with commas
+            const formatNumber = (value) => {
+                return new Intl.NumberFormat('en-US').format(value);
+            };
 
-    res.status(200).json({ success: true, message: 'Order canceled successfully.' });
-  } catch (error) {
-    console.error('Error canceling order:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
-  }
-};
-
-const cancelProduct = async (req, res) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
-    }
-
-    const { id: orderId } = req.params;
-    const { productId: orderedProductId } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(orderedProductId)) {
-      return res.status(400).json({ success: false, message: 'Invalid order or product ID.' });
-    }
-
-    const user = await User.findById(userId);
-    const order = await Order.findOne({ _id: orderId }).populate('orderedItems.product');
-    if (!order || !user.orderHistory.includes(order._id)) {
-      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
-    }
-
-    if (order.status.toLowerCase() === 'canceled' || order.status.toLowerCase() === 'delivered') {
-      return res.status(400).json({ success: false, message: 'Order cannot be modified.' });
-    }
-
-    const itemIndex = order.orderedItems.findIndex(item => item._id.equals(orderedProductId));
-    if (itemIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Product not found in order.' });
-    }
-
-    const item = order.orderedItems[itemIndex];
-    if (item.quantity === 0) {
-      return res.status(400).json({ success: false, message: 'Product is already canceled.' });
-    }
-
-    const subtotal = item.quantity * item.price;
-
-    const product = await Product.findById(item.product);
-    if (product) {
-      product.quantity += item.quantity;
-      await product.save();
-    }
-
-    // Mark product as canceled by setting quantity to 0
-    order.orderedItems[itemIndex].quantity = 0;
-    order.totalPrice -= subtotal;
-    order.finalAmount -= subtotal;
-
-    // Refund to wallet if payment was made
-    if (subtotal > 0 && order.paymentMethod !== 'COD') {
-      const wallet = await Wallet.findOneAndUpdate(
-        { userId },
-        {
-          $inc: { balance: subtotal },
-          $push: {
-            transactions: {
-              amount: subtotal,
-              type: 'credit',
-              description: `Refund for cancelled order ${order.orderId}`,
-              date: new Date()
+            async function fetchChartData(filter = 'monthly', year = '2025') {
+                // In a real app, pass the year parameter to the API
+                const res = await fetch(`/admin/dashboard/data/${filter}?year=${year}`);
+                const { labels, datasets, recentOrders } = await res.json();
+                return { labels, datasets, recentOrders };
             }
-          }
-        },
-        { upsert: true, new: true }
-      );
-    }
 
-    // Check if all items are canceled
-    const allCanceled = order.orderedItems.every(item => item.quantity === 0);
-    if (allCanceled) {
-      order.status = 'Canceled';
-      order.totalPrice = 0;
-      order.finalAmount = 0;
-      order.discount = 0;
-    }
+            function safeDestroy(chart) {
+                if (chart && chart.destroy) chart.destroy();
+            }
+            function renderRecentOrders(recentOrders) {
+                const tbody = document.getElementById('tbody')
+                tbody.innerHTML = '' // Clear old rows
 
-    await order.save();
+                recentOrders.forEach(order => {
+                    const statusClass =
+                        order.status.toLowerCase() === 'delivered'
+                            ? 'status-delivered'
+                            : order.status.toLowerCase() === 'processing'
+                                ? 'status-processing'
+                                : 'status-cancelled';
 
-    res.status(200).json({ success: true, message: 'Product canceled successfully.' });
-  } catch (error) {
-    console.error('Error canceling product:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
-  }
-};
+                    const row = `
+      <tr class="text-dark">
+        <td>#${order.orderId}</td>
+        <td>${order.customerName}</td>
+        <td>${order.createdOn}</td>
+        <td class="amount">₹${order.amount.toFixed(2)}</td>
+        <td><span class="status-badge ${statusClass}">${order.status}</span></td>
+      </tr>
+    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+            function showOrderDetailsModal(orderid) {
+                console.log(orderid)
+                fetch(`/admin/orderdetails/${orderid}`)
+                    .then(response => response.json())
+                    .then(orderDetails => {
+                        console.log(orderDetails.order, orderDetails.address)
+                        // Check if we got the correct data
+                        if (orderDetails) {
+                            // Get the modal body element by ID
+                            const modalBody = document.getElementById('modalBodyContent');
 
-const returnOrder = async (req, res) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
-    }
+                            // Build the HTML content for the modal
+                            let modalContent = `
+        <!-- Order Header -->
+        <div class="row mb-3">
+            <div class="col-8">
+                <h5 class="mb-1">Order #ORD-${orderDetails.order.orderId}</h5>
+                <p class="text-muted mb-0">Placed on ${new Date(orderDetails.order.createdOn).toLocaleDateString()}</p>
+            </div>
+            <div class="col-4 text-end">
+                <span class="badge ${orderDetails.order.status === 'Shipped' ? 'bg-success' : 'bg-warning'}">${orderDetails.order.status}</span>
+            </div>
+        </div>
 
-    const { id } = req.params;
-    const { reason } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid order ID.' });
-    }
+        <!-- Order Items -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <h6 class="mb-2">Order Items</h6>
+                
+    ${orderDetails.order.orderedItems.map(item => `
+    <div class="card mb-2">
+        <div class="card-body py-2 bg-dark">
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <img src="${item.product.productImage[0]}" alt="Product" class="img-fluid rounded">
+                </div>
+                <div class="col-7">
+                    <p class="mb-0 fw-bold">${item.product.productName}</p>
+                    <small >${item.quantity} x ₹${item.product.salePrice.toLocaleString('en-IN')}</small>
+                </div>
+                <div class="col-3 text-end">
+                    <p class="mb-0 fw-bold">₹${(item.quantity * item.product.salePrice).toLocaleString('en-IN')}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+`).join('')}
 
-    if (!reason || reason.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Return reason is required.' });
-    }
+            </div>
+        </div>
 
-    const user = await User.findById(userId);
-    const order = await Order.findOne({ _id: id }).populate('orderedItems.product');
-    if (!order || !user.orderHistory.includes(order._id)) {
-      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
-    }
+        <!-- Order Summary -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body bg-dark">
+                        <h6 class="mb-2">Order Summary</h6>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Subtotal:</span>
+                            <span>₹${orderDetails.order.totalPrice.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Shipping:</span>
+                            <span>₹0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Discount:</span>
+                            <span>₹${(orderDetails.order.discount).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>CouponDiscount:</span>
+                            <span>₹${(orderDetails.order.couponDiscount).toLocaleString('en-IN')}</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span>₹${((orderDetails.order.totalPrice - (orderDetails.order.discount + orderDetails.order.couponDiscount))).toLocaleString('en-IN')}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    if (order.status.toLowerCase() !== 'delivered') {
-      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned.' });
-    }
+        <!-- Shipping Information -->
+        <div class="row">
+            <div class="col-md-6 mb-2 mb-md-0">
+                <div class="card h-100"> 
+                    <div class="card-body bg-dark">
+                        <h6 class="card-title">Shipping Address</h6>
+                        <p class="card-text mb-0">
+                            ${orderDetails.order.address[0].name}<br>
+                            ${orderDetails.order.address[0].addressType}<br>
+                            ${orderDetails.order.address[0].city}, ${orderDetails.order.address[0].state} ${orderDetails.order.address[0].pincode}<br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body bg-dark">
+                        <h6 class="card-title">Payment Method</h6>
+                        <p class="card-text mb-1">${orderDetails.order.paymentMethod}</p>
+                    </div>
+                </div>
+            </div>
+            ${orderDetails.order.ReturnReason ? `
+                        <hr class="text-light">
+                        <h6 class="card-title">Return Reason</h6>
+                        <p class="card-text text-warning mb-0">${orderDetails.order.ReturnReason}</p>
+                        ` : ''}
+        </div>
+    `;
 
-    order.status = 'Return Request';
-    order.returnReason = reason.trim();
+                            // Insert the modal content into the modal body
+                            modalBody.innerHTML = modalContent;
 
-    // Add pending transaction for return refund
-    await Wallet.findOneAndUpdate(
-      { userId },
-      {
-        $push: {
-          transactions: {
-            amount: order.finalAmount,
-            type: 'credit',
-            description: `Pending refund for return of order ${order.orderId}`,
-            date: new Date()
-          }
-        }
-      },
-      { upsert: true }
-    );
+                            // Show the modal
+                            var myModal = new bootstrap.Modal(document.getElementById("myModal"));
+                            myModal.show();
+                        } else {
+                            // Handle error, if no order details are found
+                            alert('Order not found');
+                        }
+                    })
+            }
 
-    await order.save();
+            function generateLegend(chartId, labels, colors) {
+                const legendEl = document.getElementById(`${chartId}-legend`);
+                if (!legendEl) return;
 
-    res.status(200).json({ success: true, message: 'Return request submitted successfully.' });
-  } catch (error) {
-    console.error('Error submitting return request:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
-  }
-};
+                legendEl.innerHTML = '';
+                labels.forEach((label, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'legend-item';
 
-const returnProduct = async (req, res) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized: Please log in.' });
-    }
+                    const colorBox = document.createElement('span');
+                    colorBox.className = 'legend-color';
+                    colorBox.style.backgroundColor = colors[index % colors.length];
 
-    const { id: orderId } = req.params;
-    const { productId: orderedProductId, reason } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(orderedProductId)) {
-      return res.status(400).json({ success: false, message: 'Invalid order or product ID.' });
-    }
+                    const text = document.createElement('span');
+                    text.textContent = label;
 
-    if (!reason || reason.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Return reason is required.' });
-    }
+                    item.appendChild(colorBox);
+                    item.appendChild(text);
+                    legendEl.appendChild(item);
+                });
+            }
 
-    const user = await User.findById(userId);
-    const order = await Order.findOne({ _id: orderId }).populate('orderedItems.product');
-    if (!order || !user.orderHistory.includes(order._id)) {
-      return res.status(404).json({ success: false, message: 'Order not found or unauthorized.' });
-    }
+            function updateSalesTotal(data) {
+                const totalElement = document.getElementById('sales-total');
+                if (!totalElement) return;
 
-    if (order.status.toLowerCase() !== 'delivered') {
-      return res.status(400).json({ success: false, message: 'Only delivered orders can be returned.' });
-    }
+                const total = data.reduce((acc, val) => acc + val, 0);
+                totalElement.innerHTML = `
+        <div style="text-align: right">
+          <div style="font-size: 14px; color: var(--text-secondary);">Total Sales</div>
+          <div style="font-size: 20px; font-weight: 600; color: var(--primary-color)">
+            ${formatCurrency(total)}
+          </div>
+        </div>
+      `;
+            }
 
-    const itemIndex = order.orderedItems.findIndex(item => item._id.equals(orderedProductId));
-    if (itemIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Product not found in order.' });
-    }
+            function renderCharts(labels, data) {
+                safeDestroy(salesChart);
+                safeDestroy(productsChart);
+                safeDestroy(categoriesChart);
+                safeDestroy(brandsChart);
+                safeDestroy(statusChart);
 
-    const item = order.orderedItems[itemIndex];
-    if (item.quantity === 0) {
-      return res.status(400).json({ success: false, message: 'Canceled products cannot be returned.' });
-    }
+                // Sales Overview Chart
+                const salesCtx = document.getElementById('salesChart');
+                if (salesCtx) {
+                    updateSalesTotal(data.sales);
 
-    const subtotal = item.quantity * item.price;
+                    salesChart = new Chart(salesCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels.salesOverview,
+                            datasets: [{
+                                label: 'Revenue',
+                                data: data.sales,
+                                fill: false, // no area below the line
+                                borderColor: 'rgba(67, 97, 238, 1)',
+                                backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                                tension: 0.3, // curve of the line, 0 for straight lines
+                                pointRadius: 4,
+                                pointBackgroundColor: 'rgba(67, 97, 238, 1)',
+                                pointBorderColor: '#fff',
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return formatCurrency(context.raw);
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        drawBorder: false,
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        callback: function (value) {
+                                            return formatCurrency(value);
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
 
-    // Add pending transaction for return refund
-    await Wallet.findOneAndUpdate(
-      { userId },
-      {
-        $push: {
-          transactions: {
-            amount: subtotal,
-            type: 'credit',
-            description: `Pending refund for return of product in order ${order.orderId}`,
-            date: new Date()
-          }
-        }
-      },
-      { upsert: true }
-    );
+                }
 
-    // Store return reason in a metadata array since schema can't be modified
-    if (!order.returnReasons) {
-      order.returnReasons = [];
-    }
-    order.returnReasons.push({
-      productId: orderedProductId,
-      reason: reason.trim()
-    });
+                // Best Selling Products Chart
+                const productsCtx = document.getElementById('productsChart');
+                if (productsCtx) {
+                    productsChart = new Chart(productsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels.products,
+                            datasets: [{
+                                label: 'Units Sold',
+                                data: data.products,
+                                backgroundColor: chartColors,
+                                borderColor: chartColors.map(color => color),
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `Units Sold: ${formatNumber(context.raw)}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        callback: function (value) {
+                                            return formatNumber(value);
+                                        }
+                                    }
+                                },
+                                y: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
 
-    await order.save();
+                // Categories Chart
+                const categoriesCtx = document.getElementById('categoriesChart');
+                if (categoriesCtx) {
+                    categoriesChart = new Chart(categoriesCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels.categories,
+                            datasets: [{
+                                label: 'Category Sales',
+                                data: data.categories,
+                                backgroundColor: chartColors.slice(0, labels.categories.length),
+                                borderColor: '#ffffff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            const value = context.raw;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((value / total) * 100);
+                                            return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
 
-    res.status(200).json({ success: true, message: 'Product return request submitted successfully.' });
-  } catch (error) {
-    console.error('Error submitting product return request:', error.message, error.stack);
-    res.status(500).json({ success: false, message: `Server error: ${error.message}` });
-  }
-};
+                    // Generate legend
+                    generateLegend('categories', labels.categories, chartColors);
+                }
 
-// Other existing functions (getWallet, etc.) remain unchanged
+                // Brands Chart
+                const brandsCtx = document.getElementById('brandsChart');
+                if (brandsCtx) {
+                    brandsChart = new Chart(brandsCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels.brands,
+                            datasets: [{
+                                label: 'Brand Sales',
+                                data: data.brands,
+                                backgroundColor: chartColors.slice(0, labels.brands.length),
+                                borderColor: '#ffffff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '65%',
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            const value = context.raw;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((value / total) * 100);
+                                            return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
 
-module.exports = {
-  getOBjofId,
-  getOrderList,
-  orderDetail,
-  cancelOrder,
-  cancelProduct,
-  returnOrder,
-  returnProduct,
-  // Other exported functions
-};
+                    // Generate legend
+                    generateLegend('brands', labels.brands, chartColors);
+                }
+
+                // Order Status Chart
+                const statusCtx = document.getElementById('statusChart');
+                if (statusCtx) {
+                    statusChart = new Chart(statusCtx, {
+                        type: 'polarArea',
+                        data: {
+                            labels: labels.orderStatus,
+                            datasets: [{
+                                label: 'Orders',
+                                data: data.orderStatus,
+                                backgroundColor: [
+                                    'rgba(40, 167, 69, 0.7)',
+                                    'rgba(255, 193, 7, 0.7)',
+                                    'rgba(220, 53, 69, 0.7)',
+                                    'rgba(108, 117, 125, 0.7)'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            const value = context.raw;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((value / total) * 100);
+                                            return `${context.label}: ${formatNumber(value)} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                r: {
+                                    ticks: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // Generate legend
+                    generateLegend('status', labels.orderStatus, [
+                        '#28a745', '#ffc107', '#dc3545', '#6c757d'
+                    ]);
+                }
+            }
+
+            async function updateCharts() {
+                const timeFilter = document.getElementById('time-filter').value;
+                const yearFilter = document.getElementById('year-filter').value;
+                const { labels, datasets, recentOrders } = await fetchChartData(timeFilter, yearFilter);
+                renderCharts(labels, datasets);
+                renderRecentOrders(recentOrders);
+            }
+
+            document.getElementById('orders-filter').addEventListener('change', function () {
+                const filterValue = this.value;
+                const rows = document.querySelectorAll('.orders-table tbody tr');
+
+                rows.forEach(row => {
+                    const statusCell = row.querySelector('td:nth-child(5) .status-badge');
+                    if (!statusCell) return;
+
+                    const status = statusCell.textContent.toLowerCase();
+
+                    if (filterValue === 'all' || status === filterValue) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            window.addEventListener('DOMContentLoaded', updateCharts);
+        </script>
+</body>
+
+</html>

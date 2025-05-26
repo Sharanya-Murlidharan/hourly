@@ -185,7 +185,8 @@ const verifyOtp = async(req,res,next)=>{
                 email:user.email,
                 phone:user.phone,
                 password:passwordHash,
-                referralCode: referralCode // Assign the referral code
+                referralCode: referralCode, // Assign the referral code
+                ProfilePicture:null
             })
             await saveUserData.save()
 
@@ -320,21 +321,21 @@ const login = async(req,res, next)=>{
         
         
             if(!findUser){
-                return res.render("login",{message:"User not found"})
+                return res.json({success:false,message:"User not found"})
             }
             if(findUser.isBlocked){
-                return res.render("login",{message:"User is blocked by admin"})
+                return res.json({success:false,message:"User is blocked by admin"})
             }
             const passwordMatch = await bcrypt.compare(password,findUser.password)
             console.log(passwordMatch);
             
             if(!passwordMatch){
-                return res.render("login",{message:"Incorrect Password"})
+                return res.json({success:false,message:"Incorrect Password"})
             }
             req.session.user = findUser._id
             console.log(req.session.user);
             
-            res.redirect( '/')
+            res.json({success:true,redirectUrl:"/"})
         
     } catch (error) {
         error.statusCode = 500;
