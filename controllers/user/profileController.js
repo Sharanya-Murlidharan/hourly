@@ -4,6 +4,8 @@ const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const env = require('dotenv').config()
 const session = require('express-session')
+const fs = require('fs')
+const path = require('path')
 
 
 // Function to generate a random 8-character referral code
@@ -435,14 +437,12 @@ const editProfile = async(req,res,next)=>{
 } catch (error) {
     error.statusCode = 500;
         next(error);
-
     
 }
 }
 
 const updateProfile = async (req, res) => {
     try {
-        // console.log(req.file,'file')
         const userId = req.session.user;
         if (!userId) {
             return res.render('login', {
@@ -481,7 +481,18 @@ const updateProfile = async (req, res) => {
 
         // Handle profile image if uploaded
         if (req.file) {
-            updateData.profileImage = `/Uploads/profile-images/${req.file.filename}`;
+            // Update the ProfilePicture field with the correct path
+            updateData.ProfilePicture = `/Uploads/profile-images/${req.file.filename}`;
+            
+            // If there's an existing profile picture, you might want to delete it
+            const existingUser = await User.findById(userId);
+            if (existingUser && existingUser.ProfilePicture && existingUser.ProfilePicture !== '/Uploads/profile-images/default-image.jpg') {
+                const oldImagePath = path.join(__dirname, '../../public', existingUser.ProfilePicture);
+                
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
         }
 
         // Update user in the database
@@ -497,15 +508,7 @@ const updateProfile = async (req, res) => {
                 message: 'User not found.'
             });
         }
-        //  const user = await User.findOne({_id:userId})
-        //  if(!user){
-        //     res.render('profile', {
-        //         user: updatedUser,
-        //         message: "User Not Found"
-        //     });
-        //  }
-        //  user.ProfilePicture = req.file.path
-        //  await user.save()
+
         // Render profile page with success message
         res.render('profile', {
             user: updatedUser,
@@ -731,7 +734,50 @@ const deleteAddress = async(req,res,next)=>{
     }
 }
 
+const removeProfilePicture = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User session not found. Please log in again.'
+            });
+        }
 
+        // Get the user and their current profile picture
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.'
+            });
+        }
+
+        // If user has a profile picture and it's not the default one
+        if (user.ProfilePicture && user.ProfilePicture !== '/Uploads/profile-images/default-image.jpg') {
+            // Delete the file from the filesystem
+            const oldImagePath = path.join(__dirname, '../../public', user.ProfilePicture);
+            if (fs.existsSync(oldImagePath)) {
+                fs.unlinkSync(oldImagePath);
+            }
+
+            // Update user document to use default image
+            user.ProfilePicture = '/Uploads/profile-images/default-image.jpg';
+            await user.save();
+        }
+
+        res.json({
+            success: true,
+            message: 'Profile picture removed successfully'
+        });
+    } catch (error) {
+        console.error('Error removing profile picture:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to remove profile picture'
+        });
+    }
+};
 
 module.exports={
     getForgotPassword,
@@ -753,6 +799,7 @@ module.exports={
     updatePassword,
     editProfile,
     updateProfile,
+    removeProfilePicture,
     getAddress,
     addAddress,
     postAddAddress,

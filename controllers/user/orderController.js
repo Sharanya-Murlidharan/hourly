@@ -757,11 +757,12 @@ const getOrderList = async (req, res, next) => {
       user,
       orders: formattedOrders,
       currentPage: page,
-      totalPages: totalPages
+      totalPages,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID // Add Razorpay key
     });
   } catch (error) {
     error.statusCode = 500;
-        next(error);
+    next(error);
   }
 };
 
@@ -992,11 +993,12 @@ const returnOrder = async (req, res, next) => {
     await Wallet.findOneAndUpdate(
       { userId },
       {
+        $inc: { balance: order.finalAmount },
         $push: {
           transactions: {
             amount: order.finalAmount,
             type: 'credit',
-            description: `Pending refund for return of order ${order.orderId}`,
+            description: `Refund for return of order ${order.orderId}`,
             date: new Date()
           }
         }
@@ -1055,11 +1057,12 @@ const returnProduct = async (req, res, next) => {
     await Wallet.findOneAndUpdate(
       { userId },
       {
+        $inc: { balance: subtotal },
         $push: {
           transactions: {
             amount: subtotal,
             type: 'credit',
-            description: `Pending refund for return of product in order ${order.orderId}`,
+            description: `Refund for return of product in order ${order.orderId}`,
             date: new Date()
           }
         }
@@ -1067,10 +1070,10 @@ const returnProduct = async (req, res, next) => {
       { upsert: true }
     );
 
-    if (!order.returnReasons) {
-      order.returnReasons = [];
+    if (!order.productReturnReasons) {
+      order.productReturnReasons = [];
     }
-    order.returnReasons.push({
+    order.productReturnReasons.push({
       productId: orderedProductId,
       reason: reason.trim()
     });
@@ -1130,13 +1133,14 @@ const getPaymentFail = async (req, res, next) => {
       return res.redirect("/login");
     }
 
+    const user = await User.findById(userId);
     const order = await Order.findOne({ userId, status: "Pending", paymentMethod: "razorpay" })
       .sort({ createdOn: -1 });
 
-    res.render("paymentFail", { order });
+    res.render("paymentFail", { order, user, razorpayKeyId: process.env.RAZORPAY_KEY_ID });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
 

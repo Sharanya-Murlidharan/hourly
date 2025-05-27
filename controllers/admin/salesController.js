@@ -35,17 +35,18 @@ const getSalesReport = async (req, res, next) => {
 
     // Calculate summary stats (based on all Delivered orders)
     const allOrders = await Order.find(dateFilter);
-    const grossSales = allOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const sales = allOrders.reduce((sum, order) => sum + order.totalPrice, 0);
     const couponsRedeemed = allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.couponDiscount : 0), 0);
     const discounts = allOrders.reduce((sum, order) => sum + order.discount, 0);
     const cancelledOrRefunded = 0; // Delivered orders cannot be Canceled or Returned
-    const netSales = grossSales - discounts;
+    const grossSales = sales + (discounts + couponsRedeemed)
+    const netSales = grossSales - (discounts + couponsRedeemed);
     const totalOrders = totalOrdersCount;
-
+  
     // Format orders for the table
     const formattedOrders = orders.map((order) => ({
       orderId: order.orderId,
-      amount: order.totalPrice,
+      amount: order.totalPrice + order.discount + order.couponDiscount,
       discount: order.discount,
       coupon: order.couponDiscount,
       finalAmount: order.finalAmount,
@@ -159,15 +160,20 @@ const getSalesData = async (req, res, next) => {
 
     // Calculate summary stats (based on all Delivered orders)
     const allOrders = await Order.find(dateFilter);
-    const summary = {
-      grossSales: allOrders.reduce((sum, order) => sum + order.totalPrice, 0),
-      cancelledOrRefunded: 0, // Delivered orders cannot be Canceled or Returned
-      couponsRedeemed: allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.couponDiscount : 0), 0),
-      discounts: allOrders.reduce((sum, order) => sum + order.discount, 0),
-      netSales: allOrders.reduce((sum, order) => sum + order.totalPrice, 0) -
-                allOrders.reduce((sum, order) => sum + order.discount, 0),
-      totalOrders: totalOrdersCount,
-    };
+const sales = allOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+const discounts = allOrders.reduce((sum, order) => sum + order.discount, 0);
+const couponsRedeemed = allOrders.reduce((sum, order) => sum + (order.couponApplied ? order.couponDiscount : 0), 0);
+
+const summary = {
+  cancelledOrRefunded: 0, // Delivered orders cannot be Canceled or Returned
+  couponsRedeemed,
+  discounts,
+  grossSales: sales + discounts + couponsRedeemed,
+  netSales: (sales + discounts + couponsRedeemed) - (discounts + couponsRedeemed),
+  totalOrders: totalOrdersCount
+};
+
+
 
     // Format orders for table
     const formattedOrders = orders.map((order) => ({
@@ -200,7 +206,7 @@ const getSalesData = async (req, res, next) => {
   }
 };
 
-// Generate PDF report
+// PDF Report Generator with Fixed Alignment
 const generatePDFReport = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
@@ -216,66 +222,154 @@ const generatePDFReport = async (req, res, next) => {
       }
     );
 
-    const doc = new PDFDocument({ margin: 50 });
+    // Recalculate summary based on provided logic
+    const allOrders = data.orders || [];
+    const totalOrdersCount = allOrders.length;
+    const sales = allOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
+    const discounts = allOrders.reduce((sum, order) => sum + (order.discount || 0), 0);
+    const couponsRedeemed = allOrders.reduce((sum, order) => sum + (order.coupon || 0), 0);
+    
+    const summary = {
+      cancelledOrRefunded: 0, // Delivered orders cannot be Canceled or Returned
+      couponsRedeemed,
+      discounts,
+      grossSales: sales + discounts + couponsRedeemed,
+      netSales: (sales + discounts + couponsRedeemed) - (discounts + couponsRedeemed),
+      totalOrders: totalOrdersCount
+    };
+
+    const doc = new PDFDocument({ 
+      margin: 50,
+      layout: 'landscape',
+      size: 'A4'
+    });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=sales_report_${moment().format('YYYYMMDD')}.pdf`);
 
     doc.pipe(res);
 
     // Header
-    doc.fontSize(20).text('HOURLY Sales Report', { align: 'center' });
+    doc.fontSize(20).font('Helvetica-Bold').text('HOURLY Sales Report', { align: 'center' });
     doc.moveDown();
-    doc.fontSize(12).text(`Date Range: ${startDate && endDate ? startDate + ' to ' + endDate : 'All Data'}`, { align: 'center' });
-    doc.moveDown();
+    doc.fontSize(12).font('Helvetica').text(`Date Range: ${startDate && endDate ? startDate + ' to ' + endDate : 'All Data'}`, { align: 'center' });
+    doc.moveDown(2);
 
     // Summary
-    doc.fontSize(14).text('Summary', { underline: true });
+    doc.fontSize(14).font('Helvetica-Bold').text('Summary', { underline: true });
     doc.moveDown(0.5);
-    doc.fontSize(12).text(`Gross Sales: ₹ ${data.summary.grossSales.toLocaleString()}`);
-    doc.text(`Cancelled/Refunded: ₹ ${data.summary.cancelledOrRefunded.toLocaleString()}`);
-    doc.text(`Coupons Redeemed: ₹ ${data.summary.couponsRedeemed.toLocaleString()}`);
-    doc.text(`Discounts: ₹ ${data.summary.discounts.toLocaleString()}`);
-    doc.text(`Net Sales: ₹ ${data.summary.netSales.toLocaleString()}`);
-    doc.text(`Total Orders: ${data.summary.totalOrders}`);
-    doc.moveDown();
+    doc.fontSize(12).font('Helvetica');
+    doc.text(`Gross Sales: Rs. ${(summary.grossSales || 0).toLocaleString('en-IN')}`);
+    doc.text(`Cancelled/Refunded: Rs. ${(summary.cancelledOrRefunded || 0).toLocaleString('en-IN')}`);
+    doc.text(`Coupons Redeemed: Rs. ${(summary.couponsRedeemed || 0).toLocaleString('en-IN')}`);
+    doc.text(`Discounts: Rs. ${(summary.discounts || 0).toLocaleString('en-IN')}`);
+    doc.text(`Net Sales: Rs. ${(summary.netSales || 0).toLocaleString('en-IN')}`);
+    doc.text(`Total Orders: ${(summary.totalOrders || 0).toLocaleString('en-IN')}`);
+    doc.moveDown(2);
 
-    // Table
-    doc.fontSize(14).text('Orders', { underline: true });
+    // Table Configuration - Fixed alignment
+    doc.fontSize(14).font('Helvetica-Bold').text('Orders', { underline: true });
     doc.moveDown(0.5);
 
     const tableTop = doc.y;
     const tableHeaders = ['Order ID', 'Amount', 'Discount', 'Coupon', 'Final Amount', 'Return/Cancelled', 'Payment', 'Date', 'Status'];
-    const columnWidths = [80, 60, 60, 60, 80, 80, 80, 80, 80];
+    const columnWidths = [90, 80, 80, 80, 90, 100, 90, 90, 80];
+    const rowHeight = 25;
+    const startX = 30; // Reduced margin for more space
+    const tableWidth = columnWidths.reduce((a, b) => a + b, 0);
 
-    // Draw headers
+    // Draw outer table border
+    doc.rect(startX, tableTop, tableWidth, rowHeight).stroke();
+
+    // Draw table headers with proper alignment
     doc.fontSize(10).font('Helvetica-Bold');
+    let currentX = startX;
+    
     tableHeaders.forEach((header, i) => {
-      doc.text(header, 50 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), tableTop, { width: columnWidths[i], align: 'left' });
+      // Draw vertical line before each column (except first)
+      if (i > 0) {
+        doc.moveTo(currentX, tableTop).lineTo(currentX, tableTop + rowHeight).stroke();
+      }
+      
+      // Draw header text centered in column
+      doc.text(header, currentX + 3, tableTop + 8, { 
+        width: columnWidths[i] - 6, 
+        align: 'center',
+        ellipsis: true
+      });
+      
+      currentX += columnWidths[i];
     });
 
-    // Draw rows
-    doc.font('Helvetica');
-    data.orders.forEach((order, index) => {
-      const y = tableTop + 20 + index * 20;
-      doc.text(order.orderId, 50, y, { width: columnWidths[0], align: 'left' });
-      doc.text(`₹ ${order.amount.toLocaleString()}`, 50 + columnWidths[0], y, { width: columnWidths[1], align: 'left' });
-      doc.text(`₹ ${order.discount.toLocaleString()}`, 50 + columnWidths.slice(0, 2).reduce((a, b) => a + b, 0), y, { width: columnWidths[2], align: 'left' });
-      doc.text(`₹ ${order.coupon.toLocaleString()}`, 50 + columnWidths.slice(0, 3).reduce((a, b) => a + b, 0), y, { width: columnWidths[3], align: 'left' });
-      doc.text(`₹ ${order.finalAmount.toLocaleString()}`, 50 + columnWidths.slice(0, 4).reduce((a, b) => a + b, 0), y, { width: columnWidths[4], align: 'left' });
-      doc.text(`₹ ${order.returnOrCancelled.toLocaleString()}`, 50 + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, { width: columnWidths[5], align: 'left' });
-      doc.text(order.paymentMethod, 50 + columnWidths.slice(0, 6).reduce((a, b) => a + b, 0), y, { width: columnWidths[6], align: 'left' });
-      doc.text(order.date, 50 + columnWidths.slice(0, 7).reduce((a, b) => a + b, 0), y, { width: columnWidths[7], align: 'left' });
-      doc.text(order.status, 50 + columnWidths.slice(0, 8).reduce((a, b) => a + b, 0), y, { width: columnWidths[8], align: 'left' });
+    // Draw final vertical line
+    doc.moveTo(currentX, tableTop).lineTo(currentX, tableTop + rowHeight).stroke();
+
+    // Draw table data rows
+    doc.fontSize(9).font('Helvetica');
+    allOrders.forEach((order, index) => {
+      const y = tableTop + rowHeight + (index * rowHeight);
+      
+      // Draw row border
+      doc.rect(startX, y, tableWidth, rowHeight).stroke();
+      
+      // Prepare row data
+      const rowData = [
+        order.orderId || 'N/A',
+        `Rs.${(order.amount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.discount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.coupon || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.finalAmount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.returnOrCancelled || 0).toLocaleString('en-IN')}`,
+        order.paymentMethod || 'N/A',
+        order.date || 'N/A',
+        order.status || 'N/A'
+      ];
+
+      // Draw each cell with proper alignment
+      currentX = startX;
+      rowData.forEach((cellData, cellIndex) => {
+        // Draw vertical line before each column (except first)
+        if (cellIndex > 0) {
+          doc.moveTo(currentX, y).lineTo(currentX, y + rowHeight).stroke();
+        }
+        
+        // Determine alignment - right for currency, center for others
+        const align = (cellIndex >= 1 && cellIndex <= 5) ? 'right' : 'center';
+        const padding = align === 'right' ? 8 : 3;
+        
+        doc.text(cellData, currentX + padding, y + 8, { 
+          width: columnWidths[cellIndex] - (padding * 2), 
+          align: align,
+          ellipsis: true
+        });
+        
+        currentX += columnWidths[cellIndex];
+      });
+
+      // Draw final vertical line for row
+      doc.moveTo(currentX, y).lineTo(currentX, y + rowHeight).stroke();
     });
+
+    // Add page numbers
+    // const pageCount = doc.bufferedPageRange().count;
+    // for (let i = 0; i < pageCount; i++) {
+    //   doc.switchToPage(i);
+    //   doc.fontSize(8).text(
+    //     `Page ${i + 1} of ${pageCount}`,
+    //     doc.page.width - 100,
+    //     doc.page.height - 30,
+    //     { align: 'right' }
+    //   );
+    // }
 
     doc.end();
   } catch (error) {
+    console.error('Error generating PDF:', error);
     error.statusCode = 500;
     next(error);
   }
 };
 
-// Generate Excel report
+// Excel Report Generator
 const generateExcelReport = async (req, res, next) => {
   try {
     const { startDate, endDate, range } = req.query;
@@ -283,7 +377,7 @@ const generateExcelReport = async (req, res, next) => {
     // Mock res.json to reuse getSalesData logic (fetch all orders, no pagination)
     let data;
     await getSalesData(
-      { query: { startDate, endDate, range, page: 1, limit: Infinity } }, // Override pagination
+      { query: { startDate, endDate, range, page: 1, limit: Infinity } },
       {
         json: (result) => {
           data = result;
@@ -291,67 +385,124 @@ const generateExcelReport = async (req, res, next) => {
       }
     );
 
+    // Recalculate summary
+    const allOrders = data.orders || [];
+    const totalOrdersCount = allOrders.length;
+    const sales = allOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
+    const discounts = allOrders.reduce((sum, order) => sum + (order.discount || 0), 0);
+    const couponsRedeemed = allOrders.reduce((sum, order) => sum + (order.coupon || 0), 0);
+    
+    const summary = {
+      cancelledOrRefunded: 0,
+      couponsRedeemed,
+      discounts,
+      grossSales: sales + discounts + couponsRedeemed,
+      netSales: (sales + discounts + couponsRedeemed) - (discounts + couponsRedeemed),
+      totalOrders: totalOrdersCount
+    };
+
+    // Create workbook and worksheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sales Report');
 
-    // Summary
-    worksheet.addRow(['HOURLY Sales Report']);
-    worksheet.addRow([`Date Range: ${startDate && endDate ? startDate + ' to ' + endDate : 'All Data'}`]);
-    worksheet.addRow([]);
-    worksheet.addRow(['Summary']);
-    worksheet.addRow(['Gross Sales', `₹ ${data.summary.grossSales.toLocaleString()}`]);
-    worksheet.addRow(['Cancelled/Refunded', `₹ ${data.summary.cancelledOrRefunded.toLocaleString()}`]);
-    worksheet.addRow(['Coupons Redeemed', `₹ ${data.summary.couponsRedeemed.toLocaleString()}`]);
-    worksheet.addRow(['Discounts', `₹ ${data.summary.discounts.toLocaleString()}`]);
-    worksheet.addRow(['Net Sales', `₹ ${data.summary.netSales.toLocaleString()}`]);
-    worksheet.addRow(['Total Orders', data.summary.totalOrders]);
-    worksheet.addRow([]);
-
-    // Table
-    worksheet.addRow(['Orders']);
-    worksheet.addRow(['Order ID', 'Amount', 'Discount', 'Coupon', 'Final Amount', 'Return/Cancelled', 'Payment Method', 'Date', 'Status']);
-
-    // Add order data
-    data.orders.forEach((order) => {
-      worksheet.addRow([
-        order.orderId,
-        `₹ ${order.amount.toLocaleString()}`,
-        `₹ ${order.discount.toLocaleString()}`,
-        `₹ ${order.coupon.toLocaleString()}`,
-        `₹ ${order.finalAmount.toLocaleString()}`,
-        `₹ ${order.returnOrCancelled.toLocaleString()}`,
-        order.paymentMethod,
-        order.date,
-        order.status,
-      ]);
-    });
-
-    // Styling
-    worksheet.getRow(1).font = { size: 16, bold: true };
-    worksheet.getRow(4).font = { size: 14, bold: true };
-    worksheet.getRow(12).font = { size: 14, bold: true };
-    worksheet.getRow(13).font = { bold: true };
-    worksheet.getRow(13).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
-
     // Set column widths
     worksheet.columns = [
-      { width: 15 },
-      { width: 15 },
-      { width: 15 },
-      { width: 15 },
-      { width: 15 },
-      { width: 15 },
-      { width: 20 },
-      { width: 15 },
-      { width: 15 },
+      { header: 'Order ID', key: 'orderId', width: 15 },
+      { header: 'Amount', key: 'amount', width: 15 },
+      { header: 'Discount', key: 'discount', width: 15 },
+      { header: 'Coupon', key: 'coupon', width: 15 },
+      { header: 'Final Amount', key: 'finalAmount', width: 15 },
+      { header: 'Return/Cancelled', key: 'returnOrCancelled', width: 18 },
+      { header: 'Payment Method', key: 'paymentMethod', width: 15 },
+      { header: 'Date', key: 'date', width: 15 },
+      { header: 'Status', key: 'status', width: 12 }
     ];
 
+    // Add title
+    worksheet.mergeCells('A1:I1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'HOURLY Sales Report';
+    titleCell.font = { bold: true, size: 16 };
+    titleCell.alignment = { horizontal: 'center' };
+
+    // Add date range
+    worksheet.mergeCells('A2:I2');
+    const dateCell = worksheet.getCell('A2');
+    dateCell.value = `Date Range: ${startDate && endDate ? startDate + ' to ' + endDate : 'All Data'}`;
+    dateCell.alignment = { horizontal: 'center' };
+
+    // Add summary section
+    worksheet.addRow([]);
+    worksheet.addRow(['Summary']);
+    worksheet.getCell('A4').font = { bold: true };
+    
+    worksheet.addRow(['Gross Sales:', `Rs. ${(summary.grossSales || 0).toLocaleString('en-IN')}`]);
+    worksheet.addRow(['Cancelled/Refunded:', `Rs. ${(summary.cancelledOrRefunded || 0).toLocaleString('en-IN')}`]);
+    worksheet.addRow(['Coupons Redeemed:', `Rs. ${(summary.couponsRedeemed || 0).toLocaleString('en-IN')}`]);
+    worksheet.addRow(['Discounts:', `Rs. ${(summary.discounts || 0).toLocaleString('en-IN')}`]);
+    worksheet.addRow(['Net Sales:', `Rs. ${(summary.netSales || 0).toLocaleString('en-IN')}`]);
+    worksheet.addRow(['Total Orders:', `${(summary.totalOrders || 0).toLocaleString('en-IN')}`]);
+
+    // Add empty row before table
+    worksheet.addRow([]);
+
+    // Add table headers
+    const headerRow = worksheet.addRow([
+      'Order ID', 'Amount', 'Discount', 'Coupon', 'Final Amount', 
+      'Return/Cancelled', 'Payment Method', 'Date', 'Status'
+    ]);
+    
+    // Style header row
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // Add data rows
+    allOrders.forEach(order => {
+      const row = worksheet.addRow([
+        order.orderId || 'N/A',
+        `Rs.${(order.amount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.discount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.coupon || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.finalAmount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.returnOrCancelled || 0).toLocaleString('en-IN')}`,
+        order.paymentMethod || 'N/A',
+        order.date || 'N/A',
+        order.status || 'N/A'
+      ]);
+
+      // Add borders to data rows
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+
+    // Set response headers
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=sales_report_${moment().format('YYYYMMDD')}.xlsx`);
 
+    // Write to response
     await workbook.xlsx.write(res);
     res.end();
+
   } catch (error) {
+    console.error('Error generating Excel:', error);
     error.statusCode = 500;
     next(error);
   }

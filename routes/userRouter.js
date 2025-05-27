@@ -65,8 +65,9 @@ router.post('/changePassword',userAuth,profileController.changePaawordValid)
 router.post('/verifyChangePasswordOtp',userAuth,profileController.verifyChangePassOtp)
 router.post('/updatePassword', userAuth, profileController.updatePassword); 
 // edit profile
-router.get('/editProfile',userAuth,uploadProfilePicture,profileController.editProfile)
-router.post('/updateProfile',userAuth,uploadProfilePicture, profileController.updateProfile);
+router.get('/editProfile', userAuth, profileController.editProfile)
+router.post('/updateProfile', userAuth, uploadProfilePicture, profileController.updateProfile);
+router.post('/removeProfilePicture', userAuth, profileController.removeProfilePicture);
 // address management
 router.get('/address',userAuth,profileController.getAddress)
 router.get('/addAddress',userAuth,profileController.addAddress)

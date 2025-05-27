@@ -1,6 +1,9 @@
 <%- include("../../views/partials/user/header") %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<!-- Add SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     * {
         margin: 0;
@@ -277,6 +280,86 @@
             font-size: 1.2rem;
         }
     }
+
+    /* Add new styles for cropper modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+    }
+
+    .crop-container {
+        max-width: 100%;
+        max-height: 400px;
+        margin: 20px 0;
+    }
+
+    #cropImage {
+        max-width: 100%;
+        max-height: 400px;
+    }
+
+    .crop-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .crop-btn {
+        padding: 8px 16px;
+        background-color: #05445E;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .crop-btn.cancel {
+        background-color: #dc3545;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .remove-photo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        letter-spacing: 1px;
+    }
+
+    .remove-photo-btn:hover {
+        background-color: #c82333;
+    }
 </style>
 
 <main class="main">
@@ -298,7 +381,12 @@
                                         <%}else{%>
                                         <img src="/Uploads/profile-images/default-image.jpg" alt="Profile Image" id="profile-image" class="profile-image">
                                         <%}%>
-                                        <button type="button" class="choose-photo-btn" onclick="document.getElementById('image-input').click()">Choose Photo</button>
+                                        <div class="button-group">
+                                            <button type="button" class="choose-photo-btn" onclick="document.getElementById('image-input').click()">Choose Photo</button>
+                                            <% if(user.ProfilePicture && user.ProfilePicture !== '/Uploads/profile-images/default-image.jpg') { %>
+                                                <button type="button" class="remove-photo-btn" onclick="removeProfilePicture()">Remove Photo</button>
+                                            <% } %>
+                                        </div>
                                         <input type="file" id="image-input" name="profileImage" accept="image/jpeg,image/png,image/webp" style="display: none;">
                                     </div>
                                     <div class="form-group basic-info-group">
@@ -345,7 +433,28 @@
     </section>
 </main>
 
+<!-- Add modal for image cropping -->
+<div id="cropModal" class="modal">
+    <div class="modal-content">
+        <div class="crop-container">
+            <img id="cropImage" src="">
+        </div>
+        <div class="crop-buttons">
+            <button type="button" class="crop-btn cancel" onclick="cancelCrop()">Cancel</button>
+            <button type="button" class="crop-btn" onclick="cropImage()">Crop & Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add SweetAlert2 JS before your script -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <script>
+    let cropper;
+    const modal = document.getElementById('cropModal');
+    const cropImg = document.getElementById('cropImage');
+
     document.addEventListener('DOMContentLoaded', function () {
         const imageInput = document.getElementById('image-input');
         const profileImage = document.getElementById('profile-image');
@@ -359,35 +468,149 @@
 
             const file = files[0];
             if (!file.type.match('image/(jpeg|png|webp)')) {
-                console.error('Invalid file type:', file.type);
-                alert('Please select a valid image file (JPEG, PNG, WEBP).');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File Type',
+                    text: 'Please select a valid image file (JPEG, PNG, WEBP).',
+                    confirmButtonColor: '#05445E'
+                });
                 e.target.value = '';
                 return;
             }
 
             if (file.size > 2 * 1024 * 1024) {
-                console.error('File size too large:', file.size);
-                alert('File size exceeds 2MB. Please choose a smaller image.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'File size exceeds 2MB. Please choose a smaller image.',
+                    confirmButtonColor: '#05445E'
+                });
                 e.target.value = '';
                 return;
             }
 
+            // Read the file and show cropper
             const reader = new FileReader();
             reader.onload = function (event) {
-                profileImage.src = event.target.result;
-                profileImage.onerror = function () {
-                    console.error('Error loading image into profile-image');
-                    alert('Error loading the image. Please try a different image.');
-                    e.target.value = '';
-                };
-            };
-            reader.onerror = function () {
-                console.error('Error reading file');
-                alert('Error reading the image file. Please try again.');
-                e.target.value = '';
+                cropImg.src = event.target.result;
+                modal.style.display = "block";
+                
+                // Initialize cropper
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(cropImg, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    movable: false,
+                    zoomable: false,
+                    rotatable: false,
+                    scalable: false
+                });
             };
             reader.readAsDataURL(file);
         });
     });
+
+    function removeProfilePicture() {
+        Swal.fire({
+            title: 'Remove Profile Picture?',
+            text: 'Are you sure you want to remove your profile picture? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/removeProfilePicture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the image to default
+                        document.getElementById('profile-image').src = '/Uploads/profile-images/default-image.jpg';
+                        // Remove the remove button
+                        document.querySelector('.remove-photo-btn').remove();
+                        
+                        // Show success message
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Profile Picture Removed',
+                            text: 'Your profile picture has been successfully removed.',
+                            confirmButtonColor: '#05445E'
+                        });
+                    } else {
+                        throw new Error(data.message || 'Failed to remove profile picture');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Failed to remove profile picture',
+                        confirmButtonColor: '#05445E'
+                    });
+                });
+            }
+        });
+    }
+
+    function cancelCrop() {
+        modal.style.display = "none";
+        document.getElementById('image-input').value = '';
+        if (cropper) {
+            cropper.destroy();
+        }
+    }
+
+    function cropImage() {
+        if (!cropper) return;
+
+        // Get cropped canvas
+        const canvas = cropper.getCroppedCanvas({
+            width: 300,
+            height: 300
+        });
+
+        // Convert canvas to blob
+        canvas.toBlob(function(blob) {
+            // Create a new File object
+            const croppedFile = new File([blob], 'cropped_image.jpg', {
+                type: 'image/jpeg',
+                lastModified: new Date().getTime()
+            });
+
+            // Create a new FileList-like object
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(croppedFile);
+
+            // Set the new file as the input's files
+            document.getElementById('image-input').files = dataTransfer.files;
+
+            // Update preview
+            document.getElementById('profile-image').src = canvas.toDataURL();
+
+            // Close modal
+            modal.style.display = "none";
+            cropper.destroy();
+            cropper = null;
+
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Image Cropped',
+                text: 'Your profile picture has been cropped successfully. Click Save to update your profile.',
+                confirmButtonColor: '#05445E'
+            });
+        }, 'image/jpeg', 0.8);
+    }
 </script>
 <%- include("../../views/partials/user/footer") %>

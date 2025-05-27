@@ -699,7 +699,7 @@ function submitForm() {
     
     // Send AJAX request
     fetch('/admin/editProducts', {
-        method: 'POST',
+        method: 'PATCH',
         body: formData
     })
     .then(response => response.json())

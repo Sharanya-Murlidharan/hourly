@@ -18,8 +18,8 @@
 
     router.get('/login',adminController.loadLogin)
     router.post("/login",adminController.login)
-    router.get("/dashboard",adminController.loadDashboard)
-    router.get("/dashboard/data", adminAuth, adminController.getDashboardData);
+    router.get('/dashboard',adminAuth,adminController.loadDash);
+    router.get('/dashboard/data/:filter', adminAuth, adminController.getChartData);
     router.get("/pageError",adminController.pageerror)
     router.get('/logout',adminController.logout)
     //customer
@@ -31,15 +31,15 @@
     router.post("/addCategory",adminAuth,categoryController.addCategory)
     router.get('/listCategory',adminAuth, categoryController.categoryListed);
     router.get('/unlistCategory', adminAuth,categoryController.categoryunListed);
-    router.post('/editCategory', adminAuth, categoryController.editCategory);
-    router.post('/deleteCategory', adminAuth,categoryController.deleteCategory)
+    router.patch('/editCategory', adminAuth, categoryController.editCategory);
+    router.patch('/deleteCategory', adminAuth,categoryController.deleteCategory)
     //brand
     router.get('/brands', adminAuth, brandController.getBrandPage); // Display brand management page
     router.post("/addBrand",adminAuth,brandController.addBrand)
     router.get("/listBrand",adminAuth,brandController.brandListed)
     router.get("/unlistBrand",adminAuth,brandController.brandunListed)
-    router.post("/editBrand",adminAuth,brandController.editBrand)
-    router.post("/deleteBrand",adminAuth,brandController.deleteBrand)
+    router.patch("/editBrand",adminAuth,brandController.editBrand)
+    router.patch("/deleteBrand",adminAuth,brandController.deleteBrand)
     // product
     router.get('/products', adminAuth, productController.getProductListPage);
     router.get("/addProducts",adminAuth,productController.getProductAddPage)
@@ -47,14 +47,15 @@
     router.get('/listProduct/:id', adminAuth, productController.listProduct);
     router.get('/unlistProduct/:id', adminAuth, productController.unlistProduct);
     router.get('/editProducts/:id', adminAuth, productController.getProductEditPage);
-    router.post('/editProducts', adminAuth,uploads, productController.editProducts);
-    router.post("/deleteProducts", adminAuth, productController.deleteProduct);
+    router.patch('/editProducts', adminAuth,uploads, productController.editProducts);
+    router.patch("/deleteProducts", adminAuth, productController.deleteProduct);
     // order
     router.get('/orders', adminAuth, orderController.getOrdersPage);
     router.get('/orderDetail/:orderId', adminAuth, orderController.getOrderDetailPage);
     router.post('/orders/:orderId/status', adminAuth, orderController.updateOrderStatus)
     // return requests
     router.post('/verify-return/:id', adminAuth, orderController.verifyReturn);
+    
     //coupon management
     router.get("/coupon",adminAuth,couponController.getCoupon)
     router.post('/addCoupon',adminAuth, couponController.addCoupon);

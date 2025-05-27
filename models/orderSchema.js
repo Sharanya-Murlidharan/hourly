@@ -1,3 +1,4 @@
+// models/orderSchema.js
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -7,7 +8,7 @@ const orderSchema = new Schema({
     unique: true,
     required: true
   },
-   user: {
+  user: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -26,7 +27,7 @@ const orderSchema = new Schema({
       type: Number,
       default: 0
     },
-    regularPrice:{
+    regularPrice: {
       type: Number,
       default: 0
     }
@@ -39,8 +40,8 @@ const orderSchema = new Schema({
     type: Number,
     default: 0
   },
-  couponDiscount:{
-       type: Number,
+  couponDiscount: {
+    type: Number,
     default: 0
   },
   finalAmount: {
@@ -63,7 +64,7 @@ const orderSchema = new Schema({
   status: {
     type: String,
     required: true,
-    enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned']
+    enum: ['Pending', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned']
   },
   createdOn: {
     type: Date,
@@ -83,11 +84,23 @@ const orderSchema = new Schema({
     type: String,
     default: null
   },
+  productReturnReasons: [{
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true // Ensure productId is always present
+    },
+    reason: {
+      type: String,
+      required: true, // Ensure reason is non-empty
+      trim: true
+    }
+  }],
   razorpayOrderId: {
     type: String,
-    default: null // Store Razorpay order ID for retries
+    default: ''
   }
 });
 
-const Order = mongoose.model("Order", orderSchema);
+const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;

@@ -478,7 +478,7 @@
       const formData = new FormData(form);
 
       fetch('/admin/editBrand', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'content-type': 'application/json'
         },
@@ -576,7 +576,7 @@
       };
 
       const requestData = new Request('/admin/deleteBrand', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

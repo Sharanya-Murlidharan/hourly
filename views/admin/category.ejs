@@ -477,7 +477,7 @@
       const formData = new FormData(form);
 
       fetch('/admin/editCategory', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'content-type': 'application/json'
         },
@@ -575,7 +575,7 @@
       };
 
       const requestData = new Request('/admin/deleteCategory', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

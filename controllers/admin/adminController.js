@@ -7,473 +7,290 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const moment = require('moment');
 
+// Render 404 error page
 const pageerror = async (req, res) => {
-    res.render("404-error");
-}
+  res.render('404-error');
+};
 
+// Load admin login page
 const loadLogin = (req, res) => {
-    if (req.session.admin) {
-        return res.redirect('/admin/dashboard');
-    }
-    res.render('admin-login', { message: null });
+  if (req.session.admin) {
+    return res.redirect('/admin/dashboard');
+  }
+  res.render('admin-login', { message: null });
 };
 
+// Handle admin login
 const login = async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
-        const admin = await User.findOne({ email, isAdmin: true });
+  try {
+    const { email, password } = req.body;
+    const admin = await User.findOne({ email, isAdmin: true });
 
-        if (admin) {
-            const passwordmatch = await bcrypt.compare(password, admin.password);
-            if (passwordmatch) {
-                req.session.admin = admin;
-                req.session.Mess = "Admin Login Successfully";
-                return res.redirect("/admin/dashboard");
-            } else {
-                req.session.Mes = { type: "error", text: "Password do not match" };
-                return res.redirect("/admin/login");
-            }
-        } else {
-            req.session.Mes = { type: "error", text: "INVALID ADMIN" };
-            return res.redirect("/admin/login");
-        }
-    } catch (error) {
-        error.statusCode = 500;
-        next(error);
+    if (admin) {
+      const passwordMatch = await bcrypt.compare(password, admin.password);
+      if (passwordMatch) {
+        req.session.admin = admin;
+        req.session.Mess = 'Admin Login Successfully';
+        return res.redirect('/admin/dashboard');
+      } else {
+        req.session.Mes = { type: 'error', text: 'Password do not match' };
+        return res.redirect('/admin/login');
+      }
+    } else {
+      req.session.Mes = { type: 'error', text: 'INVALID ADMIN' };
+      return res.redirect('/admin/login');
     }
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
+};
+
+// Load admin dashboard
+const loadDash = async (req, res) => {
+  try {
+    res.render('dashboard')
+
+  } catch (error) {
+    console.error("Error generating dashboard:", error);
+    res.redirect('/admin/loaderror');
+  }
 }
 
-const loadDashboard = async (req, res, next) => {
-    if (req.session.admin) {
-        try {
-            // Fetch initial chart data (this year)
-            const chartData = await Order.aggregate([
-                { $match: { status: "Delivered" } },
-                {
-                    $match: {
-                        createdOn: {
-                            $gte: new Date(new Date().getFullYear(), 0, 1),
-                            $lte: new Date(new Date().getFullYear(), 11, 31)
-                        }
-                    }
-                },
-                {
-                    $group: {
-                        _id: { $dateToString: { format: "%Y-%m", date: "$createdOn" } },
-                        total: { $sum: "$finalAmount" }
-                    }
-                },
-                { $sort: { _id: 1 } }
-            ]);
+const getChartData = async (req, res) => {
+  const filter = req.params.filter || 'monthly';
+  const year = parseInt(req.query.year) || new Date().getFullYear();
 
-            const labels = chartData.map(item => item._id);
-            const values = chartData.map(item => item.total);
+  let startDate, endDate = new Date();
 
-            // Fetch top 10 products
-            const topProducts = await Order.aggregate([
-                { $match: { status: "Delivered" } },
-                { $unwind: "$orderedItems" },
-                {
-                    $group: {
-                        _id: "$orderedItems.product",
-                        totalSold: { $sum: "$orderedItems.quantity" }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                { $sort: { totalSold: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        productName: "$product.productName",
-                        totalSold: 1
-                    }
-                }
-            ]);
-
-            // Fetch top 10 categories
-            const topCategories = await Order.aggregate([
-                { $match: { status: "Delivered" } },
-                { $unwind: "$orderedItems" },
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "orderedItems.product",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                {
-                    $group: {
-                        _id: "$product.category",
-                        totalSold: { $sum: "$orderedItems.quantity" }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "categories",
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "category"
-                    }
-                },
-                { $unwind: "$category" },
-                { $sort: { totalSold: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        name: "$category.name",
-                        totalSold: 1
-                    }
-                }
-            ]);
-
-            // Fetch top 10 brands
-            const topBrands = await Order.aggregate([
-                { $match: { status: "Delivered" } },
-                { $unwind: "$orderedItems" },
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "orderedItems.product",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                {
-                    $group: {
-                        _id: "$product.brand",
-                        totalSold: { $sum: "$orderedItems.quantity" }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "brands",
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "brand"
-                    }
-                },
-                { $unwind: "$brand" },
-                { $sort: { totalSold: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        name: "$brand.name",
-                        totalSold: 1
-                    }
-                }
-            ]);
-
-            // Fetch recent orders (last 5)
-            const recentOrders = await Order.aggregate([
-                { $match: { status: { $in: ["Delivered", "Pending"] } } },
-                { $sort: { createdOn: -1 } },
-                { $limit: 5 },
-                { $unwind: "$orderedItems" },
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "orderedItems.product",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                {
-                    $lookup: {
-                        from: "categories",
-                        localField: "product.category",
-                        foreignField: "_id",
-                        as: "category"
-                    }
-                },
-                { $unwind: "$category" },
-                {
-                    $group: {
-                        _id: "$_id",
-                        createdOn: { $first: "$createdOn" },
-                        status: { $first: "$status" },
-                        finalAmount: { $first: "$finalAmount" },
-                        orderedItems: {
-                            $push: {
-                                productName: "$product.productName",
-                                categoryName: "$category.name",
-                                price: "$orderedItems.price",
-                                quantity: "$orderedItems.quantity"
-                            }
-                        }
-                    }
-                },
-                { $sort: { createdOn: -1 } }
-            ]);
-
-            res.render("dashboard", {
-                chartData: { labels, values },
-                topProducts,
-                topCategories,
-                topBrands,
-                recentOrders
-            });
-        } catch (error) {
-            console.error("error from loadDashboard", error);
-            res.redirect("/pageerror");
-        }
-    } else {
-        res.redirect("/admin/login");
+  if (filter === 'yearly') {
+    startDate = new Date(year, 0, 1);
+    endDate = new Date(year, 11, 31, 23, 59, 59);
+  } else {
+    startDate = new Date(endDate);
+    if (filter === 'daily') {
+      startDate.setDate(endDate.getDate() - 1);
+    } else if (filter === 'weekly') {
+      startDate.setDate(endDate.getDate() - 6); // 7 days including today
+    } else if (filter === 'monthly') {
+      startDate.setDate(endDate.getDate() - 29); // 30 days including today
     }
+  }
+
+  try {
+    const orders = await Order
+      .find({
+        createdOn: { $gte: startDate, $lte: endDate },
+        status: { $nin: ['Canceled', 'Returned'] },
+      })
+      .populate({
+        path: 'orderedItems.product',
+        populate: [
+          { path: 'category', select: 'name' },
+          { path: 'brand', select: 'name' },
+        ],
+      });
+
+    // Fixed Sales Map
+    let salesLabels = [];
+    let salesData = [];
+
+    const now = new Date();
+
+    if (filter === 'daily') {
+      const today = now.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+      const yesterday = new Date();
+      yesterday.setDate(now.getDate() - 1);
+      const yest = yesterday.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+
+      const dayMap = { [yest]: 0, [today]: 0 };
+
+      orders.forEach(order => {
+        const d = new Date(order.createdOn).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        if (dayMap[d] !== undefined) {
+          dayMap[d] += order.finalAmount
+        }
+      });
+
+      salesLabels = Object.keys(dayMap);
+      salesData = Object.values(dayMap);
+    }
+
+    else if (filter === 'weekly' || filter === 'monthly') {
+      const days = filter === 'weekly' ? 7 : 30;
+      const dayMap = {};
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        const label = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        dayMap[label] = 0;
+      }
+
+      orders.forEach(order => {
+        const d = new Date(order.createdOn).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        if (dayMap[d] !== undefined) {
+          dayMap[d] += order.finalAmount
+        }
+      });
+
+      salesLabels = Object.keys(dayMap);
+      salesData = Object.values(dayMap);
+    }
+
+    else if (filter === 'yearly') {
+      const monthMap = {};
+      for (let i = 0; i < 12; i++) {
+        const month = new Date(year, i).toLocaleString('en-US', { month: 'short' });
+        monthMap[month] = 0;
+      }
+
+      orders.forEach(order => {
+        const d = new Date(order.createdOn);
+        if (d.getFullYear() === year) {
+          const label = d.toLocaleString('en-US', { month: 'short' });
+          if (monthMap[label] !== undefined) {
+            monthMap[label] += order.finalAmount
+          }
+        }
+      });
+
+      salesLabels = Object.keys(monthMap);
+      salesData = Object.values(monthMap);
+    }
+
+    // Product Data
+    const productMap = {};
+    console.log(orders,'1234567890')
+    orders.forEach((order) => {
+      order.orderedItems.forEach((item) => {
+        console.log(item.product._id)
+        const productId = item.product._id.toString();
+        productMap[productId] = (productMap[productId] || 0) + item.quantity;
+      });
+    });
+
+    const sortedProducts = Object.entries(productMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    const productIds = sortedProducts.map(([id]) => id);
+    const productDocs = await Product.find({ _id: { $in: productIds } });
+    const productDetails = productDocs.reduce((acc, p) => {
+      acc[p._id.toString()] = p.productName;
+      return acc;
+    }, {});
+    const productLabels = sortedProducts.map(([id]) => productDetails[id] || 'Unknown');
+    const productData = sortedProducts.map(([_, qty]) => qty);
+
+    // Category Data
+    const categoryMap = {};
+    orders.forEach((order) => {
+      order.orderedItems.forEach((item) => {
+        const categoryName = item.product?.category?.name || 'Unknown';
+        const itemRevenue = item.quantity * item.product.salePrice;
+        categoryMap[categoryName] = (categoryMap[categoryName] || 0) + itemRevenue;
+      });
+    });
+
+    const sortedCategories = Object.entries(categoryMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+    const categoryLabels = sortedCategories.map(([label]) => label);
+    const categoryData = sortedCategories.map(([_, value]) => value);
+
+    // Brand Data
+    const brandMap = {};
+    orders.forEach((order) => {
+      order.orderedItems.forEach((item) => {
+        const brandName = item.product?.brand?.name || 'Unknown';
+        const itemRevenue = item.quantity * item.product.salePrice;
+        brandMap[brandName] = (brandMap[brandName] || 0) + itemRevenue;
+      });
+    });
+
+    const sortedBrands = Object.entries(brandMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+    const brandLabels = sortedBrands.map(([label]) => label);
+    const brandData = sortedBrands.map(([_, value]) => value);
+
+    // Order Status
+    const statusMap = {};
+    orders.forEach((order) => {
+      const status = order.status || 'Unknown';
+      statusMap[status] = (statusMap[status] || 0) + 1;
+    });
+    const statusLabels = Object.keys(statusMap);
+    const statusData = Object.values(statusMap);
+
+    // Recent Orders
+    const lastOrders = await Order
+      .find({
+        createdOn: { $gte: startDate, $lte: endDate },
+        status: { $nin: ['Canceled', 'Returned'] },
+      })
+      .populate('user')
+      .sort({ createdOn: -1 })
+      .limit(10);
+
+    const recentOrders = lastOrders.map((order) => ({
+      order: order._id.toString(),
+      orderId: `ORD-${order.orderId || order._id}`,
+      customerName: order.user?.name || 'Unknown',
+      email: order.user?.email || '',
+      createdOn: order.createdOn.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      amount: order.totalPrice - (order.discount || 0) - (order.couponDiscount || 0),
+      status: order.status || 'Unknown',
+    }));
+
+    res.json({
+      labels: {
+        salesOverview: salesLabels,
+        products: productLabels,
+        categories: categoryLabels,
+        brands: brandLabels,
+        orderStatus: statusLabels,
+      },
+      datasets: {
+        sales: salesData,
+        products: productData,
+        categories: categoryData,
+        brands: brandData,
+        orderStatus: statusData,
+      },
+      recentOrders,
+    });
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
+    res.status(500).json({ error: 'Failed to fetch dashboard data' });
+  }
 };
 
-const getDashboardData = async (req, res, next) => {
-    try {
-        const { range, startDate, endDate } = req.query;
-        let dateFilter = { status: "Delivered" };
+// Admin logout
+const logout = async (req, res, next) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.redirect('/pageerror');
+      }
+      res.redirect('/admin/login');
+    });
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
+};
 
-        // Handle date range
-        if (range === 'custom' && startDate && endDate) {
-            const startDateObj = moment(startDate, 'DD-MM-YYYY').startOf('day').toDate();
-            const endDateObj = moment(endDate, 'DD-MM-YYYY').endOf('day').toDate();
-            dateFilter.createdOn = {
-                $gte: startDateObj,
-                $lte: endDateObj
-            };
-        } else if (range) {
-            const today = moment().startOf('day');
-            switch (range) {
-                case 'today':
-                    dateFilter.createdOn = {
-                        $gte: today.toDate(),
-                        $lte: today.endOf('day').toDate()
-                    };
-                    break;
-                case 'last7days':
-                    dateFilter.createdOn = {
-                        $gte: today.subtract(6, 'days').startOf('day').toDate(),
-                        $lte: moment().endOf('day').toDate()
-                    };
-                    break;
-                case 'thisMonth':
-                    dateFilter.createdOn = {
-                        $gte: today.startOf('month').toDate(),
-                        $lte: today.endOf('month').toDate()
-                    };
-                    break;
-                case 'thisYear':
-                    dateFilter.createdOn = {
-                        $gte: today.startOf('year').toDate(),
-                        $lte: today.endOf('year').toDate()
-                    };
-                    break;
-            }
-        }
-
-        // Fetch chart data
-        const chartData = await Order.aggregate([
-            { $match: dateFilter },
-            {
-                $group: {
-                    _id: { $dateToString: { format: range === 'today' ? '%Y-%m-%d' : '%Y-%m', date: "$createdOn" } },
-                    total: { $sum: "$finalAmount" }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]);
-
-        const labels = chartData.map(item => item._id);
-        const values = chartData.map(item => item.total);
-
-        // Fetch top 10 products
-        const topProducts = await Order.aggregate([
-            { $match: dateFilter },
-            { $unwind: "$orderedItems" },
-            {
-                $group: {
-                    _id: "$orderedItems.product",
-                    totalSold: { $sum: "$orderedItems.quantity" }
-                }
-            },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "product"
-                }
-            },
-            { $unwind: "$product" },
-            { $sort: { totalSold: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    productName: "$product.productName",
-                    totalSold: 1
-                }
-            }
-        ]);
-
-        // Fetch top 10 categories
-        const topCategories = await Order.aggregate([
-            { $match: dateFilter },
-            { $unwind: "$orderedItems" },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "orderedItems.product",
-                    foreignField: "_id",
-                    as: "product"
-                }
-            },
-            { $unwind: "$product" },
-            {
-                $group: {
-                    _id: "$product.category",
-                    totalSold: { $sum: "$orderedItems.quantity" }
-                }
-            },
-            {
-                $lookup: {
-                    from: "categories",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "category"
-                }
-            },
-            { $unwind: "$category" },
-            { $sort: { totalSold: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    name: "$category.name",
-                    totalSold: 1
-                }
-            }
-        ]);
-
-        // Fetch top 10 brands
-        const topBrands = await Order.aggregate([
-            { $match: dateFilter },
-            { $unwind: "$orderedItems" },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "orderedItems.product",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                {
-                    $group: {
-                        _id: "$product.brand",
-                        totalSold: { $sum: "$orderedItems.quantity" }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "brands",
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "brand"
-                    }
-                },
-                { $unwind: "$brand" },
-                { $sort: { totalSold: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        name: "$brand.name",
-                        totalSold: 1
-                    }
-                }
-            ]);
-
-            // Fetch recent orders (last 5)
-            const recentOrders = await Order.aggregate([
-                { $match: { status: { $in: ["Delivered", "Pending"] } } },
-                { $sort: { createdOn: -1 } },
-                { $limit: 5 },
-                { $unwind: "$orderedItems" },
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "orderedItems.product",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-                {
-                    $lookup: {
-                        from: "categories",
-                        localField: "product.category",
-                        foreignField: "_id",
-                        as: "category"
-                    }
-                },
-                { $unwind: "$category" },
-                {
-                    $group: {
-                        _id: "$_id",
-                        createdOn: { $first: "$createdOn" },
-                        status: { $first: "$status" },
-                        finalAmount: { $first: "$finalAmount" },
-                        orderedItems: {
-                            $push: {
-                                productName: "$product.productName",
-                                categoryName: "$category.name",
-                                price: "$orderedItems.price",
-                                quantity: "$orderedItems.quantity"
-                            }
-                        }
-                    }
-                },
-                { $sort: { createdOn: -1 } }
-            ]);
-
-            res.json({
-                success: true,
-                chartData: { labels, values },
-                topProducts,
-                topCategories,
-                topBrands,
-                recentOrders
-            });
-        } catch (error) {
-            res.json({ success: false, message: error.message });
-            error.statusCode = 500;
-            next(error);
-        }
-    };
-
-    const logout = async (req, res, next) => {
-        try {
-            req.session.destroy(err => {
-                if (err) {
-                    console.log("Error destroying session", err);
-                    return res.redirect("/pageerror");
-                }
-                res.redirect("/admin/login");
-            });
-        } catch (error) {
-            error.statusCode = 500;
-            next(error);
-        }
-    }
-
-    module.exports = {
-        loadLogin,
-        login,
-        loadDashboard,
-        getDashboardData,
-        pageerror,
-        logout
-    };
+module.exports = {
+  loadLogin,
+  login,
+  loadDash,
+  getChartData,
+  pageerror,
+  logout,
+};

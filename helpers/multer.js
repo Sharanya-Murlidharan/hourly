@@ -40,13 +40,22 @@ const singleupload = multer({
     },
     limits: { fileSize: 5 * 1024 * 1024 }
 }).single('product-images'); // Keep for other routes if needed
+
+// Updated profile picture storage configuration
 const profileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'Uploads/profile-images');
+        // Create the directory if it doesn't exist
+        const uploadDir = 'public/Uploads/profile-images';
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
+        // Generate a unique filename with original extension
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, 'profile-' + uniqueSuffix + ext);
     }
 });
 
