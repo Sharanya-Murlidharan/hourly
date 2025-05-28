@@ -45,22 +45,22 @@ const categoryInfo = async (req, res, next) => {
 };
 
 const addCategory = async (req, res, next) => {
-    const { name, description } = req.body;
-    try {
-        const existingCategory = await Category.findOne({ name });
-        if (existingCategory) {
-            return res.status(400).json({ error: "Category already exists" });
-        }
-        const newcategory = new Category({
-            name,
-            description,
-        });
-        await newcategory.save(); // Fixed typo: newcategory instead of newCategory
-        return res.json({ message: "Category added successfully" });
-    } catch (error) {
-        error.statusCode = 500;
-        next(error);
+  const { name, description } = req.body;
+  try {
+    const existingCategory = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+    if (existingCategory) {
+      return res.status(400).json({ error: "Category already exists (case-insensitive)" });
     }
+    const newCategory = new Category({
+      name,
+      description,
+    });
+    await newCategory.save();
+    return res.json({ message: "Category added successfully" });
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
 };
 
 const categoryListed = async (req, res, next) => {
@@ -90,27 +90,27 @@ const editCategory = async (req, res, next) => {
   try {
     const { categoryId, name, description } = req.body;
 
-    
-    const existingCategory = await Category.findOne({ name, _id: { $ne: categoryId } });
+    const existingCategory = await Category.findOne({
+      name: { $regex: new RegExp(`^${name}$`, "i") },
+      _id: { $ne: categoryId }
+    });
     if (existingCategory) {
-      return res.json({ success:false, message: "Category exists, please choose another name" });
+      return res.json({ success: false, message: "Category already exists with this name (case-insensitive)" });
     }
 
-    
     const updatedCategory = await Category.findByIdAndUpdate(
       categoryId,
       { name, description },
       { new: true }
     );
     if (!updatedCategory) {
-      return res.json({ success:false, message: "Category not found" });
+      return res.json({ success: false, message: "Category not found" });
     }
 
-    res.json({ success:true, message: "Category updated successfully" });
-    
+    res.json({ success: true, message: "Category updated successfully" });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
 

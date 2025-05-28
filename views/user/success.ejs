@@ -341,15 +341,15 @@
         doc.rect(20, yPos - 5, 170, 8);
         doc.text("<%= item.product.productName %>", columnPositions.item + 2, yPos);
         doc.text("<%= item.quantity %>", columnPositions.qty + 2, yPos);
-        doc.text("₹<%= item.price %>", columnPositions.price + 2, yPos);
-        doc.text("₹<%= item.price * item.quantity %>", columnPositions.total + 2, yPos);
+        doc.text("Rs. <%= item.price %>", columnPositions.price + 2, yPos);
+        doc.text("Rs. <%= item.price * item.quantity %>", columnPositions.total + 2, yPos);
         yPos += 10;
       <% }) %>
 
       doc.setFont("Helvetica", "bold");
       doc.rect(20, yPos - 5, 170, 8);
       doc.text("Grand Total", columnPositions.price + 2, yPos);
-      doc.text("₹<%= order.finalAmount %>", columnPositions.total + 2, yPos);
+      doc.text("Rs. <%= order.finalAmount %>", columnPositions.total + 2, yPos);
 
       const pageHeight = doc.internal.pageSize.height;
       doc.setFontSize(10);

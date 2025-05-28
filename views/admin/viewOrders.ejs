@@ -229,6 +229,30 @@
       font-size: 1rem;
     }
   }
+
+  .product-actions {
+  margin-top: 10px;
+}
+.approve-btn, .reject-btn {
+  padding: 8px 16px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.approve-btn {
+  background-color: #28a745;
+  color: white;
+}
+.reject-btn {
+  background-color: #dc3545;
+  color: white;
+}
+.product-status {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #555;
+}
 </style>
 
 <main class="main-content">
@@ -262,18 +286,28 @@
       <h3>Ordered Items</h3>
       <div>
         <% order.orderedItems.forEach(item => { %>
-          <div class="product-item">
-            <div class="product-image">
-              <img src="/<%= item.product.productImage[0] ?  item.product.productImage[0] : 'https://via.placeholder.com/60' %>" alt="<%= item.product.productName %>">
-            </div>
-            <div class="product-details">
-              <div class="product-name"><%= item.product.productName %></div>
-              <div class="product-meta">Quantity: <%= item.quantity %></div>
-              <div class="product-meta">Price: ₹<%= item.price %></div>
-            </div>
-            <div class="product-subtotal">Subtotal: ₹<%= item.quantity * item.price %></div>
-          </div>
-        <% }) %>
+  <div class="product-item">
+    <div class="product-image">
+      <img src="/<%= item.product.productImage[0] ? item.product.productImage[0] : 'https://via.placeholder.com/60' %>" alt="<%= item.product.productName %>">
+    </div>
+    <div class="product-details">
+      <div class="product-name"><%= item.product.productName %></div>
+      <div class="product-meta">Quantity: <%= item.quantity %></div>
+      <div class="product-meta">Price: ₹<%= item.price %></div>
+      <% if (item.itemStatus === 'Return Request') { %>
+        <div class="product-actions">
+          <button class="approve-btn" onclick="handleReturnAction('<%= order._id %>', '<%= item.product._id %>', 'approve')">Approve</button>
+          <button class="reject-btn" onclick="promptRejectReason('<%= order._id %>', '<%= item.product._id %>')">Reject</button>
+        </div>
+      <% } else if (item.itemStatus === 'Returned') { %>
+        <div class="product-status">Status: Returned</div>
+      <% } else if (item.itemStatus === 'Canceled') { %>
+        <div class="product-status">Status: Canceled</div>
+      <% } %>
+    </div>
+    <div class="product-subtotal">Subtotal: ₹<%= item.quantity * item.price %></div>
+  </div>
+<% }) %>
       </div>
     </div>
     <div class="shipping-address">
@@ -454,4 +488,61 @@
       });
     }
   });
+
+async function handleReturnAction(orderId, productId, action, rejectReason = '') {
+  try {
+    const response = await fetch(`/admin/orders/${orderId}/${productId}/return`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action, rejectReason }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: `Return ${action}d successfully.`,
+        confirmButtonText: 'OK',
+      });
+      window.location.reload(); // Reload to reflect updated status
+    } else {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: data.message,
+        confirmButtonText: 'OK',
+      });
+    }
+  } catch (error) {
+    console.error('Error processing return:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'An error occurred while processing the return.',
+      confirmButtonText: 'OK',
+    });
+  }
+}
+
+async function promptRejectReason(orderId, productId) {
+  const { value: rejectReason } = await Swal.fire({
+    title: 'Reject Return',
+    input: 'text',
+    inputLabel: 'Please provide a reason for rejecting the return:',
+    inputPlaceholder: 'Enter rejection reason',
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value || value.trim() === '') {
+        return 'Rejection reason is required.';
+      }
+    },
+  });
+
+  if (rejectReason) {
+    handleReturnAction(orderId, productId, 'reject', rejectReason);
+  }
+}
 </script>

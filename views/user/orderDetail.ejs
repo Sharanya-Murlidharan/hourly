@@ -544,7 +544,9 @@
                       </div>
                       <div class="product-actions">
                         <div class="product-subtotal">Subtotal: ₹<%= item.quantity * item.price %></div>
-                        <% if (item.quantity === 0) { %>
+                        <% if(item.itemStatus){ %>
+                          <span class="product-status status-returned"><%= item.itemStatus %></span>
+                        <% } else if (item.quantity === 0) { %>
                           <span class="product-status status-canceled">Canceled</span>
                         <% } else if (order.returnReasons && order.returnReasons.some(r => r.productId.toString() === item._id.toString())) { %>
                           <span class="product-status status-returned">Returned</span>
@@ -952,15 +954,15 @@
         doc.rect(20, yPos - 5, 170, 8);
         doc.text("<%= item.product.productName %>", columnPositions.item + 2, yPos);
         doc.text("<%= item.quantity %>", columnPositions.qty + 2, yPos);
-        doc.text("₹<%= item.price %>", columnPositions.price + 2, yPos);
-        doc.text("₹<%= item.price * item.quantity %>", columnPositions.total + 2, yPos);
+        doc.text("Rs. <%= item.price %>", columnPositions.price + 2, yPos);
+        doc.text("Rs. <%= item.price * item.quantity %>", columnPositions.total + 2, yPos);
         yPos += 10;
       <% }) %>
 
       doc.setFont("Helvetica", "bold");
       doc.rect(20, yPos - 5, 170, 8);
       doc.text("Grand Total", columnPositions.price + 2, yPos);
-      doc.text("₹<%= order.orderedItems.reduce((sum, item) => item.quantity > 0 ? sum + (item.quantity * item.price) : sum, 0) %>", columnPositions.total + 2, yPos);
+      doc.text("Rs. <%= order.orderedItems.reduce((sum, item) => item.quantity > 0 ? sum + (item.quantity * item.price) : sum, 0) %>", columnPositions.total + 2, yPos);
 
       const pageHeight = doc.internal.pageSize.height;
       doc.setFontSize(10);

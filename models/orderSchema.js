@@ -30,6 +30,10 @@ const orderSchema = new Schema({
     regularPrice: {
       type: Number,
       default: 0
+    },
+    itemStatus:{
+      type: String,
+      enum: ['Canceled', 'Return Request', 'Returned']
     }
   }],
   totalPrice: {

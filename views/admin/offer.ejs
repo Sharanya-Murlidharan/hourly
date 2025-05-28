@@ -668,7 +668,7 @@ $(document).ready(() => {
             status: formData.get('status') === 'true'
         };
         fetch('/admin/editOffer', {
-            method: 'POST',
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -707,7 +707,7 @@ $(document).ready(() => {
         }).then(result => {
             if (result.isConfirmed) {
                 fetch('/admin/deleteOffer', {
-                    method: 'POST',
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
                     },

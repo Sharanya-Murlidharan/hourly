@@ -1,6 +1,7 @@
 const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema')
+const Wallet = require('../../models/walletSchema')
 
 const getOrdersPage = async (req, res, next) => {
     try {
@@ -199,7 +200,93 @@ const verifyReturn = async (req, res, next) => {
   }
 };
 
+const verifySingleProductReturn = async (req, res, next) => {
+  try {
+    const { orderId, productId } = req.params;
+    const { action, rejectReason } = req.body;
 
+    if (!["approve", "reject"].includes(action)) {
+      return res.status(400).json({ success: false, message: "Invalid action." });
+    }
+
+    const order = await Order.findById(orderId).populate("orderedItems.product");
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    const item = order.orderedItems.find(
+      (item) => item.product?._id.toString() === productId && item.itemStatus === "Return Request"
+    );
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Product not found or not in return request status." });
+    }
+
+    const user = await User.findOne({ orderHistory: order._id });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    if (action === "approve") {
+      const product = await Product.findById(productId);
+      if (product) {
+        product.quantity += item.quantity;
+        await product.save();
+      } else {
+        console.error(`Product with ID ${productId} not found in database.`);
+      }
+
+      const subtotal = item.quantity * item.price;
+      const userId = user._id
+    await Wallet.findOneAndUpdate(
+      { userId },
+      {
+        $inc: { balance: subtotal },
+        $push: {
+          transactions: {
+            amount: subtotal,
+            type: 'credit',
+            description: `Refund for return of product in order ${order.orderId}`,
+            date: new Date()
+          }
+        }
+      },
+      { upsert: true }
+    );
+
+      item.itemStatus = "Returned";
+
+      const allItemsReturned = order.orderedItems.every(
+        (item) => item.itemStatus === "Returned" || item.itemStatus === "Canceled"
+      );
+      if (allItemsReturned) {
+        order.status = "Returned";
+      }
+    } else {
+
+      if (!rejectReason || rejectReason.trim() === "") {
+        return res.status(400).json({ success: false, message: "Rejection reason is required." });
+      }
+      item.itemStatus = undefined; 
+      order.productReturnReasons.push({
+        productId: productId,
+        reason: `Return rejected: ${rejectReason.trim()}`
+      });
+
+      const hasPendingReturns = order.orderedItems.some(
+        (item) => item.itemStatus === "Return Request"
+      );
+      if (!hasPendingReturns && order.status === "Return Request") {
+        order.status = "Delivered";
+      }
+    }
+
+    await order.save();
+    res.status(200).json({ success: true, message: `Product return ${action}d successfully.` });
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
+};
   
 
 
@@ -207,5 +294,6 @@ module.exports = {
   getOrdersPage,
   getOrderDetailPage,
   updateOrderStatus,
-  verifyReturn
+  verifyReturn,
+  verifySingleProductReturn
 };

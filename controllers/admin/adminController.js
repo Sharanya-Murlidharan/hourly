@@ -243,7 +243,7 @@ const getChartData = async (req, res) => {
         month: 'short',
         year: 'numeric',
       }),
-      amount: order.totalPrice - (order.discount || 0) - (order.couponDiscount || 0),
+      amount: order.finalAmount,
       status: order.status || 'Unknown',
     }));
 

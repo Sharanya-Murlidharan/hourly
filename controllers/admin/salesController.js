@@ -314,7 +314,7 @@ const generatePDFReport = async (req, res, next) => {
       // Prepare row data
       const rowData = [
         order.orderId || 'N/A',
-        `Rs.${(order.amount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.amount + order.discount +  order.coupon|| 0).toLocaleString('en-IN')}`,
         `Rs.${(order.discount || 0).toLocaleString('en-IN')}`,
         `Rs.${(order.coupon || 0).toLocaleString('en-IN')}`,
         `Rs.${(order.finalAmount || 0).toLocaleString('en-IN')}`,
@@ -348,18 +348,6 @@ const generatePDFReport = async (req, res, next) => {
       // Draw final vertical line for row
       doc.moveTo(currentX, y).lineTo(currentX, y + rowHeight).stroke();
     });
-
-    // Add page numbers
-    // const pageCount = doc.bufferedPageRange().count;
-    // for (let i = 0; i < pageCount; i++) {
-    //   doc.switchToPage(i);
-    //   doc.fontSize(8).text(
-    //     `Page ${i + 1} of ${pageCount}`,
-    //     doc.page.width - 100,
-    //     doc.page.height - 30,
-    //     { align: 'right' }
-    //   );
-    // }
 
     doc.end();
   } catch (error) {
@@ -472,7 +460,7 @@ const generateExcelReport = async (req, res, next) => {
     allOrders.forEach(order => {
       const row = worksheet.addRow([
         order.orderId || 'N/A',
-        `Rs.${(order.amount || 0).toLocaleString('en-IN')}`,
+        `Rs.${(order.amount + order.discount +  order.coupon|| 0).toLocaleString('en-IN')}`,
         `Rs.${(order.discount || 0).toLocaleString('en-IN')}`,
         `Rs.${(order.coupon || 0).toLocaleString('en-IN')}`,
         `Rs.${(order.finalAmount || 0).toLocaleString('en-IN')}`,

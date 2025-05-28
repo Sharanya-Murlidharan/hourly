@@ -53,19 +53,20 @@
     router.get('/orders', adminAuth, orderController.getOrdersPage);
     router.get('/orderDetail/:orderId', adminAuth, orderController.getOrderDetailPage);
     router.post('/orders/:orderId/status', adminAuth, orderController.updateOrderStatus)
+    router.post('/orders/:orderId/:productId/return', orderController.verifySingleProductReturn);
     // return requests
     router.post('/verify-return/:id', adminAuth, orderController.verifyReturn);
     
     //coupon management
     router.get("/coupon",adminAuth,couponController.getCoupon)
     router.post('/addCoupon',adminAuth, couponController.addCoupon);
-    router.post('/editCoupon',adminAuth,couponController.editCoupon)
-    router.post('/deleteCoupon',adminAuth,couponController.deleteCoupon)
+    router.patch('/editCoupon',adminAuth,couponController.editCoupon)
+    router.patch('/deleteCoupon',adminAuth,couponController.deleteCoupon)
     //offer management
     router.get("/offers", adminAuth, offerController.getOffer);
     router.post('/addOffer', adminAuth, offerController.addOffer);
-    router.post('/editOffer', adminAuth, offerController.editOffer);
-    router.post('/deleteOffer', adminAuth, offerController.deleteOffer);
+    router.patch('/editOffer', adminAuth, offerController.editOffer);
+    router.patch('/deleteOffer', adminAuth, offerController.deleteOffer);
 
     // Sales routes
     router.get('/sales', adminAuth, salesController.getSalesReport);

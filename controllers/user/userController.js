@@ -483,9 +483,9 @@ const loadShoppingPage = async (req, res, next) => {
                 wishlistProductIds = wishlist.products.map(item => item.productId.toString());
             }
         }
-        const categories = await Category.find({ isListed: true });
+        const categories = await Category.find({ isListed: true,isDeleted: false });
         const categoryIds = categories.map(category => category._id.toString());
-        const brands = await Brand.find({}).lean();
+        const brands = await Brand.find({ isListed: false,isDeleted: false}).lean();
         const categoriesWithIds = categories.map(category => ({ _id: category._id, name: category.name }));
 
         let query = {

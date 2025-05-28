@@ -44,24 +44,25 @@ const getBrandPage = async(req,res,next)=>{
 const addBrand = async (req, res, next) => {
     const { name, description } = req.body;
     try {
-      console.log("Add Brand Request Received:", { name, description });
-  
-      const existingBrand = await Brand.findOne({ name });
-      if (existingBrand) {
-        console.log("Brand already exists");
-        return res.status(400).json({ error: "Brand already exists" });
-      }
-  
-      const newBrand = new Brand({ name, description });
-      await newBrand.save();
-  
-      console.log("Brand saved successfully");
-      return res.json({ message: "Brand added successfully" });
+        console.log("Add Brand Request Received:", { name, description });
+
+        // Check for existing brand with case-insensitive name
+        const existingBrand = await Brand.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+        if (existingBrand) {
+            console.log("Brand already exists");
+            return res.status(400).json({ error: "Brand already exists (case-insensitive)" });
+        }
+
+        const newBrand = new Brand({ name, description });
+        await newBrand.save();
+
+        console.log("Brand saved successfully");
+        return res.json({ message: "Brand added successfully" });
     } catch (error) {
-       error.statusCode = 500;
+        error.statusCode = 500;
         next(error);
     }
-  };
+};
   
 const brandListed = async(req,res,next)=>{
     try {
@@ -85,28 +86,34 @@ const brandunListed = async(req,res,next)=>{
     }
 }
 
-const editBrand = async(req,res,next)=>{
+const editBrand = async (req, res, next) => {
     try {
-        const {brandId,name,description}=req.body
-        const existingBrand = await Brand.findOne({name,_id:{$ne:brandId}})
+        const { brandId, name, description } = req.body;
+
+        // Check for existing brand with same name (case-insensitive), excluding current brand
+        const existingBrand = await Brand.findOne({
+            name: { $regex: new RegExp(`^${name}$`, "i") },
+            _id: { $ne: brandId }
+        });
         if (existingBrand) {
-            return res.json({success:false,message:"Brand already exists,please choose another name"})
+            return res.json({ success: false, message: "Brand already exists with this name (case-insensitive)" });
         }
-        const updateBrand = await Brand.findByIdAndUpdate(
+
+        const updatedBrand = await Brand.findByIdAndUpdate(
             brandId,
-            {name,description},
-            {new:true}
-        )
-        if (!updateBrand) {
-            return res.json({success:false,message:"Brand not found"})
+            { name, description },
+            { new: true }
+        );
+        if (!updatedBrand) {
+            return res.json({ success: false, message: "Brand not found" });
         }
-        res.json({success:true,message:"Brand updated successfully"})
+
+        res.json({ success: true, message: "Brand updated successfully" });
     } catch (error) {
-         error.statusCode = 500;
+        error.statusCode = 500;
         next(error);
-        
     }
-}
+};
 
 const deleteBrand = async(req,res,next)=>{
     const {brandId} = req.body

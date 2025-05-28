@@ -253,11 +253,11 @@
       </div>
       <div class="header-right">
         <div class="search-bar">
-          <form action="/admin/addBrand" method="post">
-            <input type="text" name="search" placeholder="Search brand">
-            <button type="submit">Search</button>
-          </form>
-        </div>
+  <form action="/admin/brands" method="get">
+    <input type="text" name="search" placeholder="Search brand" value="<%= searchQuery %>">
+    <button type="submit">Search</button>
+  </form>
+</div>
         <button class="add-category-btn">ADD Brands +</button>
       </div>
     </div>

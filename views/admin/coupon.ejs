@@ -540,7 +540,7 @@
             };
             console.log('Sending data:', data);
             fetch('/admin/editCoupon', {
-                method: 'POST',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -590,7 +590,7 @@
             const amount = parseFloat(document.getElementById("addCouponAmount").value);
             const validFrom = document.getElementById("addValidFrom").value;
             const validUpto = document.getElementById("addValidUpto").value;
-            const today = new Date('2025-05-19'); // Current date
+            const today = new Date('2025-05-27'); // Current date
             let isValid = true;
 
             if (name === "") {
@@ -763,7 +763,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch('/admin/deleteCoupon', {
-                        method: 'POST',
+                        method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json'
                         },

@@ -1052,23 +1052,25 @@ const returnProduct = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Canceled products cannot be returned.' });
     }
 
-    const subtotal = item.quantity * item.price;
+    item.itemStatus = 'Return Request'
 
-    await Wallet.findOneAndUpdate(
-      { userId },
-      {
-        $inc: { balance: subtotal },
-        $push: {
-          transactions: {
-            amount: subtotal,
-            type: 'credit',
-            description: `Refund for return of product in order ${order.orderId}`,
-            date: new Date()
-          }
-        }
-      },
-      { upsert: true }
-    );
+    // const subtotal = item.quantity * item.price;
+
+    // await Wallet.findOneAndUpdate(
+    //   { userId },
+    //   {
+    //     $inc: { balance: subtotal },
+    //     $push: {
+    //       transactions: {
+    //         amount: subtotal,
+    //         type: 'credit',
+    //         description: `Refund for return of product in order ${order.orderId}`,
+    //         date: new Date()
+    //       }
+    //     }
+    //   },
+    //   { upsert: true }
+    // );
 
     if (!order.productReturnReasons) {
       order.productReturnReasons = [];
