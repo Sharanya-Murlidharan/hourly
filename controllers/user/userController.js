@@ -357,7 +357,7 @@ const LoadHomepage = async (req, res, next) => {
             category: { $in: categories.map(c => c._id) },
             quantity: { $gt: 0 }
         })
-        .sort({ createdOn: -1 }) // Sort by newest first
+        .sort({ createdAt: -1 }) // Sort by newest first
         .limit(4);
 
         // Sort by newest and limit to 4
@@ -386,13 +386,8 @@ const LoadHomepage = async (req, res, next) => {
 
 const logout = async(req,res, next)=>{
     try {
-        req.session.destroy((err)=>{
-            if(err){
-                console.log("Session destruction error",err.message);
-                return res.redirect("/pageNotFound")
-            }
-            return res.redirect("/login")
-        })
+        req.session.user = null
+        return res.redirect("/login")
     } catch (error) {
          error.statusCode = 500;
         next(error);
@@ -485,13 +480,15 @@ const loadShoppingPage = async (req, res, next) => {
         }
         const categories = await Category.find({ isListed: true,isDeleted: false });
         const categoryIds = categories.map(category => category._id.toString());
-        const brands = await Brand.find({ isListed: false,isDeleted: false}).lean();
+        const brands = await Brand.find({ isListed: true,isDeleted: false}).lean();
+        const brandIds = brands.map(brand => brand._id.toString())
         const categoriesWithIds = categories.map(category => ({ _id: category._id, name: category.name }));
 
         let query = {
             isBlocked: false,
             isDeleted: { $ne: true },
             category: { $in: categoryIds },
+            brand : {$in: brandIds}
         };
 
         const priceRange = req.query.priceRange;
@@ -529,7 +526,7 @@ const loadShoppingPage = async (req, res, next) => {
                 break;
             case 'newest':
             default:
-                sortOptions.createdOn = -1;
+                sortOptions.createdAt = -1;
                 break;
         }
 

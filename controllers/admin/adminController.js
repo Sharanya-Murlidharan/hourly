@@ -273,13 +273,10 @@ const getChartData = async (req, res) => {
 // Admin logout
 const logout = async (req, res, next) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error destroying session:', err);
-        return res.redirect('/pageerror');
-      }
-      res.redirect('/admin/login');
-    });
+    
+    req.session.admin = null
+    res.redirect('/admin/login')
+
   } catch (error) {
     error.statusCode = 500;
     next(error);

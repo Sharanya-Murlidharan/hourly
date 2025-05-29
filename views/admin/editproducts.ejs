@@ -85,6 +85,16 @@
             background-color: #f9f9f9;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color: 0.3s ease;
+        }
+
+        .image-upload:hover {
+            background-color: #f0f0f0;
+        }
+
+        .image-upload.dragover {
+            background-color: #e9f7fe;
+            border-color: #007bff;
         }
 
         .image-upload i {
@@ -106,6 +116,15 @@
             border-radius: 5px;
             overflow: hidden;
             position: relative;
+            border: 2px solid transparent;
+        }
+
+        .preview-item.cropped {
+            border-color: #28a745;
+        }
+
+        .preview-item.needs-crop {
+            border-color: #ffc107;
         }
 
         .preview-item img {
@@ -116,9 +135,9 @@
 
         .preview-item .remove-img {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: rgba(255, 255, 255, 0.8);
+            top: 2px;
+            right: 2px;
+            background-color: rgba(255, 255, 255, 0.9);
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -126,6 +145,20 @@
             align-items: center;
             justify-content: center;
             color: #ff5555;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .preview-item .crop-btn {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            background-color: rgba(0, 123, 255, 0.9);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-size: 10px;
             cursor: pointer;
         }
 
@@ -183,7 +216,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.8);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -198,7 +231,7 @@
             border-radius: 8px;
             padding: 20px;
             width: 90%;
-            max-width: 800px;
+            max-width: 600px;
             max-height: 90vh;
             overflow: auto;
             display: flex;
@@ -208,7 +241,7 @@
 
         .crop-preview {
             max-width: 100%;
-            max-height: 70vh;
+            max-height: 400px;
             margin-bottom: 20px;
         }
 
@@ -217,6 +250,7 @@
             justify-content: space-between;
             width: 100%;
             max-width: 300px;
+            gap: 10px;
         }
 
         .crop-apply, .crop-cancel {
@@ -226,6 +260,7 @@
             cursor: pointer;
             font-weight: 500;
             font-size: 14px;
+            flex: 1;
         }
 
         .crop-apply {
@@ -238,20 +273,26 @@
         }
 
         .crop-cancel {
-            background-color: #f5f5f5;
-            color: #333;
-            border: 1px solid #ddd;
+            background-color: #6c757d;
+            color: white;
         }
 
         .crop-cancel:hover {
-            background-color: #e9e9e9;
+            background-color: #5a6268;
         }
 
         .error-message {
-            color: red;
+            color: #dc3545;
             font-size: 12px;
             display: none;
             margin-top: 5px;
+        }
+
+        .crop-instructions {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -329,8 +370,9 @@
                     <div class="image-preview" id="imagePreview">
                         <% if (product.productImage && product.productImage.length > 0) { %>
                             <% product.productImage.forEach((img, index) => { %>
-                                <div class="preview-item" data-existing="true" data-img-path="<%= img %>">
-                                    <img src="/<%= img %>" alt="Existing Image <%= index + 1 %>" onclick="showCropModal(this, '/<%= img %>')">
+                                <div class="preview-item cropped" data-existing="true" data-img-path="<%= img %>">
+                                    <img src="/<%= img %>" alt="Existing Image <%= index + 1 %>">
+                                    <button type="button" class="crop-btn" onclick="showCropModal('<%= img %>')">Crop</button>
                                     <span class="remove-img"><i class="fas fa-times"></i></span>
                                 </div>
                             <% }) %>
@@ -342,10 +384,14 @@
 
             <div id="cropModal" class="crop-modal">
                 <div class="crop-container">
+                    <div class="crop-instructions">
+                        <strong>Crop your image</strong><br>
+                        Drag to move, scroll to zoom, drag corners to resize
+                    </div>
                     <img id="cropImage" class="crop-preview" alt="Crop Preview" />
                     <div class="crop-buttons">
-                        <button class="crop-cancel" onclick="cancelCrop()">Cancel</button>
-                        <button class="crop-apply" onclick="applyCrop()">Apply</button>
+                        <button type="button" class="crop-cancel" onclick="cancelCrop()">Cancel</button>
+                        <button type="button" class="crop-apply" onclick="applyCrop()">Apply Crop</button>
                     </div>
                 </div>
             </div>
@@ -360,135 +406,190 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Add this script at the bottom of your HTML file before the closing </body> tag
+        // Global variables
+        let cropper;
+        let currentPreviewItem;
+        let currentFileIndex;
+        let existingImagesToDelete = [];
+        let newImages = [];
 
-// Global variables
-let cropper;
-let currentImageElement;
-let existingImagesToDelete = [];
-let newImages = [];
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize drag and drop zone
+            const dropZone = document.getElementById('dropZone');
+            dropZone.addEventListener('click', function() {
+                document.getElementById('productImages').click();
+            });
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize drag and drop zone
-    const dropZone = document.getElementById('dropZone');
-    dropZone.addEventListener('click', function() {
-        document.getElementById('productImages').click();
-    });
+            // Set up drag and drop events
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
 
-    // Set up drag and drop events
-    dropZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        dropZone.style.backgroundColor = '#eaf7ea';
-        dropZone.style.borderColor = '#28a745';
-    });
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
 
-    dropZone.addEventListener('dragleave', function() {
-        dropZone.style.backgroundColor = '#f9f9f9';
-        dropZone.style.borderColor = '#ddd';
-    });
-
-    dropZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        dropZone.style.backgroundColor = '#f9f9f9';
-        dropZone.style.borderColor = '#ddd';
-        
-        if (e.dataTransfer.files.length) {
-            document.getElementById('productImages').files = e.dataTransfer.files;
-            handleFileSelect();
-        }
-    });
-
-    // Set up existing image deletion
-    const existingPreviews = document.querySelectorAll('.preview-item[data-existing="true"]');
-    existingPreviews.forEach(item => {
-        const removeBtn = item.querySelector('.remove-img');
-        removeBtn.addEventListener('click', function() {
-            const imgPath = item.getAttribute('data-img-path');
-            existingImagesToDelete.push(imgPath);
-            item.remove();
-        });
-    });
-});
-
-// Handle file selection
-function handleFileSelect() {
-    const fileInput = document.getElementById('productImages');
-    const preview = document.getElementById('imagePreview');
-    const files = fileInput.files;
-    
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.match('image.*')) {
-            continue;
-        }
-        
-        if (isImageAlreadyAdded(file.name)) {
-            continue;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (function(file) {
-            return function(e) {
-                const div = document.createElement('div');
-                div.className = 'preview-item';
-                div.setAttribute('data-file-name', file.name);
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
                 
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.alt = file.name;
-                img.onclick = function() {
-                    showCropModal(this, e.target.result);
-                };
-                
-                const removeSpan = document.createElement('span');
-                removeSpan.className = 'remove-img';
-                removeSpan.innerHTML = '<i class="fas fa-times"></i>';
-                removeSpan.onclick = function() {
-                    div.remove();
-                    newImages = newImages.filter(img => img.name !== file.name);
-                };
-                
-                div.appendChild(img);
-                div.appendChild(removeSpan);
-                preview.appendChild(div);
-                
-                // Store the new image
-                newImages.push({
-                    name: file.name,
-                    file: file,
-                    blob: null
+                if (e.dataTransfer.files.length) {
+                    document.getElementById('productImages').files = e.dataTransfer.files;
+                    handleFileSelect();
+                }
+            });
+
+            // Set up existing image deletion
+            const existingPreviews = document.querySelectorAll('.preview-item[data-existing="true"]');
+            existingPreviews.forEach((item) => {
+                const removeBtn = item.querySelector('.remove-img');
+                removeBtn.addEventListener('click', function() {
+                    const imgPath = item.getAttribute('data-img-path');
+                    existingImagesToDelete.push(imgPath);
+                    item.remove();
                 });
-            };
-        })(file);
-        
-        reader.readAsDataURL(file);
-    }
-}
+            });
+        });
 
-// Check if an image is already added to preview
-function isImageAlreadyAdded(fileName) {
-    const previewItems = document.querySelectorAll('.preview-item');
-    for (let i = 0; i < previewItems.length; i++) {
-        const item = previewItems[i];
-        if (item.getAttribute('data-file-name') === fileName) {
-            return true;
+        // Handle file selection
+        function handleFileSelect() {
+            const fileInput = document.getElementById('productImages');
+            const preview = document.getElementById('imagePreview');
+            const files = fileInput.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.match('image.*')) {
+                    continue;
+                }
+                
+                if (isImageAlreadyAdded(file.name)) {
+                    continue;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (function(file, index) {
+                    return function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'preview-item needs-crop';
+                        div.setAttribute('data-file-name', file.name);
+                        div.setAttribute('data-index', index);
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = file.name;
+                        
+                        const cropBtn = document.createElement('button');
+                        cropBtn.type = 'button';
+                        cropBtn.className = 'crop-btn';
+                        cropBtn.textContent = 'Crop';
+                        cropBtn.onclick = function() {
+                            showCropModal(index);
+                        };
+                        
+                        const removeSpan = document.createElement('span');
+                        removeSpan.className = 'remove-img';
+                        removeSpan.innerHTML = '<i class="fas fa-times"></i>';
+                        removeSpan.onclick = function() {
+                            div.remove();
+                            newImages = newImages.filter(img => img.name !== file.name);
+                        };
+                        
+                        div.appendChild(img);
+                        div.appendChild(cropBtn);
+                        div.appendChild(removeSpan);
+                        preview.appendChild(div);
+                        
+                        // Store the new image
+                        newImages.push({
+                            name: file.name,
+                            file: file,
+                            blob: null,
+                            isCropped: false
+                        });
+                    };
+                })(file, newImages.length);
+                
+                reader.readAsDataURL(file);
+            }
         }
-    }
-    return false;
-}
 
-// Show crop modal
-// Show crop modal
-function showCropModal(imgElement, src) {
-    currentImageElement = imgElement;
+        // Check if an image is already added to preview
+        function isImageAlreadyAdded(fileName) {
+            const previewItems = document.querySelectorAll('.preview-item');
+            for (let i = 0; i < previewItems.length; i++) {
+                const item = previewItems[i];
+                if (item.getAttribute('data-file-name') === fileName) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+       // Show crop modal
+async function showCropModal(identifier) {
+    let imageUrl;
+    let fileData;
+    let isExistingImage = false;
+
+    if (typeof identifier === 'string') {
+        // Existing image
+        isExistingImage = true;
+        currentPreviewItem = document.querySelector(`.preview-item[data-img-path="${identifier}"]`);
+        
+        // Fix the image URL construction
+        let imagePath = identifier;
+        
+        // Replace pipe characters with forward slashes if they exist
+        // if (imagePath.includes('|')) {
+        //     imagePath = imagePath.replace(/\|/g, '/');
+        // }
+        
+        // Ensure the path starts with a forward slash
+        // if (!imagePath.startsWith('/')) {
+        //     imagePath = '/' + imagePath;
+        // }
+        
+        console.log('Original identifier:', identifier);
+        console.log('Processed image path:', imagePath);
+        
+        try {
+            const response = await fetch(imagePath);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            imageUrl = URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Error fetching image:', error);
+            console.error('Attempted URL:', imagePath);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load image for cropping.',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+    } else {
+        // New image
+        currentFileIndex = identifier;
+        fileData = newImages[identifier];
+        if (!fileData) return;
+        currentPreviewItem = document.querySelector(`[data-index="${identifier}"]`);
+        imageUrl = URL.createObjectURL(fileData.file);
+    }
+
     const cropModal = document.getElementById('cropModal');
     const cropImage = document.getElementById('cropImage');
     
-    // Ensure the image is fully loaded before initializing Cropper
-    cropImage.src = src;
+    cropImage.src = imageUrl;
+    cropModal.classList.add('active');
+
+    // Initialize cropper after image loads
     cropImage.onload = () => {
-        cropModal.classList.add('active');
-        
         if (cropper) {
             cropper.destroy();
         }
@@ -496,243 +597,314 @@ function showCropModal(imgElement, src) {
         cropper = new Cropper(cropImage, {
             aspectRatio: 1,
             viewMode: 1,
-            autoCropArea: 1,
-            movable: true,
-            zoomable: true,
-            scalable: true,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
             cropBoxResizable: true,
-            ready: () => {
-                console.log('Cropper.js initialized successfully');
-            },
-            cropend: (event) => {
-                console.log('Crop selection updated:', event.detail);
-            }
+            toggleDragModeOnDblclick: false,
+            autoCropArea: 0.8,
+            responsive: true,
+            restore: false,
+            checkCrossOrigin: false,
+            checkOrientation: false,
+            modal: true,
+            background: true,
+            opacity: 0.6,
+            zoomable: true,
+            zoomOnTouch: true,
+            zoomOnWheel: true,
+            wheelZoomRatio: 0.1,
+            cropBoxResize: true,
+            minContainerWidth: 200,
+            minContainerHeight: 200
         });
     };
 
     cropImage.onerror = () => {
-        console.error('Failed to load image for cropping:', src);
-    };
-}
-// Apply crop
-function applyCrop() {
-    if (!cropper) return;
-    
-    const canvas = cropper.getCroppedCanvas({
-        width: 600,
-        height: 600
-    });
-    
-    canvas.toBlob(function(blob) {
-        const url = URL.createObjectURL(blob);
-        currentImageElement.src = url;
-        
-        // If this is a new image, store the cropped blob
-        if (currentImageElement.parentElement.getAttribute('data-file-name')) {
-            const fileName = currentImageElement.parentElement.getAttribute('data-file-name');
-            for (let i = 0; i < newImages.length; i++) {
-                if (newImages[i].name === fileName) {
-                    newImages[i].blob = blob;
-                    break;
-                }
-            }
-        }
-        
-        cancelCrop();
-    });
-}
-
-// Cancel crop
-function cancelCrop() {
-    const cropModal = document.getElementById('cropModal');
-    cropModal.classList.remove('active');
-    
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
-    }
-}
-
-// Cancel form
-function cancelForm() {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "Your changes will not be saved!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, discard changes'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = '/admin/products';
-        }
-    });
-}
-
-// Form validation
-function validateAndSubmit(event) {
-    event.preventDefault();
-    clearErrorMessages();
-    
-    let isValid = true;
-    
-    // Check product name
-    const productName = document.getElementById('productName').value.trim();
-    if (!productName) {
-        displayError('productName', 'Product name is required');
-        isValid = false;
-    }
-    
-    // Check brand
-    const brand = document.getElementById('brand').value;
-    if (!brand) {
-        displayError('brand', 'Please select a brand');
-        isValid = false;
-    }
-    
-    // Check category
-    const category = document.getElementById('category').value;
-    if (!category) {
-        displayError('category', 'Please select a category');
-        isValid = false;
-    }
-    
-    // Check regular price
-    const regularPrice = document.getElementById('price').value;
-    if (!regularPrice || parseFloat(regularPrice) < 0) {
-        displayError('regularPrice', 'Please enter a valid regular price');
-        isValid = false;
-    }
-    
-    // Check sale price
-    const salePrice = document.getElementById('salePrice').value;
-    if (salePrice && parseFloat(salePrice) > parseFloat(regularPrice)) {
-        displayError('salePrice', 'Sale price cannot be higher than regular price');
-        isValid = false;
-    }
-    
-    // Check quantity
-    const quantity = document.getElementById('quantity').value;
-    if (!quantity || parseInt(quantity) < 0) {
-        displayError('quantity', 'Please enter a valid quantity');
-        isValid = false;
-    }
-    
-    // Check description
-    const description = document.getElementById('description').value.trim();
-    if (!description) {
-        displayError('description', 'Product description is required');
-        isValid = false;
-    }
-    
-    // Check images
-    const previewItems = document.querySelectorAll('.preview-item');
-    if (previewItems.length < 1) {
-        displayError('images', 'At least one product image is required');
-        isValid = false;
-    } else if (previewItems.length > 4) {
-        displayError('images', 'Maximum 4 images allowed');
-        isValid = false;
-    }
-    
-    if (isValid) {
-        // Create form data and submit
-        submitForm();
-    }
-    
-    return false;
-}
-
-// Display error message
-function displayError(field, message) {
-    const errorElement = document.getElementById(`${field}-error`);
-    if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.style.display = 'block';
-    }
-}
-
-// Clear all error messages
-function clearErrorMessages() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(element => {
-        element.textContent = '';
-        element.style.display = 'none';
-    });
-}
-
-// Submit form with AJAX
-function submitForm() {
-    const form = document.getElementById('editProductForm');
-    const formData = new FormData(form);
-    
-    // Add product ID
-    const pathParts = window.location.pathname.split('/');
-    const productId = pathParts[pathParts.length - 1];
-    formData.append('productId', productId);
-    
-    // Remove the original file input
-    formData.delete('productImages');
-    
-    // Add new images
-    newImages.forEach((image, index) => {
-        if (image.blob) {
-            formData.append('productImages', image.blob, image.name);
-        } else {
-            formData.append('productImages', image.file);
-        }
-    });
-    
-    // Add list of images to delete
-    formData.append('imagesToDelete', JSON.stringify(existingImagesToDelete));
-    
-    // Show loading
-    Swal.fire({
-        title: 'Updating Product',
-        text: 'Please wait...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-    
-    // Send AJAX request
-    fetch('/admin/editProducts', {
-        method: 'PATCH',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Product updated successfully',
-                confirmButtonColor: '#28a745'
-            }).then(() => {
-                window.location.href = '/admin/products';
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to update product',
-                confirmButtonColor: '#dc3545'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+        console.error('Failed to load image:', imageUrl);
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'An unexpected error occurred: ' + error.message,
+            text: 'Failed to load image for cropping.',
             confirmButtonColor: '#dc3545'
         });
-    });
+        cancelCrop();
+    };
 }
+
+        // Apply crop
+        function applyCrop() {
+            if (!cropper || !currentPreviewItem) return;
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+
+            canvas.toBlob((blob) => {
+                // Store the cropped blob
+                const croppedImageUrl = URL.createObjectURL(blob);
+                const imgElement = currentPreviewItem.querySelector('img');
+                
+                // Clean up old URL if it exists
+                if (imgElement.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(imgElement.src);
+                }
+                
+                imgElement.src = croppedImageUrl;
+                
+                // Update visual state
+                currentPreviewItem.classList.remove('needs-crop');
+                currentPreviewItem.classList.add('cropped');
+                
+                // Hide crop button
+                const cropBtn = currentPreviewItem.querySelector('.crop-btn');
+                if (cropBtn) cropBtn.style.display = 'none';
+
+                if (currentPreviewItem.hasAttribute('data-existing')) {
+                    // Existing image: mark for deletion and add to newImages
+                    const imgPath = currentPreviewItem.getAttribute('data-img-path');
+                    if (imgPath && !existingImagesToDelete.includes(imgPath)) {
+                        existingImagesToDelete.push(imgPath);
+                    }
+                    const newIndex = newImages.length;
+                    newImages.push({
+                        name: `cropped-${imgPath.split('/').pop()}`,
+                        file: null,
+                        blob: blob,
+                        isCropped: true
+                    });
+                    currentPreviewItem.setAttribute('data-file-name', `cropped-${imgPath.split('/').pop()}`);
+                    currentPreviewItem.setAttribute('data-index', newIndex);
+                    currentPreviewItem.removeAttribute('data-img-path');
+                    currentPreviewItem.removeAttribute('data-existing');
+                } else {
+                    // New image: update newImages
+                    if (currentFileIndex !== null && newImages[currentFileIndex]) {
+                        newImages[currentFileIndex].blob = blob;
+                        newImages[currentFileIndex].isCropped = true;
+                    }
+                }
+
+                // Close modal
+                cancelCrop();
+                
+                // Clear any error messages
+                clearErrorMessages();
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Cancel crop
+        function cancelCrop() {
+            const cropModal = document.getElementById('cropModal');
+            cropModal.classList.remove('active');
+            
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            // Clean up object URL
+            const cropImage = document.getElementById('cropImage');
+            if (cropImage.src.startsWith('blob:')) {
+                URL.revokeObjectURL(cropImage.src);
+            }
+            
+            currentPreviewItem = null;
+            currentFileIndex = null;
+        }
+
+        // Cancel form
+        function cancelForm() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Your changes will not be saved!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, discard changes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/admin/products';
+                }
+            });
+        }
+
+        // Form validation
+        function validateAndSubmit(event) {
+            event.preventDefault();
+            clearErrorMessages();
+            
+            let isValid = true;
+            
+            // Check product name
+            const productName = document.getElementById('productName').value.trim();
+            if (!productName) {
+                displayError('productName', 'Product name is required');
+                isValid = false;
+            }
+            
+            // Check brand
+            const brand = document.getElementById('brand').value;
+            if (!brand) {
+                displayError('brand', 'Please select a brand');
+                isValid = false;
+            }
+            
+            // Check category
+            const category = document.getElementById('category').value;
+            if (!category) {
+                displayError('category', 'Please select a category');
+                isValid = false;
+            }
+            
+            // Check regular price
+            const regularPrice = document.getElementById('price').value;
+            if (!regularPrice || parseFloat(regularPrice) < 0) {
+                displayError('regularPrice', 'Please enter a valid regular price');
+                isValid = false;
+            }
+            
+            // Check sale price
+            const salePrice = document.getElementById('salePrice').value;
+            if (salePrice && parseFloat(salePrice) > parseFloat(regularPrice)) {
+                displayError('salePrice', 'Sale price cannot be higher than regular price');
+                isValid = false;
+            }
+            
+            // Check quantity
+            const quantity = document.getElementById('quantity').value;
+            if (!quantity || parseInt(quantity) < 0) {
+                displayError('quantity', 'Please enter a valid quantity');
+                isValid = false;
+            }
+            
+            // Check description
+            const description = document.getElementById('description').value.trim();
+            if (!description) {
+                displayError('description', 'Product description is required');
+                isValid = false;
+            }
+            
+            // Check images
+            const previewItems = document.querySelectorAll('.preview-item');
+            if (previewItems.length < 1) {
+                displayError('images', 'At least one product image is required');
+                isValid = false;
+            } else if (previewItems.length > 4) {
+                displayError('images', 'Maximum 4 images allowed');
+                isValid = false;
+            }
+
+            // Check if all new images are cropped
+            const allCropped = Array.from(previewItems).every(item => {
+                return item.classList.contains('cropped');
+            });
+            if (!allCropped) {
+                displayError('images', 'Please crop all images.');
+                isValid = false;
+            }
+            
+            if (isValid) {
+                // Create form data and submit
+                submitForm();
+            }
+            
+            return false;
+        }
+
+        // Display error message
+        function displayError(field, message) {
+            const errorElement = document.getElementById(`${field}-error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Clear all error messages
+        function clearErrorMessages() {
+            const errorElements = document.querySelectorAll('.error-message');
+            errorElements.forEach(element => {
+                element.textContent = '';
+                element.style.display = 'none';
+            });
+        }
+
+        // Submit form with AJAX
+        function submitForm() {
+            const form = document.getElementById('editProductForm');
+            const formData = new FormData(form);
+            
+            // Add product ID
+            const pathParts = window.location.pathname.split('/');
+            const productId = pathParts[pathParts.length - 1];
+            formData.append('productId', productId);
+            
+            // Remove the original file input
+            formData.delete('productImages');
+            
+            // Add new images
+            newImages.forEach((image, index) => {
+                if (image.blob) {
+                    formData.append('productImages', image.blob, image.name);
+                } else if (image.file) {
+                    formData.append('productImages', image.file);
+                }
+            });
+            
+            // Add list of images to delete
+            formData.append('imagesToDelete', JSON.stringify(existingImagesToDelete));
+            
+            // Show loading
+            Swal.fire({
+                title: 'Updating Product',
+                text: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Send AJAX request
+            fetch('/admin/editProducts', {
+                method: 'PATCH',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Product updated successfully',
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        window.location.href = '/admin/products';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update product',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred: ' + error.message,
+                    confirmButtonColor: '#dc3545'
+                });
+            });
+        }
     </script>
-   
 </body>
 </html>

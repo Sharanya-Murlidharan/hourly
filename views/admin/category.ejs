@@ -279,12 +279,12 @@
               <td><%= category.description %></td>
               <td>
                 <% if (category.isListed) { %>
-                  <button class="action-btn unlist-btn">
-                    <a href="/admin/unlistCategory?id=<%= category._id %>" class="text-white" style="text-decoration: none;">UNLIST</a>
+                    <button class="action-btn list-btn">
+                    <a href="/admin/unlistCategory?id=<%= category._id %>" class="text-white" style="text-decoration: none;">LIST</a>
                   </button>
                 <% } else { %>
-                  <button class="action-btn list-btn">
-                    <a href="/admin/listCategory?id=<%= category._id %>" class="text-white" style="text-decoration: none;">LIST</a>
+                  <button class="action-btn unlist-btn">
+                    <a href="/admin/listCategory?id=<%= category._id %>" class="text-white" style="text-decoration: none;">UNLIST</a>
                   </button>
                 <% } %>
               </td>

@@ -266,30 +266,36 @@
         letter-spacing: 1px;
     }
 
-  .wishlist-btn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: rgba(255, 255, 255, 0.9);
-        color: #05445E;
-        border: 1px solid #ddd;
-        padding: 8px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: background 0.3s, color 0.3s, transform 0.3s;
-        font-size: 1rem;
-    }
+ .wishlist-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-    .wishlist-btn:hover {
-        background: #05445E;
-        color: #fff;
-        transform: scale(1.1);
-    }
+.wishlist-btn i {
+    font-size: 1rem;
+    color: #888;
+}
 
-    .wishlist-btn.active {
-        background: #05445E;
-        color: #fff;
-    }
+.wishlist-btn.active i {
+    color: #dc3545;
+}
+
+.wishlist-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+}
 
     .product-content-wrap {
         padding: 15px;
@@ -530,10 +536,10 @@
                     </a>
                 </div>
                 <button class="wishlist-btn" 
-                        data-product-id="<%= products[i]._id %>"
-                        onclick="toggleWishlist('<%= products[i]._id %>', this)">
-                    <i class="fa-solid fa-heart" style="color: #e02200;"></i>
-                </button>
+        data-product-id="<%= products[i]._id %>"
+        onclick="toggleWishlist('<%= products[i]._id %>', this, event)">
+    <i class="far fa-heart"></i>
+</button>
             </div>
             <div class="product-content-wrap">
                 <h6><%=products[i].productName%></h6>
@@ -567,15 +573,15 @@
     .then(data => {
         if (data.wishlistItems) {
             wishlistProductIds = data.wishlistItems.map(item => item.productId._id.toString());
-            document.querySelectorAll('.wishlist-btn').forEach(button => {
-                const productId = button.getAttribute('data-product-id');
-                if (wishlistProductIds.includes(productId)) {
-                    button.classList.add('active');
-                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> ';
-                } else {
-                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> Add to Wishlist';
-                }
-            });
+           document.querySelectorAll('.wishlist-btn').forEach(button => {
+    const productId = button.getAttribute('data-product-id');
+    if (wishlistProductIds.includes(productId)) {
+        button.classList.add('active');
+        button.innerHTML = '<i class="fas fa-heart"></i>';
+    } else {
+        button.innerHTML = '<i class="far fa-heart"></i>';
+    }
+});
         }
     })
     .catch(error => {
@@ -624,64 +630,65 @@
         });
     }
 
-    function toggleWishlist(productId, button) {
-        const isInWishlist = button.classList.contains('active');
-        const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
-        
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ productId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                if (isInWishlist) {
-                    button.classList.remove('active');
-                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> Add to Wishlist';
-                    wishlistProductIds = wishlistProductIds.filter(id => id !== productId);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Removed',
-                        text: 'Product removed from wishlist!',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                } else {
-                    button.classList.add('active');
-                    button.innerHTML = '<i class="fa-solid fa-heart" style="color: #e02200;"></i> ';
-                    wishlistProductIds.push(productId);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Added',
-                        text: 'Product added to wishlist!',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
-            } else {
+    function toggleWishlist(productId, button, event) {
+    event.stopPropagation();
+    const isInWishlist = button.classList.contains('active');
+    const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (isInWishlist) {
+                button.classList.remove('active');
+                button.querySelector('i').classList.replace('fas', 'far');
+                wishlistProductIds = wishlistProductIds.filter(id => id !== productId);
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to update wishlist',
+                    icon: 'success',
+                    title: 'Removed',
+                    text: 'Product removed from wishlist!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                button.classList.add('active');
+                button.querySelector('i').classList.replace('far', 'fas');
+                wishlistProductIds.push(productId);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Added',
+                    text: 'Product added to wishlist!',
                     timer: 1500,
                     showConfirmButton: false
                 });
             }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
+        } else {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'An error occurred while updating the wishlist',
-                timer: 2000,
+                text: data.message || 'Failed to update wishlist',
+                timer: 1500,
                 showConfirmButton: false
             });
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while updating the wishlist',
+            timer: 2000,
+            showConfirmButton: false
         });
-    }
+    });
+}
 </script>
 
 <!-- footer begins -->
