@@ -107,7 +107,7 @@ router.get('/wallet', userAuth, orderController.getWallet)
 router.get('/wishlist',userAuth,wishlistController.getWishlist)
 router.post('/addToWishlist', userAuth, wishlistController.addToWishlist);
 router.post('/removeFromWishlist', userAuth, wishlistController.removeFromWishlist);
-
+ 
 
 
 

@@ -192,6 +192,9 @@
     .status-returned {
       color: #ff9800;
     }
+    .status-paymentfailed {
+  color: #d32f2f; /* Red, consistent with status-canceled */
+}
     .order-meta {
       display: flex;
       gap: 20px;
@@ -511,7 +514,7 @@
                 <div class="order-summary">
                   <div class="order-header">
                     <span class="order-id">Order ID: <%= order.orderId %></span>
-                    <div class="order-status-container">
+                    <!-- <div class="order-status-container">
                       <span class="order-status status-<%= order.status.toLowerCase().replace(' ', '') %>"><%= order.status %></span>
                       <% if (order.status.toLowerCase() !== 'delivered' && order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned') { %>
                         <button class="action-btn" onclick="cancelOrder('<%= order._id %>')">
@@ -523,7 +526,20 @@
                           <i class="fa-solid fa-undo"></i> Return Order
                         </button>
                       <% } %>
-                    </div>
+                    </div> -->
+                    <div class="order-status-container">
+  <span class="order-status status-<%= order.status.toLowerCase().replace(' ', '') %>"><%= order.status %></span>
+  <% if (order.status.toLowerCase() !== 'delivered' && order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned' && order.status.toLowerCase() !== 'payment failed') { %>
+    <button class="action-btn" onclick="cancelOrder('<%= order._id %>')">
+      <i class="fa-solid fa-times"></i> Cancel Order
+    </button>
+  <% } %>
+  <% if (order.status.toLowerCase() === 'delivered') { %>
+    <button class="return-btn" onclick="returnOrder('<%= order._id %>')">
+      <i class="fa-solid fa-undo"></i> Return Order
+    </button>
+  <% } %>
+</div>
                   </div>
                   <div class="order-meta">
                     <p>Order Date: <%= new Date(order.createdOn).toLocaleDateString('en-GB') %></p>
@@ -555,11 +571,12 @@
                           <button class="return-btn" onclick="returnProduct('<%= item._id %>', '<%= order._id %>', '<%= item.product.productName %>')">
                             <i class="fa-solid fa-undo"></i> Return Product
                           </button>
-                        <% } else if (order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned') { %>
+                        <% } else if (order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned' && order.status !== "Payment Failed") { %>
                           <button class="cancel-product-btn" onclick="cancelProduct('<%= item.product.productName %>', '<%= item._id %>', '<%= order._id %>')">
                             <i class="fa-solid fa-times"></i> Cancel Product
                           </button>
                         <% } %>
+                        
                       </div>
                     </div>
                   <% }) %>

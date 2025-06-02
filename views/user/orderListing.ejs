@@ -343,7 +343,7 @@
                             <th>Actions</th>
                           </tr>
                         </thead>
-                       <tbody>
+                       <!-- <tbody>
   <% orders.forEach(order => { %>
     <tr>
       <td>
@@ -371,6 +371,37 @@
           <i class="fa-solid fa-eye"></i> View Details
         </button>
        
+      </td>
+    </tr>
+  <% }) %>
+</tbody> -->
+<tbody>
+  <% orders.forEach(order => { %>
+    <tr>
+      <td>
+        <div class="order-image">
+          <img src="<%= order.productImage %>" alt="<%= order.productName %>">
+        </div>
+      </td>
+      <td><%= order.orderId %></td>
+      <td><%= order.productName %></td>
+      <td><%= order.orderDate %></td>
+      <td><%= order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1) %></td>
+      <td>₹<%= order.totalAmount %></td>
+      <td>
+        <span class="order-status status-<%= order.status.toLowerCase().replace(' ', '') %>">
+          <%= order.status %>
+          <% if (order.status.toLowerCase() === 'delivered' && order.deliveredOn) { %>
+            (Delivered on <%= new Date(order.deliveredOn).toLocaleDateString('en-GB') %>)
+          <% } else if (order.status.toLowerCase() === 'canceled' && order.canceledOn) { %>
+            (Canceled on <%= new Date(order.canceledOn).toLocaleDateString('en-GB') %>)
+          <% } %>
+        </span>
+      </td>
+      <td>
+        <button class="action-btn" onclick="viewOrderDetails('<%= order.orderId %>')">
+          <i class="fa-solid fa-eye"></i> View Details
+        </button>
       </td>
     </tr>
   <% }) %>

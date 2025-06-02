@@ -266,11 +266,11 @@
     <div class="order-summary">
       <div class="order-header">
         <span class="order-id">Order ID: <%= order.orderId %></span>
-        <select class="status-dropdown <%= order.status === 'Canceled' ? 'status-canceled' : '' %>" id="statusDropdown" data-order-id="<%= order.orderId %>" <%= order.status === 'Canceled' ? 'disabled' : '' %>>
-          <% ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'].forEach(status => { %>
-            <option value="<%= status %>" <%= order.status === status ? 'selected' : '' %>><%= status %></option>
-          <% }) %>
-        </select>
+     <select class="status-dropdown <%= order.status === 'Canceled' ? 'status-canceled' : '' %>" id="statusDropdown" data-order-id="<%= order.orderId %>" <%= order.status === 'Canceled' ? 'disabled' : '' %>>
+  <% ['Pending', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'].forEach(status => { %>
+    <option value="<%= status %>" <%= order.status === status ? 'selected' : '' %> <%= ['Canceled', 'Return Request', 'Returned'].includes(status) ? 'disabled' : '' %>><%= status %></option>
+  <% }) %>
+</select>
       </div>
       <div class="order-meta">
         <p>Order Date: <%= new Date(order.createdOn).toLocaleDateString('en-GB') %></p>
@@ -458,15 +458,12 @@
               timer: 1500,
               showConfirmButton: false,
             });
-            const statusClasses = {
-              'Delivered': 'status-delivered',
-              'Pending': 'status-pending',
-              'Canceled': 'status-canceled',
-              'Processing': 'status-processing',
-              'Shipped': 'status-shipped',
-              'Return Request': 'status-returnrequest',
-              'Returned': 'status-returned',
-            };
+           const statusClasses = {
+  'Delivered': 'status-delivered',
+  'Pending': 'status-pending',
+  'Processing': 'status-processing',
+  'Shipped': 'status-shipped'
+};
             e.target.className = 'status-dropdown';
             e.target.classList.add(statusClasses[newStatus] || '');
             if (newStatus === 'Canceled') {

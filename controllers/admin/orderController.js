@@ -109,14 +109,43 @@ const getOrderDetailPage = async (req, res, next) => {
   }
 };
 
+// const updateOrderStatus = async (req, res, next) => {
+//   try {
+//     const { orderId } = req.params;
+//     const { status } = req.body;
+
+//     const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'];
+//     if (!validStatuses.includes(status)) {
+//       return res.status(400).json({ message: 'Invalid status' });
+//     }
+
+//     const order = await Order.findOneAndUpdate(
+//       { orderId },
+//       { status },
+//       { new: true }
+//     );
+
+//     if (!order) {
+//       return res.status(404).json({ message: 'Order not found' });
+//     }
+
+//     res.status(200).json({ message: 'Status updated successfully', status });
+//   } catch (error) {
+//      error.statusCode = 500;
+//         next(error);
+//   }
+// };
+
 const updateOrderStatus = async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'];
+    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+      return res.status(400).json({ 
+        message: 'Invalid status. Status can only be set to Pending, Processing, Shipped, or Delivered.' 
+      });
     }
 
     const order = await Order.findOneAndUpdate(
@@ -131,11 +160,10 @@ const updateOrderStatus = async (req, res, next) => {
 
     res.status(200).json({ message: 'Status updated successfully', status });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
-
 const verifyReturn = async (req, res, next) => {
   try {
     const { id } = req.params;

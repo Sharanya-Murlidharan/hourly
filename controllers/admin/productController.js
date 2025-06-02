@@ -17,7 +17,7 @@ const getProductListPage = async (req, res, next) => {
         })
             .populate('category')
             .populate('brand')
-            .sort({ createdAt: -1 }) 
+            .sort({ createdAt: -1 }) // Sort by createdAt in descending order (latest first)
             .lean();
 
         res.render("products", {
@@ -32,8 +32,8 @@ const getProductListPage = async (req, res, next) => {
 // Get Add Product Page
 const getProductAddPage = async (req, res, next) => {
     try {
-        const category = await Category.find({ isListed: true,isDeleted:false});
-        const brand = await Brand.find({ isListed: true,isDeleted:false });
+        const category = await Category.find({ isListed: true });
+        const brand = await Brand.find({ isListed: false });
         res.render("addproducts", {
             cat: category,
             brands: brand
@@ -118,7 +118,7 @@ const getProductEditPage = async (req, res, next) => {
         }
         
         const category = await Category.find({ isListed: true });
-        const brand = await Brand.find({ isListed: true });
+        const brand = await Brand.find({ isListed: false });
         
         res.render("editproducts", {
             product: product,

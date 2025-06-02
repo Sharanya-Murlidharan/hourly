@@ -160,7 +160,7 @@ const getChartData = async (req, res) => {
 
     // Product Data
     const productMap = {};
-    console.log(orders,'1234567890')
+    // console.log(orders,'1234567890')
     orders.forEach((order) => {
       order.orderedItems.forEach((item) => {
         console.log(item.product._id)
