@@ -68,19 +68,23 @@ const addCoupon = async (req, res, next) => {
             console.log('Validation failed: Invalid amount', { amountNum });
             return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
         }
-        const existingCoupon = await Coupon.findOne({ $or: [{ code, isDeleted: false }, { name, isDeleted: false }] });
+        const existingCoupon = await Coupon.findOne({
+            $or: [
+                { code: code.trim(), isDeleted: false },
+                { name: { $regex: `^${name.trim()}$`, $options: 'i' }, isDeleted: false }
+            ]
+        });
         if (existingCoupon) {
-            if (existingCoupon.code === code) {
+            if (existingCoupon.code === code.trim()) {
                 console.log('Validation failed: Coupon code exists', { code });
                 return res.status(400).json({ success: false, error: 'Coupon code already exists' });
             }
-            if (existingCoupon.name === name) {
+            if (existingCoupon.name.toLowerCase() === name.trim().toLowerCase()) {
                 console.log('Validation failed: Coupon name exists', { name });
                 return res.status(400).json({ success: false, error: 'Coupon name already exists' });
             }
         }
         const newCoupon = new Coupon({
-           
             name: name.trim(),
             description: description ? description.trim() : '',
             code: code.trim(),
@@ -90,9 +94,9 @@ const addCoupon = async (req, res, next) => {
             validUpto,
             isDeleted: false
         });
-        console.log('Saving coupon:', newCoupon); // Debug log
+        console.log('Saving coupon:', newCoupon);
         await newCoupon.save();
-        console.log('Coupon saved successfully'); // Debug log
+        console.log('Coupon saved successfully');
         res.json({ success: true, message: 'Coupon added successfully' });
     } catch (error) {
         error.statusCode = 500;
@@ -100,10 +104,10 @@ const addCoupon = async (req, res, next) => {
     }
 };
 
-const editCoupon = async (req, res,next) => {
+const editCoupon = async (req, res, next) => {
     try {
         const { couponId, name, description, code, minCartValue, amount, validFrom, validUpto } = req.body;
-        console.log('Received data:', req.body); // Debug log
+        console.log('Received data:', req.body);
 
         if (!couponId || !name || !code || !minCartValue || !amount || !validFrom || !validUpto) {
             return res.status(400).json({ success: false, error: 'All fields are required' });
@@ -123,23 +127,26 @@ const editCoupon = async (req, res,next) => {
             return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
         }
         const existingCoupon = await Coupon.findOne({
-            $or: [{ code, isDeleted: false }, { name, isDeleted: false }],
+            $or: [
+                { code: code.trim(), isDeleted: false },
+                { name: { $regex: `^${name.trim()}$`, $options: 'i' }, isDeleted: false }
+            ],
             _id: { $ne: couponId }
         });
         if (existingCoupon) {
-            if (existingCoupon.code === code) {
+            if (existingCoupon.code === code.trim()) {
                 return res.status(400).json({ success: false, error: 'Coupon code already exists' });
             }
-            if (existingCoupon.name === name) {
+            if (existingCoupon.name.toLowerCase() === name.trim().toLowerCase()) {
                 return res.status(400).json({ success: false, error: 'Coupon name already exists' });
             }
         }
         const updatedCoupon = await Coupon.findByIdAndUpdate(
             couponId,
             {
-                name,
+                name: name.trim(),
                 description: description || '',
-                code,
+                code: code.trim(),
                 minCartValue: minCartValueNum,
                 amount: amountNum,
                 validFrom: new Date(validFrom),

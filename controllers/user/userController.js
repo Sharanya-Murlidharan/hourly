@@ -1032,6 +1032,39 @@ const searchProducts = async (req, res, next) => {
     }
 };
 
+const aboutpage = async(req,res,next)=>{
+    try {
+         const userId = req.session.user;
+            if (!userId) {
+              return res.redirect("/login");
+            }
+        
+            const user = await User.findById(userId);
+
+        res.render('about',{user})
+        
+    } catch (error) {
+         error.statusCode = 500;
+        next(error);
+    }
+}
+
+const loadContact = async (req,res) => {
+    try {
+          const userId = req.session.user;
+            if (!userId) {
+              return res.redirect("/login");
+            }
+        
+            const user = await User.findById(userId);
+
+        res.render('contact',{user})
+        
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 
 module.exports = {
     LoadHomepage,
@@ -1047,5 +1080,7 @@ module.exports = {
     loadShoppingPage,
     filterProduct,
     filterByPrice,
-    searchProducts
+    searchProducts,
+    aboutpage,
+    loadContact
 }

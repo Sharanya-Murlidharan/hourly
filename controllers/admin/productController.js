@@ -33,7 +33,7 @@ const getProductListPage = async (req, res, next) => {
 const getProductAddPage = async (req, res, next) => {
     try {
         const category = await Category.find({ isListed: true });
-        const brand = await Brand.find({ isListed: false });
+        const brand = await Brand.find({ isListed: true });
         res.render("addproducts", {
             cat: category,
             brands: brand
@@ -50,8 +50,8 @@ const addProducts= async (req, res, next) => {
         const { productName, brand, category, regularPrice, salePrice, quantity, description } = req.body;
         const files = req.files; // Array of uploaded files
 
-        console.log('Received fields:', req.body);
-        console.log('Received files:', files);
+        // console.log('Received fields:', req.body);
+        // console.log('Received files:', files);
 
         // Validate required fields
         if (!productName || !brand || !category || !regularPrice || !salePrice || !quantity || !description) {
@@ -65,6 +65,7 @@ const addProducts= async (req, res, next) => {
         // Process files (e.g., save paths to database)
         const imagePaths = files.map(file => file.path);
 
+        
         // Replace with your database logic
         const newProduct = new Product({
             productName,
@@ -118,7 +119,7 @@ const getProductEditPage = async (req, res, next) => {
         }
         
         const category = await Category.find({ isListed: true });
-        const brand = await Brand.find({ isListed: false });
+        const brand = await Brand.find({ isListed: true });
         
         res.render("editproducts", {
             product: product,

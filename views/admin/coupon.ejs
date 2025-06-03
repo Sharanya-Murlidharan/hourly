@@ -249,6 +249,8 @@
         margin-top: 5px;
     }
 </style>
+<!-- Add Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
     <div class="content">
@@ -336,12 +338,12 @@
                 </div>
                 <div>
                     <label for="addValidFrom">Valid From:</label>
-                    <input type="date" id="addValidFrom" name="validFrom" class="modal-input" min="2025-05-16">
+                    <input type="date" id="addValidFrom" name="validFrom" class="modal-input">
                     <div id="add-validFrom-error" class="error-message"></div>
                 </div>
                 <div>
-                    <label for="addValidUpto">Valid: </label>
-                    <input type="date" id="addValidUpto" name="validUpto" class="modal-input" min="2025-05-16">
+                    <label for="addValidUpto">Valid Upto:</label>
+                    <input type="date" id="addValidUpto" name="validUpto" class="modal-input">
                     <div id="add-validUpto-error" class="error-message"></div>
                 </div>
                 <div class="button-group">
@@ -386,12 +388,12 @@
                 </div>
                 <div>
                     <label for="editValidFrom">Valid From:</label>
-                    <input type="date" id="editValidFrom" name="validFrom" class="modal-input" min="2025-05-16">
+                    <input type="date" id="editValidFrom" name="validFrom" class="modal-input">
                     <div id="edit-validFrom-error" class="error-message"></div>
                 </div>
                 <div>
                     <label for="editValidUpto">Valid Upto:</label>
-                    <input type="date" id="editValidUpto" name="validUpto" class="modal-input" min="2025-05-16">
+                    <input type="date" id="editValidUpto" name="validUpto" class="modal-input">
                     <div id="edit-validUpto-error" class="error-message"></div>
                 </div>
                 <div class="button-group">
@@ -402,8 +404,46 @@
         </div>
     </div>
 
+    <!-- Add Flatpickr JS and SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Initialize Flatpickr for Add Coupon Modal
+        flatpickr('#addValidFrom', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today'
+        });
+        flatpickr('#addValidUpto', {
+            dateFormat: 'Y-m-d',
+            minDate: document.getElementById('addValidFrom').value || 'today'
+        });
+
+        // Update validUpto minDate when validFrom changes
+        document.getElementById('addValidFrom').addEventListener('change', function() {
+            flatpickr('#addValidUpto', {
+                dateFormat: 'Y-m-d',
+                minDate: this.value
+            });
+        });
+
+        // Initialize Flatpickr for Edit Coupon Modal
+        flatpickr('#editValidFrom', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today'
+        });
+        flatpickr('#editValidUpto', {
+            dateFormat: 'Y-m-d',
+            minDate: document.getElementById('editValidFrom').value || 'today'
+        });
+
+        // Update validUpto minDate when validFrom changes
+        document.getElementById('editValidFrom').addEventListener('change', function() {
+            flatpickr('#editValidUpto', {
+                dateFormat: 'Y-m-d',
+                minDate: this.value
+            });
+        });
+
         // Add Coupon Modal
         const addModal = document.getElementById("addCouponModal");
         const addBtn = document.querySelector(".add-coupon-btn");
@@ -590,7 +630,7 @@
             const amount = parseFloat(document.getElementById("addCouponAmount").value);
             const validFrom = document.getElementById("addValidFrom").value;
             const validUpto = document.getElementById("addValidUpto").value;
-            const today = new Date('2025-05-27'); // Current date
+            const today = new Date(); // Use current date dynamically
             let isValid = true;
 
             if (name === "") {
@@ -622,12 +662,10 @@
                 displayAddErrorMessage("add-amount-error", "Please enter a valid coupon amount");
                 isValid = false;
             }
-            // Validation: Coupon amount should not exceed min cart value
             if (!isNaN(minCartValue) && !isNaN(amount) && amount > minCartValue) {
                 displayAddErrorMessage("add-amount-error", "Coupon amount cannot exceed minimum cart value");
                 isValid = false;
             }
-            // New validation: Coupon amount should not be equal to min cart value
             if (!isNaN(minCartValue) && !isNaN(amount) && amount === minCartValue) {
                 displayAddErrorMessage("add-amount-error", "Coupon amount cannot be equal to minimum cart value");
                 isValid = false;
@@ -661,7 +699,7 @@
             const amount = parseFloat(document.getElementById("editCouponAmount").value);
             const validFrom = document.getElementById("editValidFrom").value;
             const validUpto = document.getElementById("editValidUpto").value;
-            const today = new Date('2025-05-19'); // Current date
+            const today = new Date(); // Use current date dynamically
             let isValid = true;
 
             if (name === "") {
@@ -693,12 +731,10 @@
                 displayEditErrorMessage("edit-amount-error", "Please enter a valid coupon amount");
                 isValid = false;
             }
-            // Validation: Coupon amount should not exceed min cart value
             if (!isNaN(minCartValue) && !isNaN(amount) && amount > minCartValue) {
                 displayEditErrorMessage("edit-amount-error", "Coupon amount cannot exceed minimum cart value");
                 isValid = false;
             }
-            // New validation: Coupon amount should not be equal to min cart value
             if (!isNaN(minCartValue) && !isNaN(amount) && amount === minCartValue) {
                 displayEditErrorMessage("edit-amount-error", "Coupon amount cannot be equal to minimum cart value");
                 isValid = false;
@@ -825,6 +861,22 @@
         if (searchInput.value) {
             clearSearch.style.display = 'block';
         }
+
+        // Reset Add Coupon Modal Form on Close
+        addModal.addEventListener('click', function(event) {
+            if (event.target === addModal || event.target.classList.contains('close') || event.target.classList.contains('cancel-btn')) {
+                clearAddErrorMessages();
+                document.getElementById('addCouponForm').reset();
+            }
+        });
+
+        // Reset Edit Coupon Modal Form on Close
+        editModal.addEventListener('click', function(event) {
+            if (event.target === editModal || event.target.classList.contains('close') || event.target.classList.contains('cancel-btn')) {
+                clearEditErrorMessages();
+                document.getElementById('editCouponForm').reset();
+            }
+        });
     </script>
 </body>
 </html>

@@ -41,30 +41,38 @@
                     <th>ACTIONS</th>
                 </tr>
             </thead>
-            <tbody id="offerTableBody">
-                <% if (offers && offers.length > 0) { %>
-                    <% offers.forEach(offer => { %>
-                        <tr>
-                            <td><%= offer.offerName %></td>
-                            <td><%= offer.offerType %></td>
-                            <td><%= offer.applicable %></td>
-                            <td><%= offer.applicableItem ? (offer.applicable === 'Product' ? offer.applicableItem.productName : offer.applicable === 'Brand' ? offer.applicableItem.name : offer.applicableItem.name) : 'N/A' %></td>
-                            <td><%= offer.offerAmount %></td>
-                            <td><%= new Date(offer.validFrom).toISOString().split('T')[0] %></td>
-                            <td><%= new Date(offer.validUpto).toISOString().split('T')[0] %></td>
-                            <td><%= offer.isListed ? 'Active' : 'Inactive' %></td>
-                            <td class="actions">
-                                <a class="edit" href="#" data-bs-toggle="modal" data-bs-target="#editOfferModal" onclick='openEditModal(<%- JSON.stringify(offer).replace(/'/g, "\\'") %>)'><i class="fas fa-edit"></i></a>
-                                <a class="delete" href="#" onclick="confirmDeleteOffer('<%= offer._id %>')"><i class="fas fa-trash"></i></a>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="9">No offers available</td>
-                    </tr>
-                <% } %>
-            </tbody>
+           <tbody id="offerTableBody">
+    <% if (offers && offers.length > 0) { %>
+        <% offers.forEach(offer => { %>
+            <tr>
+                <td><%= offer.offerName %></td>
+                <td><%= offer.offerType %></td>
+                <td><%= offer.applicable %></td>
+                <td><%= offer.applicableItem ? (offer.applicable === 'Product' ? offer.applicableItem.productName : offer.applicable === 'Brand' ? offer.applicableItem.name : offer.applicableItem.name) : 'N/A' %></td>
+                <td><%= offer.offerAmount %></td>
+                <td><%= new Date(offer.validFrom).toISOString().split('T')[0] %></td>
+                <td><%= new Date(offer.validUpto).toISOString().split('T')[0] %></td>
+                <td>
+                    <% 
+                        const today = new Date();
+                        const validUpto = new Date(offer.validUpto);
+                        const isExpired = validUpto.setHours(23, 59, 59, 999) < today.getTime();
+                        const isActive = offer.isListed && !isExpired;
+                    %>
+                    <%= isActive ? 'Active' : 'Inactive' %>
+                </td>
+                <td class="actions">
+                    <a class="edit" href="#" data-bs-toggle="modal" data-bs-target="#editOfferModal" onclick='openEditModal(<%- JSON.stringify(offer).replace(/'/g, "\\'") %>)'><i class="fas fa-edit"></i></a>
+                    <a class="delete" href="#" onclick="confirmDeleteOffer('<%= offer._id %>')"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+        <% }) %>
+    <% } else { %>
+        <tr>
+            <td colspan="9">No offers available</td>
+        </tr>
+    <% } %>
+</tbody>
         </table>
         <% if (totalPages > 1) { %>
             <nav aria-label="Page navigation">
@@ -134,10 +142,10 @@
                         <div class="mb-3">
                             <label for="addApplicable" class="form-label">Offer Applies To</label>
                             <select class="form-control" id="addApplicable" name="applicable">
+                                <option value="" disabled selected>Select </option>
                                 <option value="Product">Product</option>
                                 <option value="Category">Category</option>
                                 <option value="Brand">Brand</option>
-                                <option value="All Products">All Products</option>
                             </select>
                             <div id="add-applicable-error" class="error-message text-danger"></div>
                         </div>
@@ -195,10 +203,10 @@
                         <div class="mb-3">
                             <label for="editApplicable" class="form-label">Offer Applies To</label>
                             <select class="form-control" id="editApplicable" name="applicable">
+                                <option value="" disabled selected>Select</option>
                                 <option value="Product">Product</option>
                                 <option value="Category">Category</option>
                                 <option value="Brand">Brand</option>
-                                <option value="All Products">All Products</option>
                             </select>
                             <div id="edit-applicable-error" class="error-message text-danger"></div>
                         </div>
