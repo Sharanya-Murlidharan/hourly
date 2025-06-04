@@ -238,41 +238,43 @@ const removeCoupon = async (req, res, next) => {
   }
 };
 
-const proceedToPaymentPage = async (req, res, next) => {
-  try {
-    const userId = req.session.user;
-    if (!userId) {
-      return res.status(400).json({ success: false, error: "You are logged out. Please login again." });
-    }
+// const proceedToPaymentPage = async (req, res, next) => {
+//   try {
+//     const userId = req.session.user;
+//     if (!userId) {
+//       return res.status(400).json({ success: false, error: "You are logged out. Please login again." });
+//     }
 
-    const { addressId } = req.body;
-    if (!addressId) {
-      return res.status(400).json({ success: false, error: "Address is required." });
-    }
+//     const { addressId } = req.body;
+//     if (!addressId) {
+//       return res.status(400).json({ success: false, error: "Address is required." });
+//     }
 
-    const addressDoc = await Address.findOne({ userId });
-    if (!addressDoc) {
-      return res.status(400).json({ success: false, error: "No address found for user." });
-    }
+//     const addressDoc = await Address.findOne({ userId });
+//     if (!addressDoc) {
+//       return res.status(400).json({ success: false, error: "No address found for user." });
+//     }
 
-    const selectedAddress = addressDoc.address.id(addressId);
-    if (!selectedAddress) {
-      return res.status(400).json({ success: false, error: "Invalid address selected." });
-    }
+//     const selectedAddress = addressDoc.address.id(addressId);
+//     if (!selectedAddress) {
+//       return res.status(400).json({ success: false, error: "Invalid address selected." });
+//     }
 
-    const cart = await Cart.findOne({ userId });
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ success: false, error: "Cart is empty." });
-    }
+//     const cart = await Cart.findOne({ userId });
+//     if (!cart || cart.items.length === 0) {
+//       return res.status(400).json({ success: false, error: "Cart is empty." });
+//     }
 
-    req.session.checkoutData = { addressId };
+//     req.session.checkoutData = { addressId };
 
-    res.json({ redirect: "/payment" });
-  } catch (error) {
-     error.statusCode = 500;
-        next(error);
-  }
-};
+//     res.json({ redirect: "/payment" });
+//   } catch (error) {
+//      error.statusCode = 500;
+//         next(error);
+//   }
+// };
+
+
 
 // const getPaymentPage = async (req, res, next) => {
 //   try {
@@ -326,6 +328,77 @@ const proceedToPaymentPage = async (req, res, next) => {
 //         next(error);
 //   }
 // };
+
+const proceedToPaymentPage = async (req, res, next) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "You are logged out. Please login again." });
+    }
+
+    const { addressId } = req.body;
+    if (!addressId) {
+      return res.status(400).json({ success: false, error: "Address is required." });
+    }
+
+    const addressDoc = await Address.findOne({ userId });
+    if (!addressDoc) {
+      return res.status(400).json({ success: false, error: "No address found for user." });
+    }
+
+    const selectedAddress = addressDoc.address.id(addressId);
+    if (!selectedAddress) {
+      return res.status(400).json({ success: false, error: "Invalid address selected." });
+    }
+
+    const cart = await Cart.findOne({ userId }).populate({
+      path: "items.productId",
+      populate: [
+        { path: "category", model: "Category" },
+        { path: "brand", model: "Brand" },
+      ],
+    });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ success: false, error: "Cart is empty." });
+    }
+
+    // Validate each cart item
+    for (const item of cart.items) {
+      const product = item.productId;
+      if (!product) {
+        return res.status(400).json({
+          success: false,
+          error: "One or more products in the cart are invalid.",
+        });
+      }
+      if (product.isDeleted || product.isBlocked || product.status !== "Available") {
+        return res.status(400).json({
+          success: false,
+          error: `Product '${product.productName}' is unavailable, deleted, or blocked.`,
+        });
+      }
+      if (!product.category || product.category.isDeleted || !product.category.isListed) {
+        return res.status(400).json({
+          success: false,
+          error: `Category for product '${product.productName}' is unlisted or deleted.`,
+        });
+      }
+      if (!product.brand || product.brand.isDeleted || !product.brand.isListed) {
+        return res.status(400).json({
+          success: false,
+          error: `Brand for product '${product.productName}' is unlisted or deleted.`,
+        });
+      }
+    }
+
+    req.session.checkoutData = { addressId };
+
+    res.json({ redirect: "/payment" });
+  } catch (error) {
+    console.error("Error in proceedToPaymentPage:", error);
+    res.status(500).json({ success: false, error: "An error occurred on the server." });
+  }
+};
 
 const getPaymentPage = async (req, res, next) => {
   try {
@@ -428,6 +501,7 @@ const createRazorpayOrder = async (req, res, next) => {
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ error: "Cart is empty." });
     }
+
 
     const options = {
       amount,
@@ -616,7 +690,6 @@ const verifyRazorpayPayment = async (req, res, next) => {
     }
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    console.log(req.body,"req.body")
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
       if (order) {
@@ -632,32 +705,7 @@ const verifyRazorpayPayment = async (req, res, next) => {
       .update(body.toString())
       .digest("hex");
 
-    // const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
-    // if (!order) {
-    //   return res.status(404).json({ success: false, error: "Order not found." });
-    // }
-
-    // order.status = "Pending";
-    // order.razorpayPaymentId = razorpay_payment_id;
-    // await order.save();
-
-    // const user = await User.findById(userId);
-    // user.orderHistory.push(order._id);
-    // await user.save();
-     const order = req.session.order
-     console.log(order,'order is here afdsklafk')
-     if (!order) {
-      return res.status(404).json({ success: false, error: "Order not found." });
-    }
-    const user = await User.findOne({_id:userId})
-    const neworder = new Order(order)
-    console.log(neworder,'newOrdere')
-    user.orderHistory.push(neworder._id)
-    await user.save()
-    neworder.save()
-    req.session.order = null
-     if (expectedSignature !== razorpay_signature) {
-      console.log('hie kdsafldslakfjldf it is')
+    if (expectedSignature !== razorpay_signature) {
       const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
       if (order) {
         order.status = "Payment Failed";
@@ -665,6 +713,24 @@ const verifyRazorpayPayment = async (req, res, next) => {
       }
       return res.status(400).json({ success: false, error: "Invalid payment signature." });
     }
+
+    // Find existing order by razorpayOrderId
+    const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!order) {
+      return res.status(404).json({ success: false, error: "Order not found." });
+    }
+
+    order.status = "Pending";
+    order.razorpayPaymentId = razorpay_payment_id;
+    await order.save();
+
+    const user = await User.findById(userId);
+    if (!user.orderHistory.includes(order._id)) {
+      user.orderHistory.push(order._id);
+      await user.save();
+    }
+
+    // Clear cart if this is a retry or normal flow
     const cart = await Cart.findOne({ userId });
     if (cart) {
       for (const item of cart.items) {
@@ -681,6 +747,7 @@ const verifyRazorpayPayment = async (req, res, next) => {
     }
 
     delete req.session.checkoutData;
+    req.session.order = null; // Clear session order
 
     res.json({ success: true, redirect: "/orderSuccess" });
   } catch (error) {
@@ -696,6 +763,49 @@ const verifyRazorpayPayment = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// const retryRazorpayPayment = async (req, res, next) => {
+//   try {
+//     const userId = req.session.user;
+//     if (!userId) {
+//       return res.status(401).json({ error: "You are logged out. Please login again." });
+//     }
+
+//     const { orderId } = req.body; // This is the order.orderId (string), not _id
+//     if (!orderId) {
+//       return res.status(400).json({ error: "Invalid order ID." });
+//     }
+
+//     const order = await Order.findOne({ orderId, user: userId });
+//     if (!order || order.paymentMethod !== "razorpay" || order.status !== "Payment Failed") {
+//       return res.status(400).json({ error: "Invalid or non-retryable order." });
+//     }
+
+//     // Store order details in session to reuse in paymentCheckout
+//     req.session.checkoutData = {
+//       addressId: order.address._id, // Assuming address is stored as an object; adjust if needed
+//       orderId: order.orderId
+//     };
+
+//     if (!order.razorpayOrderId) {
+//       const options = {
+//         amount: order.finalAmount * 100,
+//         currency: "INR",
+//         receipt: `receipt_${order.orderId}`
+//       };
+//       const razorpayOrder = await razorpayInstance.orders.create(options);
+//       order.razorpayOrderId = razorpayOrder.id;
+//       await order.save();
+//     }
+
+//     // Redirect to payment page instead of opening Razorpay directly
+//     res.json({ success: true, redirect: "/payment" });
+//   } catch (error) {
+//     error.statusCode = 500;
+//     next(error);
+//   }
+// };
 
 const retryRazorpayPayment = async (req, res, next) => {
   try {
@@ -731,8 +841,13 @@ const retryRazorpayPayment = async (req, res, next) => {
       await order.save();
     }
 
-    // Redirect to payment page instead of opening Razorpay directly
-    res.json({ success: true, redirect: "/payment" });
+    // Return Razorpay order details instead of redirect
+    res.json({
+      success: true,
+      id: order.razorpayOrderId,
+      amount: order.finalAmount * 100,
+      currency: "INR"
+    });
   } catch (error) {
     error.statusCode = 500;
     next(error);
@@ -1342,6 +1457,29 @@ const getWallet = async (req, res, next) => {
   }
 };
 
+// const getPaymentFail = async (req, res, next) => {
+//   try {
+//     const userId = req.session.user;
+//     if (!userId) {
+//       return res.redirect("/login");
+//     }
+//     const user = await User.findById(userId);
+//     const order = await Order.findOne({ userId, status: "Pending", paymentMethod: "razorpay" })
+//       .sort({ createdOn: -1 });
+//     const orders = req.session.order
+//     const neworder = new Order (orders)
+//     neworder.status = "Payment Failed"
+//     await neworder.save()
+//     const cart = await Cart.findOneAndDelete({ userId });
+//     user.orderHistory.push(neworder._id)
+//     await user.save()
+//     res.render("paymentFail", { order, user, razorpayKeyId: process.env.RAZORPAY_KEY_ID });
+//   } catch (error) {
+//     error.statusCode = 500;
+//     next(error);
+//   }
+// };
+
 const getPaymentFail = async (req, res, next) => {
   try {
     const userId = req.session.user;
@@ -1349,15 +1487,24 @@ const getPaymentFail = async (req, res, next) => {
       return res.redirect("/login");
     }
     const user = await User.findById(userId);
-    const order = await Order.findOne({ userId, status: "Pending", paymentMethod: "razorpay" })
+    
+    // Find the most recent failed order
+    const order = await Order.findOne({ user: userId, status: "Payment Failed", paymentMethod: "razorpay" })
       .sort({ createdOn: -1 });
-    const orders = req.session.order
-    const neworder = new Order (orders)
-    neworder.status = "Payment Failed"
-    await neworder.save()
-    const cart = await Cart.findOneAndDelete({ userId });
-    user.orderHistory.push(neworder._id)
-    await user.save()
+    
+    // If there's a pending order in session, update its status
+    if (req.session.order) {
+      const newOrder = new Order(req.session.order);
+      newOrder.status = "Payment Failed";
+      await newOrder.save();
+      user.orderHistory.push(newOrder._id);
+      await user.save();
+      req.session.order = null; // Clear session order after saving
+    }
+
+    // Do NOT delete the cart
+    // const cart = await Cart.findOneAndDelete({ userId });
+
     res.render("paymentFail", { order, user, razorpayKeyId: process.env.RAZORPAY_KEY_ID });
   } catch (error) {
     error.statusCode = 500;

@@ -3,40 +3,35 @@ const Category = require("../../models/categorySchema");
 const categoryInfo = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 4; // Define limit here
+        const limit = 4;
         const skip = (page - 1) * limit;
-        const search = req.query.search || ""; // Handle search query
+        const search = req.query.search || "";
 
-        const categoryData = await Category.find({
-           
+        const query = {
+            isDeleted: false, // Only include non-deleted categories
             $or: [
                 { name: { $regex: new RegExp(search, "i") } },
                 { description: { $regex: new RegExp(search, "i") } }
             ]
-        
-    
-        })
+        };
+
+        const categoryData = await Category.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .exec();
 
-        const totalCategories = await Category.countDocuments({
-            $or: [
-                { name: { $regex: new RegExp(search, "i") } },
-                { description: { $regex: new RegExp(search, "i") } }
-            ]
-        });
+        const totalCategories = await Category.countDocuments(query);
 
         const totalPages = Math.ceil(totalCategories / limit);
 
         res.render("category", {
-            cat: categoryData, // Match variable name with template
+            cat: categoryData,
             currentPage: page,
             totalPages: totalPages,
             totalCategories: totalCategories,
-            limit: limit, // Pass limit to template
-            searchQuery: search // Pass search query for pagination
+            limit: limit,
+            searchQuery: search
         });
     } catch (error) {
         error.statusCode = 500;
@@ -66,25 +61,24 @@ const addCategory = async (req, res, next) => {
 const categoryListed = async (req, res, next) => {
     try {
         const id = req.query.id;
-        await Category.updateOne({ _id: id }, { $set: { isListed:true } });
+        await Category.updateOne({ _id: id }, { $set: { isListed: true } });
         res.redirect("/admin/category");
     } catch (error) {
-         error.statusCode = 500;
+        error.statusCode = 500;
         next(error);
     }
 }; 
 
-const categoryunListed = async (req, res,next) => {
+const categoryunListed = async (req, res, next) => {
     try {
         const id = req.query.id;
-        await Category.updateOne({ _id: id }, { $set: {isListed:false } });
+        await Category.updateOne({ _id: id }, { $set: { isListed: false } });
         res.redirect("/admin/category");
     } catch (error) {
         error.statusCode = 500;
         next(error);
     }
 };
-
 
 const editCategory = async (req, res, next) => {
   try {
@@ -95,7 +89,7 @@ const editCategory = async (req, res, next) => {
       _id: { $ne: categoryId }
     });
     if (existingCategory) {
-      return res.json({ success: false, message: "Category already exists with this name (case-insensitive)" });
+      return res.json({ success: false, message: "Category already exists with this name" });
     }
 
     const updatedCategory = await Category.findByIdAndUpdate(
@@ -119,18 +113,16 @@ const deleteCategory = async (req, res, next) => {
     try {
       await Category.findByIdAndUpdate(
         categoryId,
-        { isDeleted: true }, // Set isDeleted to true
+        { isDeleted: true },
         { new: true }
-    );
-    console.log(`Category ${categoryId} updated to isDeleted: true`);
+      );
+      console.log(`Category ${categoryId} updated to isDeleted: true`);
       res.json({ success: true, message: "Category deleted successfully" });
     } catch (error) {
-         error.statusCode = 500;
+        error.statusCode = 500;
         next(error);
     }
-  };
-  
-  
+};
 
 module.exports = {
     categoryInfo,

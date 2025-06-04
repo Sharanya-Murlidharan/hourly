@@ -101,6 +101,9 @@
   .status-shipped { color: #0288d1; }
   .status-returnrequest,
   .status-returned { color: #ff9800; }
+  .status-paymentfailed {
+  color: #d32f2f; /* Red color to indicate failure */
+}
 
   .order-meta p,
   .user-details p,
@@ -266,9 +269,20 @@
     <div class="order-summary">
       <div class="order-header">
         <span class="order-id">Order ID: <%= order.orderId %></span>
-     <select class="status-dropdown <%= order.status === 'Canceled' ? 'status-canceled' : '' %>" id="statusDropdown" data-order-id="<%= order.orderId %>" <%= order.status === 'Canceled' ? 'disabled' : '' %>>
-  <% ['Pending', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'].forEach(status => { %>
-    <option value="<%= status %>" <%= order.status === status ? 'selected' : '' %> <%= ['Canceled', 'Return Request', 'Returned'].includes(status) ? 'disabled' : '' %>><%= status %></option>
+     <select
+  class="status-dropdown <%= order.status === 'Canceled' ? 'status-canceled' : order.status === 'Payment Failed' ? 'status-paymentfailed' : '' %>"
+  id="statusDropdown"
+  data-order-id="<%= order.orderId %>"
+  <%= order.status === 'Canceled' || order.status === 'Payment Failed' ? 'disabled' : '' %>
+>
+  <% ['Pending', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned','Payment Failed'].forEach(status => { %>
+    <option
+      value="<%= status %>"
+      <%= order.status === status ? 'selected' : '' %>
+      <%= ['Canceled', 'Return Request', 'Returned'].includes(status) ? 'disabled' : '' %>
+    >
+      <%= status %>
+    </option>
   <% }) %>
 </select>
       </div>

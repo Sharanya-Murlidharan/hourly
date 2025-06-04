@@ -8,7 +8,7 @@ passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     // This MUST match exactly what's in your Google Console
-    callbackURL: "http://localhost:3000/auth/google/callback"
+    callbackURL: "http://hourrly.shop/auth/google/callback"
 },
 async (accessToken, refreshToken, profile, done) => {
     try {

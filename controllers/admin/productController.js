@@ -11,17 +11,41 @@ const getProductListPage = async (req, res, next) => {
         const categories = await Category.find({ isListed: true });
         const categoryIds = categories.map((category) => category._id.toString());
 
-        const products = await Product.find({ 
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+
+        // Search query parameter
+        const searchQuery = req.query.search || '';
+        const queryConditions = { 
             isDeleted: false,
-            category: {$in:categoryIds}
-        })
+            category: { $in: categoryIds }
+        };
+
+        // Add search filter if searchQuery exists
+        if (searchQuery) {
+            queryConditions.productName = { $regex: searchQuery, $options: 'i' }; // Case-insensitive search
+        }
+
+        // Get total count of products for pagination
+        const totalProducts = await Product.countDocuments(queryConditions);
+
+        const products = await Product.find(queryConditions)
             .populate('category')
             .populate('brand')
             .sort({ createdAt: -1 }) // Sort by createdAt in descending order (latest first)
+            .skip(skip)
+            .limit(limit)
             .lean();
 
         res.render("products", {
-            products: products
+            products: products,
+            currentPage: page,
+            totalPages: Math.ceil(totalProducts / limit),
+            totalProducts: totalProducts,
+            limit: limit,
+            searchQuery: searchQuery // Pass searchQuery to the view for pagination links
         });
     } catch (error) {
         error.statusCode = 500;
@@ -32,8 +56,8 @@ const getProductListPage = async (req, res, next) => {
 // Get Add Product Page
 const getProductAddPage = async (req, res, next) => {
     try {
-        const category = await Category.find({ isListed: true });
-        const brand = await Brand.find({ isListed: true });
+        const category = await Category.find({ isListed: true, isDeleted:false });
+        const brand = await Brand.find({ isListed: true, isDeleted:false });
         res.render("addproducts", {
             cat: category,
             brands: brand
@@ -50,9 +74,6 @@ const addProducts= async (req, res, next) => {
         const { productName, brand, category, regularPrice, salePrice, quantity, description } = req.body;
         const files = req.files; // Array of uploaded files
 
-        // console.log('Received fields:', req.body);
-        // console.log('Received files:', files);
-
         // Validate required fields
         if (!productName || !brand || !category || !regularPrice || !salePrice || !quantity || !description) {
             return res.status(400).json({ success: false, message: 'All fields are required.' });
@@ -62,10 +83,18 @@ const addProducts= async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Please upload between 3 and 4 images.' });
         }
 
+        // Check for existing product with case-insensitive name
+        const existingProduct = await Product.findOne({
+            productName: { $regex: new RegExp(`^${productName.trim()}$`, "i") },
+            isDeleted: false
+        });
+        if (existingProduct) {
+            return res.status(400).json({ success: false, message: 'Product name already exists (case-insensitive).' });
+        }
+
         // Process files (e.g., save paths to database)
         const imagePaths = files.map(file => file.path);
 
-        
         // Replace with your database logic
         const newProduct = new Product({
             productName,
@@ -85,8 +114,6 @@ const addProducts= async (req, res, next) => {
         next(error);
     }
 };
-
-
 
 const listProduct = async (req, res, next) => {
     try {
@@ -108,8 +135,7 @@ const unlistProduct = async (req, res, next) => {
     }
 };
 
-// Get Edit Product Page
-const getProductEditPage = async (req, res, next) => {
+const getProductEditPage = async (req, res,next) => {
     try {
         const productId = req.params.id;
         const product = await Product.findById(productId);
@@ -118,8 +144,8 @@ const getProductEditPage = async (req, res, next) => {
             return res.redirect("/admin/products");
         }
         
-        const category = await Category.find({ isListed: true });
-        const brand = await Brand.find({ isListed: true });
+        const category = await Category.find({ isListed: true,  isDeleted:false });
+        const brand = await Brand.find({ isListed: true, isDeleted:false });
         
         res.render("editproducts", {
             product: product,
@@ -127,13 +153,13 @@ const getProductEditPage = async (req, res, next) => {
             brands: brand
         });
     } catch (error) {
-         error.statusCode = 500;
+          error.statusCode = 500;
         next(error);
     }
 };
 
 // Update Product
-const editProducts = async (req, res, next) => {
+const editProducts = async (req, res,next) => {
     try {
         const productId = req.body.productId;
         const { productName, brand, category, regularPrice, salePrice, quantity, description, imagesToDelete } = req.body;
@@ -153,13 +179,23 @@ const editProducts = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Product not found.' });
         }
 
+        // Check for existing product with same name (case-insensitive), excluding current product
+        const existingProduct = await Product.findOne({
+            productName: { $regex: new RegExp(`^${productName.trim()}$`, "i") },
+            _id: { $ne: productId },
+            isDeleted: false
+        });
+        if (existingProduct) {
+            return res.status(400).json({ success: false, message: 'Product name already exists (case-insensitive).' });
+        }
+
         // Parse imagesToDelete
         let imagesToDeleteArray = [];
         try {
             imagesToDeleteArray = JSON.parse(imagesToDelete || '[]');
         } catch (e) {
-            console.error('Error parsing imagesToDelete:', e);
-            return res.status(400).json({ success: false, message: 'Invalid image deletion list.' });
+            error.statusCode = 500;
+            next(error);
         }
 
         // Remove specified images from product.productImage and filesystem
@@ -202,8 +238,8 @@ const editProducts = async (req, res, next) => {
 
         res.status(200).json({ success: true, message: 'Product updated successfully!' });
     } catch (error) {
-        error.statusCode = 500;
-        next(error);
+        console.error('Error updating product:', error.stack);
+        res.status(500).json({ success: false, message: error.message || 'An error occurred on the server.' });
     }
 };
 
@@ -248,10 +284,7 @@ const deleteProduct = async (req, res, next) => {
        error.statusCode = 500;
         next(error);
     }
-  };
-
- 
-
+};
 
 module.exports = {
     getProductListPage,
