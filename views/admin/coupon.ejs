@@ -742,10 +742,7 @@
             if (validFrom === "") {
                 displayEditErrorMessage("edit-validFrom-error", "Please select a valid from date");
                 isValid = false;
-            } else if (new Date(validFrom) < today) {
-                displayEditErrorMessage("edit-validFrom-error", "Valid from date cannot be in the past");
-                isValid = false;
-            }
+            } 
             if (validUpto === "") {
                 displayEditErrorMessage("edit-validUpto-error", "Please select a valid upto date");
                 isValid = false;
