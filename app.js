@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const path = require('path')
-// const morgan = require('morgan');
+const morgan = require('morgan');
 const env = require('dotenv').config()
 const session = require('express-session')
 const db = require('./config/db')
@@ -11,7 +11,7 @@ const passport = require('./config/passport')
 
 db()
 
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(session({
