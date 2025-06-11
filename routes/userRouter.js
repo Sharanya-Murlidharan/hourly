@@ -30,12 +30,11 @@ router.get('/auth/google/callback',
 )
 // homepage
 router.get('/',userAuth,userController.LoadHomepage)
-router.post('/search',userAuth,userController.searchProducts)
+// router.post('/search',userAuth,userController.searchProducts)
 
 // shopping page
 router.get('/shop',userAuth,userController.loadShoppingPage)
-router.get('/filter',userAuth,userController.filterProduct)
-router.get('/filterByPrice', userController.filterByPrice)
+// router.get('/filterByPrice', userController.filterByPrice)
 // router.post('/search', userController.searchProducts);
 
 //product detail page

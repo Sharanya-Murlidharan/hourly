@@ -127,7 +127,7 @@ const listProduct = async (req, res, next) => {
 
 const unlistProduct = async (req, res, next) => {
     try {
-        await Product.findByIdAndUpdate(req.params.id, { status: 'Unavailable',isBlocked:true });
+        await Product.findByIdAndUpdate(req.params.id, { status: 'out of stock',isBlocked:true });
         res.redirect('/admin/products');
     } catch (error) {
          error.statusCode = 500;
@@ -138,7 +138,11 @@ const unlistProduct = async (req, res, next) => {
 const getProductEditPage = async (req, res,next) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findById(productId);
+        const product = await Product.findOne({
+            _id: productId,
+            isDeleted: false // Only retrieve non-deleted products
+        }).populate('category').populate('brand');
+        
         
         if (!product) {
             return res.redirect("/admin/products");

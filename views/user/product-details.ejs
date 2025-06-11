@@ -319,8 +319,23 @@
             display: none;
             color: #666 !important;
             font-size: 14px;
-       ROLLBAR) {
-            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        .zz-section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333 !important;
+        }
+        .zz-related-products {
+            margin-top: 40px;
+            width: 100%;
+        }
+        .zz-related-products .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
         .zz-related-products .col-lg-3 {
             flex: 0 0 250px;
@@ -349,13 +364,20 @@
             position: absolute;
             top: 10px;
             right: 10px;
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
         }
-        .wishlist-btn a {
+        .wishlist-btn i {
             color: #666 !important;
             font-size: 18px;
             transition: color 0.3s;
         }
-        .wishlist-btn a:hover {
+        .wishlist-btn.active i {
+            color: #d32f2f !important;
+        }
+        .wishlist-btn:hover i {
             color: #d32f2f !important;
         }
         .product-details {
@@ -574,8 +596,9 @@
                         </div>
                         <div class="action-buttons">
                             <button class="add-to-cart-button" onclick="addToCart('<%= product?._id %>')" <%= product?.quantity > 0 ? '' : 'disabled' %>>Add to Cart</button>
-                            <button class="wishlist-button" onclick="addToWishlist('<%= product?._id %>')">
-                                <i class="fas fa-heart"></i>
+                            <button class="wishlist-button <%= wishlistProductIds.includes(product?._id.toString()) ? 'active' : '' %>" 
+                                    onclick="toggleWishlist('<%= product?._id %>', this, event)">
+                                <i class="<%= wishlistProductIds.includes(product?._id.toString()) ? 'fas' : 'far' %> fa-heart"></i>
                             </button>
                         </div>
                     </div>
@@ -608,11 +631,10 @@
                                         <a href="/productDetails?id=<%= relatedProduct._id %>">
                                             <img src="/<%= relatedProduct.productImage[0] %>" alt="<%= relatedProduct.productName %>">
                                         </a>
-                                        <div class="wishlist-btn">
-                                            <a href="/addToWishlist?id=<%= relatedProduct._id %>" aria-label="Add to wishlist">
-                                                <i class="fa fa-heart"></i>
-                                            </a>
-                                        </div>
+                                        <button class="wishlist-btn <%= wishlistProductIds.includes(relatedProduct._id.toString()) ? 'active' : '' %>" 
+                                                onclick="toggleWishlist('<%= relatedProduct._id %>', this, event)">
+                                            <i class="<%= wishlistProductIds.includes(relatedProduct._id.toString()) ? 'fas' : 'far' %> fa-heart"></i>
+                                        </button>
                                     </div>
                                     <div class="product-details">
                                         <h6><a href="/productDetails?id=<%= relatedProduct._id %>" class="text-dark text-decoration-none"><%= relatedProduct.productName %></a></h6>
@@ -740,9 +762,13 @@
                 }
             };
 
-            window.addToWishlist = function(productId) {
-                const wishlistButton = document.querySelector('.wishlist-button');
-                fetch('/addToWishlist', {
+            window.toggleWishlist = function(productId, button, event) {
+                event.preventDefault();
+                const isInWishlist = button.classList.contains('active');
+                const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
+                const icon = button.querySelector('i');
+
+                fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -756,29 +782,41 @@
                             return;
                         }
                         return response.json().then(data => {
-                            throw new Error(data.message || 'Failed to add to wishlist');
+                            throw new Error(data.message || 'Failed to update wishlist');
                         });
                     }
                     return response.json();
                 })
                 .then(data => {
-                    if (data && data.success) {
-                        wishlistButton.classList.add('active');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Product added to wishlist!',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else if (data) {
-                        if (data.message === "Product is already in your wishlist.") {
-                            wishlistButton.classList.add('active');
+                    if (data.success) {
+                        if (isInWishlist) {
+                            button.classList.remove('active');
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Product removed from wishlist!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            button.classList.add('active');
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Product added to wishlist!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
                         }
+                    } else {
                         Swal.fire({
                             icon: 'info',
                             title: 'Info',
-                            text: data.message || 'Product is already in your wishlist.',
+                            text: data.message || 'Product already in wishlist.',
                             timer: 1500,
                             showConfirmButton: false
                         });
@@ -789,7 +827,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: error.message || 'An error occurred while adding to wishlist',
+                        text: error.message || 'An error occurred while updating wishlist',
                         timer: 2000,
                         showConfirmButton: false
                     });
@@ -800,9 +838,8 @@
                 const img = container.querySelector('.zoom-image');
                 const lens = container.querySelector('.zoom-lens');
 
-                if (!img || !lens) return; // Skip if elements are missing
+                if (!img || !lens) return;
 
-                // Adjust lens size for thumbnails (smaller images)
                 if (container.parentElement.classList.contains('thumbnail')) {
                     lens.style.width = '50px';
                     lens.style.height = '50px';
@@ -821,7 +858,7 @@
                     lens.style.left = `${lensX}px`;
                     lens.style.top = `${lensY}px`;
 
-                    const zoomedImgUrl = img.src || '/images/no-image.jpg'; // Fallback image
+                    const zoomedImgUrl = img.src || '/images/no-image.jpg';
                     lens.style.backgroundImage = `url("${zoomedImgUrl}")`;
                     lens.style.backgroundSize = `${img.width * 2}px ${img.height * 2}px`;
                     lens.style.backgroundPosition = `-${posX * 2}px -${posY * 2}px`;

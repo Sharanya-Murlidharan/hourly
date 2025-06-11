@@ -395,8 +395,8 @@ const proceedToPaymentPage = async (req, res, next) => {
 
     res.json({ redirect: "/payment" });
   } catch (error) {
-    console.error("Error in proceedToPaymentPage:", error);
-    res.status(500).json({ success: false, error: "An error occurred on the server." });
+    error.statusCode = 500;
+    next(error);
   }
 };
 
