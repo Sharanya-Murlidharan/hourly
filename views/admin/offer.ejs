@@ -802,8 +802,8 @@ $(document).ready(() => {
     if (isNaN(offerAmount) || offerAmount <= 0) {
         displayAddErrorMessage('add-offerAmount-error', 'Please enter a valid offer amount');
         isValid = false;
-    } else if (offerAmount > 25) {
-        displayAddErrorMessage('add-offerAmount-error', 'Cannot add more than 25%');
+    } else if (offerAmount > 90) 
+        displayAddErrorMessage('add-offerAmount-error', 'Cannot add more than 90%');
         isValid = false;
     }
 
@@ -873,8 +873,8 @@ $(document).ready(() => {
             isValid = false;
         }
 
-        if ( offerAmount > 25) {
-            displayEditErrorMessage('edit-offerAmount-error', 'Cannot add more than 25%');
+        if ( offerAmount > 90) {
+            displayEditErrorMessage('edit-offerAmount-error', 'Cannot add more than 90%');
             isValid = false;
         }
 
