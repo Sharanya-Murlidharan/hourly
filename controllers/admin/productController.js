@@ -39,13 +39,30 @@ const getProductListPage = async (req, res, next) => {
             .limit(limit)
             .lean();
 
+            // const totalSale = await Product.aggregate([
+            //     {
+            //         $match:{
+            //             isDeleted:false
+            //         }
+            //     },
+            //     {
+            //         $group:{
+            //             _id:null,
+            //             totalPrice:{$sum:"$salePrice"}
+            //         }
+            //     }
+            // ])
+            // const sum = totalSale[0].totalPrice
+
         res.render("products", {
             products: products,
             currentPage: page,
             totalPages: Math.ceil(totalProducts / limit),
             totalProducts: totalProducts,
             limit: limit,
-            searchQuery: searchQuery // Pass searchQuery to the view for pagination links
+            searchQuery: searchQuery,
+            // sum
+
         });
     } catch (error) {
         error.statusCode = 500;

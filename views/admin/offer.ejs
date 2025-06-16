@@ -758,79 +758,71 @@ $(document).ready(() => {
     });
 
     // Form Validation
-   function validateAddForm() {
-    clearAddErrorMessages();
-    const offerName = $('#addOfferName').val().trim();
-    const description = $('#addDescription').val().trim();
-    const offerType = $('#addOfferType').val();
-    const applicable = $('#addApplicable').val();
-    const applicableItem = $('#addApplicableItem').val();
-    const offerAmount = parseFloat($('#addOfferAmount').val());
-    const validFrom = $('#addValidFrom').val();
-    const validUpto = $('#addValidUpto').val();
-    const status = $('#addStatus').val();
-    let isValid = true;
+    function validateAddForm() {
+        clearAddErrorMessages();
+        const offerName = $('#addOfferName').val().trim();
+        const description = $('#addDescription').val().trim();
+        const offerType = $('#addOfferType').val();
+        const applicable = $('#addApplicable').val();
+        const applicableItem = $('#addApplicableItem').val();
+        const offerAmount = parseFloat($('#addOfferAmount').val());
+        const validFrom = $('#addValidFrom').val();
+        const validUpto = $('#addValidUpto').val();
+        const status = $('#addStatus').val();
+        let isValid = true;
 
-    if (offerName === '') {
-        displayAddErrorMessage('add-offerName-error', 'Please enter an offer name');
-        isValid = false;
-    } else if (!/^[a-zA-Z\s-']+$/.test(offerName)) {
-        displayAddErrorMessage('add-offerName-error', 'Offer name should contain only alphabetic characters');
-        isValid = false;
-    }
-
-    if (description === '') {
-        displayAddErrorMessage('add-description-error', 'Please enter a description');
-        isValid = false;
-    }
-
-    if (offerType === '') {
-        displayAddErrorMessage('add-offerType-error', 'Please select a discount type');
-        isValid = false;
-    }
-
-    if (applicable === '') {
-        displayAddErrorMessage('add-applicable-error', 'Please select where the offer applies');
-        isValid = false;
-    }
-
-    if (['Product', 'Category', 'Brand'].includes(applicable) && (!applicableItem || applicableItem === '')) {
-        displayAddErrorMessage('add-applicableItem-error', `Please select an applicable ${applicable.toLowerCase()}`);
-        isValid = false;
-    }
-
-    if (isNaN(offerAmount) || offerAmount <= 0) {
-        displayAddErrorMessage('add-offerAmount-error', 'Please enter a valid offer amount');
-        isValid = false;
-    } else if (offerAmount > 90) 
-        displayAddErrorMessage('add-offerAmount-error', 'Cannot add more than 90%');
-        isValid = false;
-    }
-
-    if (validFrom === '') {
-        displayAddErrorMessage('add-validFrom-error', 'Please enter a valid from date');
-        isValid = false;
-    }
-
-    if (validUpto === '') {
-        displayAddErrorMessage('add-validUpto-error', 'Please enter a valid upto date');
-        isValid = false;
-    } else {
-        const fromDate = new Date(validFrom);
-        const toDate = new Date(validUpto);
-        if (toDate < fromDate) {
-            displayAddErrorMessage('add-validUpto-error', 'Valid upto date must be after valid from date');
+        if (offerName === '') {
+            displayAddErrorMessage('add-offerName-error', 'Please enter an offer name');
+            isValid = false;
+        } else if (!/^[a-zA-Z\s-']+$/.test(offerName)) {
+            displayAddErrorMessage('add-offerName-error', 'Offer name should contain only alphabetic characters');
             isValid = false;
         }
+        if (description === '') {
+            displayAddErrorMessage('add-description-error', 'Please enter a description');
+            isValid = false;
+        }
+        if (offerType === '') {
+            displayAddErrorMessage('add-offerType-error', 'Please select a discount type');
+            isValid = false;
+        }
+        if (applicable === '') {
+            displayAddErrorMessage('add-applicable-error', 'Please select where the offer applies');
+            isValid = false;
+        }
+        if (['Product', 'Category', 'Brand'].includes(applicable) && (!applicableItem || applicableItem === '')) {
+            displayAddErrorMessage('add-applicableItem-error', `Please select an applicable ${applicable.toLowerCase()}`);
+            isValid = false;
+        }
+        if (isNaN(offerAmount) || offerAmount <= 0) {
+            displayAddErrorMessage('add-offerAmount-error', 'Please enter a valid offer amount');
+            isValid = false;
+        }
+         if ( offerAmount > 90) {
+            displayEditErrorMessage('add-offerAmount-error', 'Cannot add more than 90%');
+            isValid = false;
+        }
+        if (validFrom === '') {
+            displayAddErrorMessage('add-validFrom-error', 'Please enter a valid from date');
+            isValid = false;
+        }
+        if (validUpto === '') {
+            displayAddErrorMessage('add-validUpto-error', 'Please enter a valid upto date');
+            isValid = false;
+        } else {
+            const fromDate = new Date(validFrom);
+            const toDate = new Date(validUpto);
+            if (toDate < fromDate) {
+                displayAddErrorMessage('add-validUpto-error', 'Valid upto date must be after valid from date');
+                isValid = false;
+            }
+        }
+        if (status === '') {
+            displayAddErrorMessage('add-status-error', 'Please select a status');
+            isValid = false;
+        }
+        return isValid;
     }
-
-    if (status === '') {
-        displayAddErrorMessage('add-status-error', 'Please select a status');
-        isValid = false;
-    }
-
-    return isValid;
-}
 
     function validateEditForm() {
         clearEditErrorMessages();
