@@ -1,0 +1,460 @@
+<%- include('../../views/partials/user/header') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Hourly</title>
+    <style>
+        /* General reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Services Section */
+        .services-section {
+            padding: 80px 0;
+            background: #fff;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .service-card {
+            text-align: center;
+            padding: 40px 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            background: #f8f9fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #007bff;
+            transition: all 0.3s ease;
+        }
+
+        
+
+        .service-card h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .service-card p {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.7;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        /* About Content Section */
+        .about-section {
+            padding: 0px 0 100px 0;
+            background: #f8f9fa;
+            position: relative;
+            z-index: 1;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 50px;
+            margin-top: 40px;
+        }
+
+        .about-card {
+            background: #fff;
+            padding: 50px 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .about-card h2 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #333;
+            text-align: center;
+        }
+
+        .about-card p {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        /* Founder Section */
+        .founder-section {
+            padding: 100px 0 80px 0;
+            background: #4a5568;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            z-index: 1;
+            margin-top: 0;
+        }
+
+        .founder-section h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 50px;
+            color: #fff;
+        }
+
+        .founder-card {
+            max-width: 350px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .founder-card:hover {
+            transform: scale(1.02);
+        }
+
+        .founder-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 25px;
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .founder-card:hover .founder-image {
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        .founder-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .founder-card p {
+            font-size: 16px;
+            color: #cbd5e0;
+            font-weight: 400;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .fade-in:nth-child(1) { animation-delay: 0.1s; }
+        .fade-in:nth-child(2) { animation-delay: 0.2s; }
+        .fade-in:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .services-section,
+            .about-section,
+            .founder-section {
+                padding: 60px 0;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .about-card {
+                padding: 30px 25px;
+            }
+
+            .about-card h2 {
+                font-size: 22px;
+            }
+
+            .founder-section h2 {
+                font-size: 28px;
+                margin-bottom: 40px;
+            }
+
+            .founder-card {
+                padding: 30px 20px;
+            }
+
+            .founder-image {
+                width: 100px;
+                height: 100px;
+            }
+
+            .service-card {
+                padding: 30px 15px;
+            }
+
+            .service-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .services-section,
+            .about-section,
+            .founder-section {
+                padding: 40px 0;
+            }
+
+            .about-card {
+                padding: 25px 20px;
+            }
+
+            .about-card h2 {
+                font-size: 20px;
+            }
+
+            .about-card p,
+            .service-card p {
+                font-size: 14px;
+            }
+
+            .founder-section h2 {
+                font-size: 24px;
+            }
+
+            .founder-card h3 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>About Us</h1>
+        </div>
+    </header>
+
+    <!-- Services Section -->
+    <section class="services-section">
+        <div class="container">
+            <div class="services-grid">
+                <div class="service-card fade-in">
+                    <div class="service-icon">
+                        🚚
+                    </div>
+                    <h3>Free Shipping</h3>
+                    <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
+                </div>
+                
+                <div class="service-card fade-in">
+                    <div class="service-icon">
+                        🎧
+                    </div>
+                    <h3>Support Customer</h3>
+                    <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
+                </div>
+                
+                <div class="service-card fade-in">
+                    <div class="service-icon">
+                        🔒
+                    </div>
+                    <h3>Secure Payments</h3>
+                    <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Content Section -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-card fade-in">
+                    <h2>Our Story</h2>
+                    <p>
+                        Hourly began with a simple goal — to make buying watches easier and more reliable. What started as a small idea has grown into a trusted destination for customers worldwide, offering the latest watches from top brands all in one place.
+                        <br><br>
+                        We're proud to help you stay connected with the technology that fits your life.
+                    </p>
+                </div>
+                
+                <div class="about-card fade-in">
+                    <h2>Our Mission</h2>
+                    <p>
+                        At Hourly, we're here to empower you with choice, quality, and convenience. Every watch we offer is carefully selected by our team to meet the highest standards — so you can shop with total confidence, knowing you're getting the best value, performance, and reliability.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Founder Section -->
+    <section class="founder-section">
+        <div class="container">
+            <h2>Meet Our Founder</h2>
+            <div class="founder-card fade-in">
+                <img src="/image/IMG_2817.JPG" alt="Sharanya Murlidharan" class="founder-image">
+                <h3>Sharanya Murlidharan</h3>
+                <p>Founder & CEO</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scrolling for better UX
+        document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Add hover effects for service cards
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Remove the parallax effect that was causing issues
+        // window.addEventListener('scroll', () => {
+        //     const scrolled = window.pageYOffset;
+        //     const founderSection = document.querySelector('.founder-section');
+        //     const rate = scrolled * -0.5;
+        //     
+        //     if (founderSection) {
+        //         founderSection.style.transform = `translateY(${rate}px)`;
+        //     }
+        // });
+
+        // Mobile menu toggle functionality (if needed)
+        function toggleMobileMenu() {
+            // Add mobile menu functionality here if needed
+        }
+
+        // Responsive image loading
+        function optimizeImages() {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.loading = 'lazy';
+            });
+        }
+
+        // Initialize optimizations
+        document.addEventListener('DOMContentLoaded', () => {
+            optimizeImages();
+        });
+    </script>
+</body>
+</html>
+<%- include('../../views/partials/user/footer') %>

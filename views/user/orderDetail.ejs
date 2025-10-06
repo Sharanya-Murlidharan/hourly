@@ -193,8 +193,13 @@
       color: #ff9800;
     }
     .status-paymentfailed {
+<<<<<<< HEAD
     color: #d32f2f; /* Red color for Payment Failed */
   }
+=======
+  color: #d32f2f; /* Red, consistent with status-canceled */
+}
+>>>>>>> 7bd58ee187596c35ded1b81b8871e8b5a8c021b4
     .order-meta {
       display: flex;
       gap: 20px;
@@ -527,6 +532,7 @@
                         </button>
                       <% } %>
                     </div> -->
+<<<<<<< HEAD
                     <!-- Update the order-status display -->
 <div class="order-status-container">
   <span class="order-status status-<%= order.status.toLowerCase().replace(' ', '') %>">
@@ -537,6 +543,11 @@
          order.status.toLowerCase() !== 'return request' && 
          order.status.toLowerCase() !== 'returned' && 
          order.status.toLowerCase() !== 'payment failed') { %>
+=======
+                    <div class="order-status-container">
+  <span class="order-status status-<%= order.status.toLowerCase().replace(' ', '') %>"><%= order.status %></span>
+  <% if (order.status.toLowerCase() !== 'delivered' && order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned' && order.status.toLowerCase() !== 'payment failed') { %>
+>>>>>>> 7bd58ee187596c35ded1b81b8871e8b5a8c021b4
     <button class="action-btn" onclick="cancelOrder('<%= order._id %>')">
       <i class="fa-solid fa-times"></i> Cancel Order
     </button>
@@ -578,11 +589,12 @@
                           <button class="return-btn" onclick="returnProduct('<%= item._id %>', '<%= order._id %>', '<%= item.product.productName %>')">
                             <i class="fa-solid fa-undo"></i> Return Product
                           </button>
-                        <% } else if (order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned') { %>
+                        <% } else if (order.status.toLowerCase() !== 'canceled' && order.status.toLowerCase() !== 'return request' && order.status.toLowerCase() !== 'returned' && order.status !== "Payment Failed") { %>
                           <button class="cancel-product-btn" onclick="cancelProduct('<%= item.product.productName %>', '<%= item._id %>', '<%= order._id %>')">
                             <i class="fa-solid fa-times"></i> Cancel Product
                           </button>
                         <% } %>
+                        
                       </div>
                     </div>
                   <% }) %>

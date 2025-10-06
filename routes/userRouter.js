@@ -30,12 +30,16 @@ router.get('/auth/google/callback',
 )
 // homepage
 router.get('/',userAuth,userController.LoadHomepage)
-router.post('/search',userAuth,userController.searchProducts)
+// router.post('/search',userAuth,userController.searchProducts)
 
 // shopping page
 router.get('/shop',userAuth,userController.loadShoppingPage)
+<<<<<<< HEAD
 router.get('/filter',userAuth,userController.filterProduct)
 router.get('/filterByPrice',userAuth, userController.filterByPrice)
+=======
+// router.get('/filterByPrice', userController.filterByPrice)
+>>>>>>> 7bd58ee187596c35ded1b81b8871e8b5a8c021b4
 // router.post('/search', userController.searchProducts);
 
 //product detail page
@@ -107,7 +111,10 @@ router.get('/wallet', userAuth, orderController.getWallet)
 router.get('/wishlist',userAuth,wishlistController.getWishlist)
 router.post('/addToWishlist', userAuth, wishlistController.addToWishlist);
 router.post('/removeFromWishlist', userAuth, wishlistController.removeFromWishlist);
-
+// about
+router.get('/about',userAuth,userController.aboutpage)
+// contact
+router.get('/contact',userController.loadContact)
 
 
 

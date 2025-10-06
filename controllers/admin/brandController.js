@@ -8,33 +8,31 @@ const getBrandPage = async(req,res,next)=>{
         const skip = (page-1)*limit
         const search = req.query.search || ""
 
-        const brandData = await Brand.find({
+        const query = {
+            isDeleted: false, // Only include non-deleted brands
             $or:[
                 {name:{$regex:new RegExp(search,"i")}},
                 {description:{$regex:new RegExp(search,"i")}}
             ]
-        })
+        }
+
+        const brandData = await Brand.find(query)
             .sort({createdOn:-1})
             .skip(skip)
             .limit(limit)
             .exec()
 
-            const totalBrands = await Brand.countDocuments({
-                $or:[
-                    {name:{$regex: new RegExp(search,"i")}},
-                    {description:{$regex:new RegExp(search,"i")}}
-                ]
-            })
+        const totalBrands = await Brand.countDocuments(query)
 
-            const totalPages = Math.ceil(totalBrands/limit)
-            res.render("brand",{
-                brands:brandData,
-                currentPage:page,
-                totalPages:totalPages,
-                totalBrands:totalBrands,
-                limit:limit,
-                searchQuery:search
-            })
+        const totalPages = Math.ceil(totalBrands/limit)
+        res.render("brand",{
+            brands:brandData,
+            currentPage:page,
+            totalPages:totalPages,
+            totalBrands:totalBrands,
+            limit:limit,
+            searchQuery:search
+        })
     } catch (error) {
          error.statusCode = 500;
         next(error);
@@ -96,7 +94,7 @@ const editBrand = async (req, res, next) => {
             _id: { $ne: brandId }
         });
         if (existingBrand) {
-            return res.json({ success: false, message: "Brand already exists with this name (case-insensitive)" });
+            return res.json({ success: false, message: "Brand already exists with this name" });
         }
 
         const updatedBrand = await Brand.findByIdAndUpdate(

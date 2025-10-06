@@ -10,7 +10,7 @@ const getOrdersPage = async (req, res, next) => {
       const skip = (page - 1) * limit;
       const searchQuery = req.query.search ? req.query.search.trim() : '';
   
-      console.log('Search Query:', searchQuery); // Debug: Log the search query
+      // console.log('Search Query:', searchQuery); // Debug: Log the search query
   
       // Initialize search filter
       let searchFilter = {};
@@ -53,7 +53,7 @@ const getOrdersPage = async (req, res, next) => {
         .skip(skip)
         .limit(limit);
   
-      console.log('Fetched Orders:', orders.length); // Debug: Log number of orders fetched
+      // console.log('Fetched Orders:', orders.length); // Debug: Log number of orders fetched
   
       // Attach user data to orders
       const ordersWithUsers = await Promise.all(
@@ -109,30 +109,74 @@ const getOrderDetailPage = async (req, res, next) => {
   }
 };
 
+// const updateOrderStatus = async (req, res, next) => {
+//   try {
+//     const { orderId } = req.params;
+//     const { status } = req.body;
+
+//     const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+//     if (!validStatuses.includes(status)) {
+//       return res.status(400).json({ 
+//         message: 'Invalid status. Status can only be set to Pending, Processing, Shipped, or Delivered.' 
+//       });
+//     }
+
+//     const order = await Order.findOneAndUpdate(
+//       { orderId },
+//       { status },
+//       { new: true }
+//     );
+
+//     if (!order) {
+//       return res.status(404).json({ message: 'Order not found' });
+//     }
+
+//     res.status(200).json({ message: 'Status updated successfully', status });
+//   } catch (error) {
+//     error.statusCode = 500;
+//     next(error);
+//   }
+// };
+
 const updateOrderStatus = async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled', 'Return Request', 'Returned'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+    const restrictedStatuses = ['Payment Failed', 'Canceled', 'Return Request', 'Returned'];
+
+    // Find the order to check its current status
+    const order = await Order.findOne({ orderId });
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
     }
 
-    const order = await Order.findOneAndUpdate(
+    // Prevent status update if current status is restricted
+    if (restrictedStatuses.includes(order.status)) {
+      return res.status(400).json({
+        message: `Order status cannot be updated from ${order.status}.`,
+      });
+    }
+
+    // Validate new status
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid status. Status can only be set to Pending, Processing, Shipped, or Delivered.',
+      });
+    }
+
+    // Update the order status
+    const updatedOrder = await Order.findOneAndUpdate(
       { orderId },
       { status },
       { new: true }
     );
 
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-
     res.status(200).json({ message: 'Status updated successfully', status });
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
 

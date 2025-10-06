@@ -47,6 +47,15 @@ const addOffer = async (req, res, next) => {
     try {
         const { offerName, description, offerType, applicable, applicableItem, offerAmount, validFrom, validUpto, status } = req.body;
 
+        // Check for duplicate offer name (case-insensitive)
+        const existingOffer = await Offer.findOne({
+            offerName: { $regex: `^${offerName}$`, $options: 'i' },
+            isDeleted: false
+        });
+        if (existingOffer) {
+            return res.json({ success: false, message: 'An offer with this name already exists' });
+        }
+
         if (['Product', 'Category', 'Brand'].includes(applicable) && !applicableItem) {
             return res.json({ success: false, message: `Applicable ${applicable.toLowerCase()} is required` });
         }
@@ -82,6 +91,16 @@ const editOffer = async (req, res, next) => {
             return res.json({ success: false, message: 'Invalid offer ID' });
         }
 
+        // Check for duplicate offer name (case-insensitive), excluding the current offer
+        const existingOffer = await Offer.findOne({
+            offerName: { $regex: `^${offerName}$`, $options: 'i' },
+            isDeleted: false,
+            _id: { $ne: offerId }
+        });
+        if (existingOffer) {
+            return res.json({ success: false, message: 'An offer with this name already exists' });
+        }
+
         if (['Product', 'Category', 'Brand'].includes(applicable) && !applicableItem) {
             return res.json({ success: false, message: `Applicable ${applicable.toLowerCase()} is required` });
         }
@@ -111,7 +130,7 @@ const editOffer = async (req, res, next) => {
 
         return res.json({ success: true, message: 'Offer updated successfully' });
     } catch (error) {
-         error.statusCode = 500;
+        error.statusCode = 500;
         next(error);
     }
 };

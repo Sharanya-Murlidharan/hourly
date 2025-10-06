@@ -2,7 +2,7 @@ const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
 const User = require('../../models/userSchema');
 const Offer = require("../../models/offerSchema"); // Import the Offer model
-
+const Wishlist = require('../../models/wishlistSchema')
 
 // Helper function to calculate the highest discount for a product
 const calculateProductDiscount = async (product, currentDate) => {
@@ -74,6 +74,15 @@ const productDetails = async (req, res, next) => {
         const userId = req.session.user;
         const userData = userId ? await User.findById(userId) : null;
 
+        // Initialize wishlistProductIds to ensure it's always defined
+        let wishlistProductIds = [];
+        if (userId) {
+            const wishlist = await Wishlist.findOne({ userId }).lean();
+            wishlistProductIds = wishlist && wishlist.products
+                ? wishlist.products.map(item => item.productId.toString())
+                : [];
+        }
+
         const productId = req.query.id;
         const product = await Product.findOne({
             _id: productId,
@@ -137,6 +146,7 @@ const productDetails = async (req, res, next) => {
             page,
             limit,
             totalRelatedProducts,
+            wishlistProductIds,
         });
     } catch (error) {
          error.statusCode = 500;

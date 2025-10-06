@@ -501,6 +501,38 @@
 </style>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+
+        function toggleClearButton() {
+            if (searchInput.value.trim() !== '') {
+                clearBtn.classList.add('show');
+            } else {
+                clearBtn.classList.remove('show');
+            }
+        }
+
+        toggleClearButton();
+
+        searchInput.addEventListener('input', toggleClearButton);
+
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearBtn.classList.remove('show');
+            window.location.href = '/shop';
+        });
+
+        searchInput.form.addEventListener('submit', function(event) {
+            if (searchInput.value.trim() === '') {
+                event.preventDefault();
+                searchInput.focus();
+            }
+        });
+    });
+</script>
+
+<script>
     <% products.forEach(product => { %>
         console.log('Product <%= product._id %>:', {
             hasDiscount: <%= JSON.stringify(product.hasDiscount) %>,
@@ -516,7 +548,7 @@
 <div class="container">
     <aside class="sidebar ms-1">
         <div class="search-bar">
-            <form action="/shop" method="GET">
+            <form action="/search" method="POST">
                 <input type="text" name="query" id="searchInput" placeholder="Search" value="<%= locals.query || '' %>">
                 <button type="button" class="clear-btn" id="clearSearch"><i class="fas fa-times"></i></button>
                 <button type="submit"><i class="fas fa-search"></i></button>
@@ -529,7 +561,7 @@
                 <ul>
                     <% category.forEach(cat => { %>
                     <li class="filter-item">
-                        <a href="/shop?category=<%= cat._id %>"><%= cat.name %></a>
+                        <a href="/filter?category=<%= cat._id %>"><%= cat.name %></a>
                     </li>
                     <% }) %>
                 </ul>
@@ -541,7 +573,7 @@
                 <ul>
                     <% brands.forEach(brand => { %>
                     <li class="filter-item">
-                        <a href="/shop?brands=<%= brand._id %>"><%= brand.name %></a>
+                        <a href="/filter?brands=<%= brand._id %>"><%= brand.name %></a>
                     </li>
                     <% }) %>
                 </ul>
@@ -616,19 +648,19 @@
     <ul class="pagination">
         <% if (currentPage > 1) { %>
             <li class="page-item">
-                <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+                <a class="page-link" href="?page=<%= currentPage - 1 %>&priceRange=<%= priceRange %>&sort=<%= sort %>" aria-label="Previous">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
         <% } %>
         <% for(let i = 1; i <= totalPages; i++) { %>
             <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                <a class="page-link" href="?page=<%= i %>&priceRange=<%= priceRange %>&sort=<%= sort %>"><%= i %></a>
             </li>
         <% } %>
         <% if (currentPage < totalPages) { %>
             <li class="page-item">
-                <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+                <a class="page-link" href="?page=<%= currentPage + 1 %>&priceRange=<%= priceRange %>&sort=<%= sort %>" aria-label="Next">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
@@ -637,266 +669,124 @@
 </nav>
 
 <script>
-// Updated JavaScript for integrated filtering (brand, category, and search)
-
-// Function to get current URL parameters
-function getCurrentFilters() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return {
-        category: urlParams.get('category') || '',
-        brands: urlParams.get('brands') || '',
-        priceRange: urlParams.get('priceRange') || '',
-        sort: urlParams.get('sort') || 'newest',
-        query: urlParams.get('query') || ''
-    };
-}
-
-// Function to build URL with all current filters
-function buildShopUrl(newFilters = {}) {
-    const currentFilters = getCurrentFilters();
-    const mergedFilters = { ...currentFilters, ...newFilters };
-    
-    const url = new URL(window.location.origin + '/shop');
-    
-    // Add all non-empty filter parameters
-    Object.keys(mergedFilters).forEach(key => {
-        if (mergedFilters[key] && mergedFilters[key] !== '') {
-            url.searchParams.set(key, mergedFilters[key]);
-        }
-    });
-    
-    // Always reset to page 1 when filters change (except for pagination clicks)
-    if (!newFilters.hasOwnProperty('page')) {
+    document.getElementById('priceRange').addEventListener('change', (e) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('priceRange', e.target.value);
         url.searchParams.set('page', 1);
-    }
-    
-    return url.toString();
-}
-
-// Price range filter change handler
-document.getElementById('priceRange').addEventListener('change', (e) => {
-    const newUrl = buildShopUrl({ priceRange: e.target.value });
-    window.location.href = newUrl;
-});
-
-// Sort filter change handler
-document.getElementById('sortSelect').addEventListener('change', (e) => {
-    const newUrl = buildShopUrl({ sort: e.target.value });
-    window.location.href = newUrl;
-});
-
-// Update category and brand links to work with combined filtering
-document.addEventListener('DOMContentLoaded', function() {
-    // Update category links
-    const categoryLinks = document.querySelectorAll('.filter-item a[href*="category="]');
-    categoryLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        const categoryId = href.split('category=')[1];
-        
-        // Add click event listener instead of changing href
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const newUrl = buildShopUrl({ 
-                category: categoryId,
-                brands: '' // Reset brand when selecting category
-            });
-            window.location.href = newUrl;
-        });
+        window.location.href = url.toString();
     });
-    
-    // Update brand links
-    const brandLinks = document.querySelectorAll('.filter-item a[href*="brands="]');
-    brandLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        const brandId = href.split('brands=')[1];
-        
-        // Add click event listener instead of changing href
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const newUrl = buildShopUrl({ 
-                brands: brandId,
-                category: '' // Reset category when selecting brand
-            });
-            window.location.href = newUrl;
-        });
+
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', e.target.value);
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
     });
-    
-    // Update pagination links to preserve all filters
-    updatePaginationLinks();
-    
-    // Initialize search functionality
-    initializeSearch();
-});
 
-// Function to update pagination links
-function updatePaginationLinks() {
-    const paginationLinks = document.querySelectorAll('.pagination .page-link');
-    paginationLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (href && href.includes('page=')) {
-            // Extract page number from href
-            const pageMatch = href.match(/page=(\d+)/);
-            if (pageMatch) {
-                const page = pageMatch[1];
-                const newUrl = buildShopUrl({ page: page });
-                link.setAttribute('href', newUrl);
-            }
-        }
-    });
-}
-
-// Initialize search functionality
-function initializeSearch() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearch');
-    const searchForm = searchInput ? searchInput.form : null;
-
-    function toggleClearButton() {
-        if (searchInput && searchInput.value.trim() !== '') {
-            clearBtn.classList.add('show');
-        } else {
-            clearBtn.classList.remove('show');
-        }
-    }
-
-    if (searchInput) {
-        toggleClearButton();
-        searchInput.addEventListener('input', toggleClearButton);
-    }
-
-    if (clearBtn) {
-        clearBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            clearBtn.classList.remove('show');
-            // Clear search but keep other filters
-            const newUrl = buildShopUrl({ query: '' });
-            window.location.href = newUrl;
-        });
-    }
-
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(event) {
-            event.preventDefault(); // Always prevent default form submission
-            
-            const searchQuery = searchInput.value.trim();
-            if (searchQuery === '') {
-                searchInput.focus();
-                return;
-            }
-            
-            // Build URL with search query and preserve other filters
-            const newUrl = buildShopUrl({ query: searchQuery });
-            window.location.href = newUrl;
-        });
-    }
-}
-
-// Add to cart functionality
-function addToCart(productId) {
-    fetch('/addToCart', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productId }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Product added to cart!',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = '/cart';
-            });
-            if (data.remainingStock === 0) {
-                const productCard = document.querySelector(`button[onclick="addToCart('${productId}')"]`).parentElement;
-                productCard.querySelector('.add-to-cart-btn').remove();
-                productCard.insertAdjacentHTML('beforeend', '<div class="out-of-stock">Out of Stock</div>');
-            }
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to add to cart',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'An error occurred',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    });
-}
-
-// Wishlist functionality
-function toggleWishlist(productId, button, event) {
-    event.stopPropagation();
-    const isInWishlist = button.classList.contains('active');
-    const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productId }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (isInWishlist) {
-                button.classList.remove('active');
-                button.querySelector('i').classList.replace('fas', 'far');
+    function addToCart(productId) {
+        fetch('/addToCart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Removed',
-                    text: 'Product removed from wishlist!',
+                    title: 'Success',
+                    text: 'Product added to cart!',
                     timer: 1500,
                     showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/cart';
                 });
+                if (data.remainingStock === 0) {
+                    const productCard = document.querySelector(`button[onclick="addToCart('${productId}')"]`).parentElement;
+                    productCard.querySelector('.add-to-cart-btn').remove();
+                    productCard.insertAdjacentHTML('beforeend', '<div class="out-of-stock">Out of Stock</div>');
+                }
             } else {
-                button.classList.add('active');
-                button.querySelector('i').classList.replace('far', 'fas');
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Added',
-                    text: 'Product added to wishlist!',
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to add to cart',
                     timer: 1500,
                     showConfirmButton: false
                 });
             }
-        } else {
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message || 'Failed to update wishlist',
-                timer: 1500,
+                text: error.message || "catch error",
+                timer: 2000,
                 showConfirmButton: false
             });
-        }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while updating the wishlist',
-            timer: 2000,
-            showConfirmButton: false
         });
-    });
-}
+    }
+
+    function toggleWishlist(productId, button, event) {
+        event.stopPropagation();
+        const isInWishlist = button.classList.contains('active');
+        const url = isInWishlist ? '/removeFromWishlist' : '/addToWishlist';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isInWishlist) {
+                    button.classList.remove('active');
+                    button.querySelector('i').classList.replace('fas', 'far');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Removed',
+                        text: 'Product removed from wishlist!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    button.classList.add('active');
+                    button.querySelector('i').classList.replace('far', 'fas');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added',
+                        text: 'Product added to wishlist!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update wishlist',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while updating the wishlist',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        });
+    }
 </script>
 
 <%- include('../../views/partials/user/footer') %>
