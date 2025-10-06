@@ -35,7 +35,7 @@ router.post('/search',userAuth,userController.searchProducts)
 // shopping page
 router.get('/shop',userAuth,userController.loadShoppingPage)
 router.get('/filter',userAuth,userController.filterProduct)
-router.get('/filterByPrice', userController.filterByPrice)
+router.get('/filterByPrice',userAuth, userController.filterByPrice)
 // router.post('/search', userController.searchProducts);
 
 //product detail page
@@ -94,12 +94,12 @@ router.get("/availableCoupons", userAuth, orderController.getAvailableCoupons);
 router.get("/orderSuccess",userAuth,orderController.getSuccess)
 router.get("/paymentFail", userAuth, orderController.getPaymentFail)
 // order Listing
-router.get("/orderListing",orderController.getOrderList)
-router.get("/orderDetail/:id",orderController.orderDetail)
-router.post('/cancel/:id', orderController.cancelOrder);
-router.post('/cancel-product/:id', orderController.cancelProduct);
-router.post('/return/:id', orderController.returnOrder)
-router.post('/return-product/:id', orderController.returnProduct);
+router.get("/orderListing",userAuth,orderController.getOrderList)
+router.get("/orderDetail/:id",userAuth,orderController.orderDetail)
+router.post('/cancel/:id', userAuth,orderController.cancelOrder);
+router.post('/cancel-product/:id',userAuth, orderController.cancelProduct);
+router.post('/return/:id',userAuth, orderController.returnOrder)
+router.post('/return-product/:id',userAuth, orderController.returnProduct);
 // wallet
 router.get('/wallet', userAuth, orderController.getWallet)
 
