@@ -9,8 +9,7 @@ const userRouter = require('./routes/userRouter')
 const adminRouter = require('./routes/adminRouter')
 const passport = require('./config/passport')
 
-db()
-
+db() 
 app.use(morgan('dev'));
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))

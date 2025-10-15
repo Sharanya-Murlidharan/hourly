@@ -39,20 +39,7 @@ const getProductListPage = async (req, res, next) => {
             .limit(limit)
             .lean();
 
-            // const totalSale = await Product.aggregate([
-            //     {
-            //         $match:{
-            //             isDeleted:false
-            //         }
-            //     },
-            //     {
-            //         $group:{
-            //             _id:null,
-            //             totalPrice:{$sum:"$salePrice"}
-            //         }
-            //     }
-            // ])
-            // const sum = totalSale[0].totalPrice
+           
 
         res.render("products", {
             products: products,
