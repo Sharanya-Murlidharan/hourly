@@ -40,6 +40,7 @@ function generateOtp() {
 
 const sendVerificationEmail = async(email,otp)=>{
     try {
+        console.log("hi",process.env.NODEMAILER_EMAIL,process.env.NODEMAILER_PASSWORD)
         const transporter = nodemailer.createTransport({
             service:"gmail",
             port:587,
@@ -88,6 +89,7 @@ const getForgotPassword = async(req,res)=>{
 const forgotEmailValid = async (req, res,next) => {
     try {
         const { email } = req.body;
+        console.log(email)
         const findUser = await User.findOne({ email: email });
         if (findUser) {
             const otp = generateOtp();
@@ -568,7 +570,7 @@ const postAddAddress = async (req, res,next) => {
         return res.status(401).json({ error: "User not found" });
       }
   
-      const { fullName, phone, altPhone, street, city, state, pin, country } = req.body;
+      const { fullName, phone, altPhone, street, city, state, pin, country,isDefault = 'off' } = req.body;
       if (!fullName || !phone || !altPhone || !street || !city || !state || !pin || !country) {
         return res.status(400).json({ error: "All address fields are required" });
       }
@@ -580,6 +582,14 @@ const postAddAddress = async (req, res,next) => {
           address: [],
         });
       }
+
+      // If isDefault is true, unset other addresses' isDefault
+        if (isDefault === 'on') {
+            await Address.updateOne(
+                { userId },
+                { $set: { "address.$[].isDefault": false } }
+            );
+        }
   
       userAddress.address.push({
         name: fullName,
@@ -590,6 +600,7 @@ const postAddAddress = async (req, res,next) => {
         phone,
         altPhone,
         country,
+        isDefault: isDefault === 'on'
       });
   
       await userAddress.save();
@@ -643,7 +654,7 @@ const postEditAddress = async (req, res) => {
         return res.status(401).json({ error: "Please log in" });
       }
   
-      const { addressId, fullName, phone, altPhone, street, city, state, pin, country } = req.body;
+      const { addressId, fullName, phone, altPhone, street, city, state, pin, country, isDefault = 'off'  } = req.body;
       const queryAddressId = req.query.id || addressId; // Support both query and body
   
       if (!queryAddressId || !fullName || !phone || !altPhone || !street || !city || !state || !pin || !country) {
@@ -669,6 +680,14 @@ const postEditAddress = async (req, res) => {
         }
         return res.redirect("/pageNotFound");
       }
+
+      // If isDefault is true, unset other addresses' isDefault
+        if (isDefault === 'on') {
+            await Address.updateOne(
+                { userId },
+                { $set: { "address.$[].isDefault": false } }
+            );
+        }
   
       await Address.updateOne(
         { "address._id": queryAddressId },
@@ -684,6 +703,7 @@ const postEditAddress = async (req, res) => {
               phone,
               altPhone,
               country,
+              isDefault: isDefault === 'on'
             },
           },
         }
@@ -731,6 +751,39 @@ const deleteAddress = async(req,res,next)=>{
          error.statusCode = 500;
         next(error);
 
+    }
+}
+
+const setDefaultAddress = async (req, res, next) => {
+    try {
+        const userId = req.session.user;
+        const addressId = req.query.id;
+
+        if (!userId) {
+            return res.status(401).json({ error: "Please log in" });
+        }
+
+        const findAddress = await Address.findOne({ "address._id": addressId });
+        if (!findAddress) {
+            return res.status(404).send("Address not found");
+        }
+
+        // Unset isDefault for all addresses
+        await Address.updateOne(
+            { userId },
+            { $set: { "address.$[].isDefault": false } }
+        );
+
+        // Set isDefault for the selected address
+        await Address.updateOne(
+            { "address._id": addressId },
+            { $set: { "address.$.isDefault": true } }
+        );
+
+        res.redirect("/address?defaultSet=true");
+    } catch (error) {
+        error.statusCode = 500;
+        next(error);
     }
 }
 
@@ -806,4 +859,5 @@ module.exports={
     editAddress,
     postEditAddress,
     deleteAddress,
+    setDefaultAddress
 }

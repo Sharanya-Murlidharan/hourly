@@ -233,6 +233,13 @@
     border-color: #05445E;
     outline: none;
   }
+  .modal-content input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #28a745;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
   .modal-content .button-group {
     display: flex;
     gap: 8px;
@@ -398,13 +405,13 @@
                 name="address"
                 id="address<%= address._id %>"
                 value="<%= address._id %>"
-                <%= index === 0 ? 'checked' : '' %>
+                <%= address.isDefault ? 'checked' : '' %>
               >
               <label for="address<%= address._id %>">
-                <%= address.name %><br>
+                <%= address.name %> <%= address.isDefault ? '(Default)' : '' %><br>
                 <span><%= address.landMark %>, <%= address.city %>, <%= address.state %>, <%= address.pincode %></span>
               </label>
-              <a class="edit-link" onclick="openEditModal('<%= address._id %>', '<%= address.name %>', '<%= address.phone %>', '<%= address.altPhone %>', '<%= address.landMark %>', '<%= address.city %>', '<%= address.state %>', '<%= address.pincode %>', '<%= address.country %>')">Edit</a>
+              <a class="edit-link" onclick="openEditModal('<%= address._id %>', '<%= address.name %>', '<%= address.phone %>', '<%= address.altPhone %>', '<%= address.landMark %>', '<%= address.city %>', '<%= address.state %>', '<%= address.pincode %>', '<%= address.country %>', <%= address.isDefault ? 'true' : 'false' %>)">Edit</a>
             </div>
           <% }) %>
         </div>
@@ -455,9 +462,9 @@
           <span id="subtotal-value">₹<%= subtotal %></span>
         </div>
         <div class="summary-item">
-  <span>Offer Discount</span>
-  <span id="offer-discount-value">-₹<%= offerDiscount %></span>
-</div>
+          <span>Offer Discount</span>
+          <span id="offer-discount-value">-₹<%= offerDiscount %></span>
+        </div>
         <div class="summary-item">
           <span>Coupon Discount</span>
           <span id="discount-value">-₹<%= discount %></span>
@@ -519,6 +526,11 @@
           <label for="country">Country</label>
           <input type="text" id="country" name="country" placeholder="Enter your country">
           <div id="error8" class="error-message"></div>
+        </div>
+        <div class="form-group">
+          <label for="isDefault">
+            <input type="checkbox" id="isDefault" name="isDefault"> Set as Default
+          </label>
         </div>
         <div class="button-group">
           <button type="submit" class="save-btn">Save</button>
@@ -650,11 +662,12 @@
       document.getElementById('modalTitle').textContent = 'Add Address';
       document.getElementById('addressForm').reset();
       document.getElementById('addressId').value = '';
+      document.getElementById('isDefault').checked = false;
       document.getElementById('addressModal').style.display = 'flex';
       document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
     }
 
-    function openEditModal(id, fullName, phone, altPhone, street, city, state, pin, country) {
+    function openEditModal(id, fullName, phone, altPhone, street, city, state, pin, country, isDefault) {
       document.getElementById('modalTitle').textContent = 'Edit Address';
       document.getElementById('addressId').value = id;
       document.getElementById('fullName').value = fullName;
@@ -665,6 +678,7 @@
       document.getElementById('state').value = state;
       document.getElementById('pin').value = pin;
       document.getElementById('country').value = country;
+      document.getElementById('isDefault').checked = isDefault;
       document.getElementById('addressModal').style.display = 'flex';
       document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
     }
@@ -672,6 +686,7 @@
     function closeModal() {
       document.getElementById('addressModal').style.display = 'none';
       document.getElementById('addressForm').reset();
+      document.getElementById('isDefault').checked = false;
       document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
     }
 
@@ -732,15 +747,24 @@
                 name="address"
                 id="address${address._id}"
                 value="${address._id}"
-                ${index === 0 ? 'checked' : ''}
+                ${address.isDefault ? 'checked' : ''}
               >
               <label for="address${address._id}">
-                ${address.name}<br>
+                ${address.name} ${address.isDefault ? '(Default)' : ''}<br>
                 <span>${address.landMark}, ${address.city}, ${address.state}, ${address.pincode}</span>
               </label>
-              <a class="edit-link" onclick="openEditModal('${address._id}', '${address.name}', '${address.phone}', '${address.altPhone}', '${address.landMark}', '${address.city}', '${address.state}', '${address.pincode}', '${address.country}')">Edit</a>
+              <a class="edit-link" onclick="openEditModal('${address._id}', '${address.name}', '${address.phone}', '${address.altPhone}', '${address.landMark}', '${address.city}', '${address.state}', '${address.pincode}', '${address.country}', ${address.isDefault})">Edit</a>
             </div>
           `).join('');
+
+          // Fallback: Select first address if no default exists
+          const hasDefault = result.addresses.some(addr => addr.isDefault);
+          if (!hasDefault && result.addresses.length > 0) {
+            const firstAddressId = result.addresses[0]._id;
+            const firstRadio = document.getElementById(`address${firstAddressId}`);
+            if (firstRadio) firstRadio.checked = true;
+          }
+
           closeModal();
           Swal.fire({
             icon: 'success',
@@ -756,6 +780,15 @@
           text: 'An error occurred. Please try again.',
           confirmButtonColor: '#05445E',
         });
+      }
+    });
+
+    // Fallback: Select first address if no default exists on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const hasDefault = Array.from(document.querySelectorAll('input[name="address"]')).some(radio => radio.checked);
+      if (!hasDefault) {
+        const firstRadio = document.querySelector('input[name="address"]');
+        if (firstRadio) firstRadio.checked = true;
       }
     });
 
@@ -780,18 +813,14 @@
         const result = await response.json();
 
         if (result.success) {
-          // Update the UI with the new totals
           document.getElementById('subtotal-value').textContent = `₹${result.subtotal}`;
           document.getElementById('offer-discount-value').textContent = `-₹${result.offerDiscount}`;
           document.getElementById('discount-value').textContent = `-₹${result.discount}`;
           document.getElementById('total-value').textContent = `₹${result.totalPrice}`;
-
-          // Replace the coupon input with a remove button
           const couponSection = document.querySelector('.coupon-section');
           couponSection.innerHTML = `
             <button class="remove-btn" onclick="removeCoupon()">Remove Coupon</button>
           `;
-
           Swal.fire({
             icon: 'success',
             title: 'Coupon Applied',
@@ -825,20 +854,16 @@
         const result = await response.json();
 
         if (result.success) {
-          // Update the UI with the new totals
           document.getElementById('subtotal-value').textContent = `₹${result.subtotal}`;
           document.getElementById('offer-discount-value').textContent = `-₹${result.offerDiscount}`;
           document.getElementById('discount-value').textContent = `-₹${result.discount}`;
           document.getElementById('total-value').textContent = `₹${result.totalPrice}`;
-
-          // Replace the remove button with the coupon input
           const couponSection = document.querySelector('.coupon-section');
           couponSection.innerHTML = `
             <input type="text" id="couponCode" placeholder="Enter coupon code">
             <button class="apply-btn" onclick="applyCoupon()">Apply</button>
             <a class="view-coupons" onclick="openCouponModal()">View Available Coupons</a>
           `;
-
           Swal.fire({
             icon: 'success',
             title: 'Coupon Removed',
@@ -918,42 +943,42 @@
       document.getElementById('coupon-list').innerHTML = '';
     }
 
-   async function displayCoupons() {
-  const couponList = document.getElementById('coupon-list');
-  couponList.innerHTML = '<p>Loading coupons...</p>';
+    async function displayCoupons() {
+      const couponList = document.getElementById('coupon-list');
+      couponList.innerHTML = '<p>Loading coupons...</p>';
 
-  try {
-    const response = await fetch('/availableCoupons', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const result = await response.json();
+      try {
+        const response = await fetch('/availableCoupons', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
 
-    if (result.success && result.coupons.length > 0) {
-      couponList.innerHTML = result.coupons.map(coupon => `
-        <div class="coupon-item">
-          <h3>${coupon.name}</h3>
-          <p>Code: ${coupon.code}</p>
-          <p>Discount: ₹${coupon.amount}</p>
-          <p>Min. Cart Value: ₹${coupon.minCartValue}</p>
-          <p>Expiry Date: ${new Date(coupon.validUpto).toLocaleDateString()}</p>
-          <p>${coupon.description || 'No description available'}</p>
-          <button class="copy-btn" onclick="copyCouponCode('${coupon.code}')">Copy Code</button>
-        </div>
-      `).join('');
-    } else {
-      couponList.innerHTML = '<p>No coupons available.</p>';
+        if (result.success && result.coupons.length > 0) {
+          couponList.innerHTML = result.coupons.map(coupon => `
+            <div class="coupon-item">
+              <h3>${coupon.name}</h3>
+              <p>Code: ${coupon.code}</p>
+              <p>Discount: ₹${coupon.amount}</p>
+              <p>Min. Cart Value: ₹${coupon.minCartValue}</p>
+              <p>Expiry Date: ${new Date(coupon.validUpto).toLocaleDateString()}</p>
+              <p>${coupon.description || 'No description available'}</p>
+              <button class="copy-btn" onclick="copyCouponCode('${coupon.code}')">Copy Code</button>
+            </div>
+          `).join('');
+        } else {
+          couponList.innerHTML = '<p>No coupons available.</p>';
+        }
+      } catch (error) {
+        couponList.innerHTML = '<p>Failed to load coupons. Please try again.</p>';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load coupons.',
+          confirmButtonColor: '#05445E',
+        });
+      }
     }
-  } catch (error) {
-    couponList.innerHTML = '<p>Failed to load coupons. Please try again.</p>';
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Failed to load coupons.',
-      confirmButtonColor: '#05445E',
-    });
-  }
-}
 
     async function copyCouponCode(code) {
       try {

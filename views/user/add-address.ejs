@@ -2,6 +2,8 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     * {
         margin: 0;
@@ -20,24 +22,21 @@
         font-family: 'Montserrat', sans-serif;
     }
 
-    /* Main container padding */
     .main {
         padding: 30px 0;
-        min-height: calc(100vh - 150px); /* Adjust for header and footer */
+        min-height: calc(100vh - 150px);
     }
 
-    /* Container for Main Content (With Sidebar) */
     .account-container {
-        max-width: 1200px; /* Increased width to accommodate sidebar */
+        max-width: 1200px;
         margin: 40px auto;
         background: #fff;
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        display: flex; /* Use flex to place sidebar and content side by side */
+        display: flex;
     }
 
-    /* Sidebar */
     .sidebar {
         width: 20%;
         background: #fff;
@@ -92,13 +91,11 @@
         border-radius: 0 5px 5px 0;
     }
 
-    /* Main Content */
     .main-content {
         padding: 40px;
-        flex: 1; /* Take remaining space */
+        flex: 1;
     }
 
-    /* Greeting */
     .greeting {
         font-size: 1.8rem;
         font-weight: 500;
@@ -106,7 +103,6 @@
         margin-bottom: 20px;
     }
 
-    /* Form Styles */
     .address-form {
         background: #f5f5f5;
         border: 1px solid #ddd;
@@ -129,7 +125,8 @@
         letter-spacing: 1px;
     }
 
-    .form-group input {
+    .form-group input[type="text"],
+    .form-group input[type="tel"] {
         width: 100%;
         padding: 10px;
         font-size: 1rem;
@@ -188,7 +185,6 @@
         background-color: #555;
     }
 
-    /* General Error Message (for server-side errors) */
     .general-error {
         background-color: #f8d7da;
         color: #721c24;
@@ -199,7 +195,27 @@
         font-size: 0.9rem;
     }
 
-    /* Responsive Design */
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        accent-color: #28a745; /* Green checkbox for visibility */
+        cursor: pointer;
+    }
+
+    .checkbox-group label {
+        font-size: 1rem;
+        color: #333;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
     @media (max-width: 768px) {
         .account-container {
             flex-direction: column;
@@ -230,6 +246,15 @@
             padding: 6px 12px;
         }
 
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.9rem;
+        }
+
         .sidebar ul li a {
             font-size: 0.9rem;
             padding: 10px;
@@ -241,7 +266,6 @@
     }
 </style>
 
-<!-- Main Content -->
 <main class="main">
     <section class="pt-10 pb-10">
         <div class="container">
@@ -254,7 +278,6 @@
                                 <li><a href="/address" class="active"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
                                 <li><a href="/orderListing"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
                                 <li><a href="/wallet"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
-                                <!-- <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li> -->
                                 <li>
                                     <a href="/logout" class="menu-item logout">
                                         <i class="icon">
@@ -271,13 +294,11 @@
                             <div class="greeting">
                                 Add New Address
                             </div>
-                            <!-- Display General Server-Side Error (if any) -->
                             <% if (typeof generalError !== 'undefined') { %>
                                 <div class="general-error">
                                     <%= generalError %>
                                 </div>
                             <% } %>
-                            <!-- Add Address Form -->
                             <div class="address-form">
                                 <form action="/addAddress" method="POST" novalidate id="addressForm">
                                     <div class="form-group">
@@ -320,6 +341,10 @@
                                         <input type="text" id="country" name="country" placeholder="Enter your country" value="<%= typeof formData !== 'undefined' ? formData.country || '' : '' %>">
                                         <div id="error8" class="error-message"></div>
                                     </div>
+                                    <div class="form-group checkbox-group">
+                                        <input type="checkbox" id="isDefault" name="isDefault">
+                                        <label for="isDefault">Set as Default Address</label>
+                                    </div>
                                     <div class="form-actions">
                                         <button type="submit" class="save-btn">Save</button>
                                         <a href="/address" class="cancel-btn">Cancel</a>
@@ -335,7 +360,6 @@
 </main>
 
 <script>
-    // Accessing input fields by ID
     const fullNameInput = document.getElementById('fullName');
     const phoneInput = document.getElementById('phone');
     const altPhoneInput = document.getElementById('altPhone');
@@ -344,21 +368,19 @@
     const stateInput = document.getElementById('state');
     const pinInput = document.getElementById('pin');
     const countryInput = document.getElementById('country');
+    const isDefaultInput = document.getElementById('isDefault');
 
-    // Accessing error message elements by ID
-    const error1 = document.getElementById('error1'); // Full Name
-    const error2 = document.getElementById('error2'); // Phone
-    const error3 = document.getElementById('error3'); // Alt Phone
-    const error4 = document.getElementById('error4'); // Street
-    const error5 = document.getElementById('error5'); // City
-    const error6 = document.getElementById('error6'); // State
-    const error7 = document.getElementById('error7'); // PIN
-    const error8 = document.getElementById('error8'); // Country
+    const error1 = document.getElementById('error1');
+    const error2 = document.getElementById('error2');
+    const error3 = document.getElementById('error3');
+    const error4 = document.getElementById('error4');
+    const error5 = document.getElementById('error5');
+    const error6 = document.getElementById('error6');
+    const error7 = document.getElementById('error7');
+    const error8 = document.getElementById('error8');
 
-    // Accessing the form by ID
     const addressForm = document.getElementById('addressForm');
 
-    // Validation functions
     function fullNameValidateChecking() {
         const value = fullNameInput.value.trim();
         const pattern = /^[A-Za-z\s]+$/;
@@ -395,12 +417,7 @@
         if (value === "") {
             error4.style.display = "block";
             error4.innerHTML = "Street Address cannot be empty.";
-        } 
-        // else if (value.length < ) {
-        //     error4.style.display = "block";
-        //     error4.innerHTML = "Street Address must be at least 5 characters long.";
-        // } 
-        else {
+        } else {
             error4.style.display = "none";
             error4.innerHTML = "";
         }
@@ -471,7 +488,6 @@
         return error8.style.display === "none";
     }
 
-    // Real-time Validation
     fullNameInput.addEventListener('input', fullNameValidateChecking);
     phoneInput.addEventListener('input', () => phoneValidateChecking(phoneInput, error2));
     altPhoneInput.addEventListener('input', () => phoneValidateChecking(altPhoneInput, error3));
@@ -481,7 +497,33 @@
     pinInput.addEventListener('input', pinValidateChecking);
     countryInput.addEventListener('input', countryValidateChecking);
 
-    // Form Submission with Validation
+    isDefaultInput.addEventListener('change', function() {
+    if (this.checked) {
+        Swal.fire({
+            title: 'Set as Default?',
+            text: "This address will be set as your default address.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#666',
+            confirmButtonText: 'Yes, set as default!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                this.checked = false;
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Default Address Selected',
+                    text: 'This address will be saved as default.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#05445E'
+                });
+            }
+        });
+    }
+});
+
     document.addEventListener('DOMContentLoaded', function() {
         addressForm.addEventListener('submit', function(e) {
             const isFullNameValid = fullNameValidateChecking();
@@ -494,19 +536,11 @@
             const isCountryValid = countryValidateChecking();
 
             if (!isFullNameValid || !isPhoneValid || !isAltPhoneValid || !isStreetValid || !isCityValid || !isStateValid || !isPinValid || !isCountryValid) {
-                e.preventDefault(); // Prevent submission if any validation fails
-
-                // Scroll to the first error
+                e.preventDefault();
                 const firstError = document.querySelector('.error-message[style="display: block"]');
                 if (firstError) {
                     firstError.parentElement.querySelector('input').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            }
-
-            // Check if elements are found
-            if (!fullNameInput || !phoneInput || !altPhoneInput || !streetInput || !cityInput || !stateInput || !pinInput || !countryInput || 
-                !error1 || !error2 || !error3 || !error4 || !error5 || !error6 || !error7 || !error8 || !addressForm) {
-                console.error('One or more elements not found');
             }
         });
     });

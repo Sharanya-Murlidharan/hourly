@@ -26,6 +26,8 @@ const getSalesReport = async (req, res, next) => {
     // Get total number of orders for pagination
     const totalOrdersCount = await Order.countDocuments(dateFilter);
     const totalPages = Math.ceil(totalOrdersCount / limit);
+    const isDataEmpty = totalOrdersCount === 0; // Check if data is empty
+
 
     // Fetch orders for the current page
     const orders = await Order.find(dateFilter)
@@ -73,6 +75,7 @@ const getSalesReport = async (req, res, next) => {
       endDate: endDate || '',
       currentPage,
       totalPages,
+       isDataEmpty,
     });
   } catch (error) {
     error.statusCode = 500;
@@ -151,6 +154,8 @@ const getSalesData = async (req, res, next) => {
     // Get total number of orders for pagination
     const totalOrdersCount = await Order.countDocuments(dateFilter);
     const totalPages = Math.ceil(totalOrdersCount / limit);
+    const isDataEmpty = totalOrdersCount === 0; // Check if data is empty
+
 
     // Fetch paginated orders
     const orders = await Order.find(dateFilter)
@@ -170,7 +175,8 @@ const summary = {
   discounts,
   grossSales: sales + discounts + couponsRedeemed,
   netSales: (sales + discounts + couponsRedeemed) - (discounts + couponsRedeemed),
-  totalOrders: totalOrdersCount
+  totalOrders: totalOrdersCount,
+   isDataEmpty, // Include in response
 };
 
 
@@ -198,6 +204,8 @@ const summary = {
       orders: formattedOrders,
       currentPage,
       totalPages,
+      isDataEmpty, // Include in response
+
     });
   } catch (error) {
     res.json({ success: false, message: error.message });
@@ -221,6 +229,11 @@ const generatePDFReport = async (req, res, next) => {
         },
       }
     );
+
+    // Check if data is empty
+    if (data.isDataEmpty) {
+      return res.redirect("/admin/sales?message=No data available to generate PDF report");
+    }
 
     // Recalculate summary based on provided logic
     const allOrders = data.orders || [];
@@ -372,6 +385,11 @@ const generateExcelReport = async (req, res, next) => {
         },
       }
     );
+
+    // Check if data is empty
+    if (data.isDataEmpty) {
+      return res.redirect("/admin/sales?message=No data available to generate Excel report");
+    }
 
     // Recalculate summary
     const allOrders = data.orders || [];

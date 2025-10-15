@@ -23,13 +23,11 @@
         font-family: 'Montserrat', sans-serif;
     }
 
-    /* Main container padding */
     .main {
         padding: 30px 0;
-        min-height: calc(100vh - 150px); /* Adjust for header and footer */
+        min-height: calc(100vh - 150px);
     }
 
-    /* Container for Main Content (With Sidebar) */
     .account-container {
         max-width: 1200px;
         margin: 40px auto;
@@ -40,7 +38,6 @@
         display: flex;
     }
 
-    /* Sidebar */
     .sidebar {
         width: 20%;
         background: #fff;
@@ -95,13 +92,11 @@
         border-radius: 0 5px 5px 0;
     }
 
-    /* Main Content */
     .main-content {
         padding: 40px;
         flex: 1;
     }
 
-    /* Greeting */
     .greeting {
         font-size: 1.8rem;
         font-weight: 500;
@@ -112,7 +107,6 @@
         align-items: center;
     }
 
-    /* Add Address Button */
     .add-address-btn {
         display: inline-flex;
         align-items: center;
@@ -138,7 +132,6 @@
         background-color: #043b52;
     }
 
-    /* Address List */
     .address-list {
         margin-bottom: 20px;
     }
@@ -166,7 +159,7 @@
         gap: 10px;
     }
 
-    .edit-btn, .delete-btn {
+    .edit-btn, .delete-btn, .default-btn {
         padding: 8px 16px;
         border: none;
         border-radius: 5px;
@@ -196,7 +189,21 @@
         background-color: #e6392f;
     }
 
-    /* No Addresses Message */
+    .default-btn {
+        background-color: #28a745;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .default-btn:hover {
+        background-color: #218838;
+    }
+
+    .default-btn.disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+
     .no-addresses {
         font-size: 1rem;
         color: #666;
@@ -204,7 +211,6 @@
         margin-bottom: 20px;
     }
 
-    /* Responsive Design */
     @media (max-width: 768px) {
         .account-container {
             flex-direction: column;
@@ -249,7 +255,7 @@
             font-size: 0.9rem;
         }
 
-        .edit-btn, .delete-btn {
+        .edit-btn, .delete-btn, .default-btn {
             font-size: 0.8rem;
             padding: 6px 12px;
         }
@@ -265,7 +271,6 @@
     }
 </style>
 
-<!-- Main Content -->
 <main class="main">
     <section class="pt-10 pb-10">
         <div class="container">
@@ -278,7 +283,6 @@
                                 <li><a href="/address" class="active"><i class="fa-solid fa-map-marker-alt"></i> My Addresses</a></li>
                                 <li><a href="/orderListing"><i class="fa-solid fa-shopping-bag"></i> My Orders</a></li>
                                 <li><a href="/wallet"><i class="fa-solid fa-wallet"></i> Wallet</a></li>
-                                <!-- <li><a href="#"><i class="fa-solid fa-heart"></i> My Wishlist</a></li> -->
                                 <li>
                                     <a href="/logout" class="menu-item logout">
                                         <i class="icon">
@@ -298,20 +302,15 @@
                                     <i class="fa-solid fa-plus"></i> Add New Address
                                 </a>
                             </div>
-                            <!-- Address List -->
                             <div class="address-list">
                                 <% if (addresses && addresses.length > 0) { %>
                                     <% addresses.forEach((address, index) => { %>
                                         <div class="address-item">
                                             <div class="address-details">
-                                                <p><strong> • <%= address.name %></strong></p>
+                                                <p><strong> • <%= address.name %></strong> <%= address.isDefault ? '(Default)' : '' %></p>
                                                 <p>Phone: <%= address.phone %></p>
                                                 <p>Alternative Phone: <%= address.altPhone %></p>
                                                 <p>Street: <%= address.landMark %></p>
-                                                <!-- <p>City: <%= address.city %></p>
-                                                <p>State: <%= address.state %></p>
-                                                <p>PIN Code: <%= address.pincode %></p>
-                                                <p>Country: <%= typeof address.country !== 'undefined' ? address.country : 'Not specified' %></p> -->
                                             </div>
                                             <div class="address-actions">
                                                 <a href="/editAddress?id=<%=address._id %>" class="edit-btn">
@@ -319,6 +318,9 @@
                                                 </a>
                                                 <a href="#" class="delete-btn" data-href="/deleteAddress?id=<%=address._id%>">
                                                     <i class="fa-solid fa-trash"></i> Delete
+                                                </a>
+                                                <a href="#" class="default-btn <%= address.isDefault ? 'disabled' : '' %>" data-href="/setDefaultAddress?id=<%=address._id%>" <%= address.isDefault ? 'disabled' : '' %>>
+                                                    <i class="fa-solid fa-check"></i> <%= address.isDefault ? 'Default Address' : 'Set as Default' %>
                                                 </a>
                                             </div>
                                         </div>
@@ -336,10 +338,11 @@
 </main>
 
 <script>
-    // Show SweetAlert for address saved or deleted
     document.addEventListener('DOMContentLoaded', function() {
         const addressSaved = <%= typeof addressSaved !== 'undefined' ? addressSaved : false %>;
         const addressDeleted = <%= typeof addressDeleted !== 'undefined' ? addressDeleted : false %>;
+        const addressEdited = <%= typeof addressEdited !== 'undefined' ? addressEdited : false %>;
+        const defaultSet = <%= typeof defaultSet !== 'undefined' ? defaultSet : false %>;
 
         if (addressSaved) {
             Swal.fire({
@@ -361,10 +364,29 @@
             });
         }
 
-        // Add SweetAlert confirmation for Delete buttons
+        if (addressEdited) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Address Updated',
+                text: 'Your address has been successfully updated!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#05445E'
+            });
+        }
+
+        if (defaultSet) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Default Address Set',
+                text: 'The address has been set as default!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#05445E'
+            });
+        }
+
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function(e) {
-                e.preventDefault(); // Prevent default navigation
+                e.preventDefault();
                 const deleteUrl = this.getAttribute('data-href');
 
                 Swal.fire({
@@ -378,10 +400,34 @@
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = deleteUrl; // Proceed with deletion
+                        window.location.href = deleteUrl;
                     }
                 });
             });
+        });
+
+        document.querySelectorAll('.default-btn').forEach(button => {
+            if (!button.classList.contains('disabled')) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const defaultUrl = this.getAttribute('data-href');
+
+                    Swal.fire({
+                        title: 'Set as Default?',
+                        text: "This address will be set as your default address.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#666',
+                        confirmButtonText: 'Yes, set as default!',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = defaultUrl;
+                        }
+                    });
+                });
+            }
         });
     });
 </script>

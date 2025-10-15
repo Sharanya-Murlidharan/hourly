@@ -43,6 +43,10 @@ const addressSchema = new Schema({
         country:{
             type:String,
             required:true
+        },
+        isDefault: {
+            type: Boolean,
+            default: false
         }
     }]
 

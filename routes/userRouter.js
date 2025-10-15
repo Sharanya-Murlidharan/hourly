@@ -42,7 +42,7 @@ router.get('/productDetails',userAuth,productController.productDetails)
 
 router.get("/login",userController.loadLogin)
 router.post("/login",userController.login)
-router.get("/logout",userController.logout)
+router.get("/logout",userAuth,userController.logout)
 //profile management
 router.get('/forgotPassword',profileController.getForgotPassword);
 router.post("/forgotEmailValid",profileController.forgotEmailValid)
@@ -55,7 +55,7 @@ router.get('/userProfile',userAuth,profileController.userProfile)
 //profile change email
 router.get('/changeEmail',userAuth,profileController.changeEmail)
 router.post('/changeEmail',userAuth,profileController.changeEmailValid)
-router.get('/newEmailPage',profileController.newEmailPage)
+router.get('/newEmailPage',userAuth,profileController.newEmailPage)
 router.post('/verifyEmailOtp',userAuth,profileController.verifyEmailOtp)
 router.post('/updateEmail',userAuth,profileController.updateEmail)
 //profile change password
@@ -74,6 +74,7 @@ router.post('/addAddress',userAuth,profileController.postAddAddress)
 router.get('/editAddress',userAuth,profileController.editAddress)
 router.post('/editAddress',userAuth,profileController.postEditAddress)
 router.get('/deleteAddress',userAuth,profileController.deleteAddress)
+router.get('/setDefaultAddress', userAuth, profileController.setDefaultAddress)
 //cart management
 router.get("/cart", userAuth, cartController.getCartPage)
 router.post("/addToCart",userAuth, cartController.addToCart)
@@ -93,12 +94,12 @@ router.get("/availableCoupons", userAuth, orderController.getAvailableCoupons);
 router.get("/orderSuccess",userAuth,orderController.getSuccess)
 router.get("/paymentFail", userAuth, orderController.getPaymentFail)
 // order Listing
-router.get("/orderListing",orderController.getOrderList)
-router.get("/orderDetail/:id",orderController.orderDetail)
-router.post('/cancel/:id', orderController.cancelOrder);
-router.post('/cancel-product/:id', orderController.cancelProduct);
-router.post('/return/:id', orderController.returnOrder)
-router.post('/return-product/:id', orderController.returnProduct);
+router.get("/orderListing",userAuth,orderController.getOrderList)
+router.get("/orderDetail/:id",userAuth,orderController.orderDetail)
+router.post('/cancel/:id', userAuth,orderController.cancelOrder);
+router.post('/cancel-product/:id', userAuth,orderController.cancelProduct);
+router.post('/return/:id', userAuth,orderController.returnOrder)
+router.post('/return-product/:id', userAuth,orderController.returnProduct);
 // wallet
 router.get('/wallet', userAuth, orderController.getWallet)
 
@@ -109,7 +110,7 @@ router.post('/removeFromWishlist', userAuth, wishlistController.removeFromWishli
 // about
 router.get('/about',userAuth,userController.aboutpage)
 // contact
-router.get('/contact',userController.loadContact)
+router.get('/contact',userAuth,userController.loadContact)
 
 
 

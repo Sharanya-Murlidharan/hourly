@@ -419,8 +419,14 @@
                 <div class="filter-actions">
                     <button class="btn btn-primary" id="applyFilter">Apply</button>
                     <button class="btn btn-secondary" id="clearFilter">Clear</button>
-                    <button class="btn btn-pdf" id="exportPDF"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button class="btn btn-excel" id="exportExcel"><i class="fas fa-file-excel"></i> Excel</button>
+                    <!-- <button class="btn btn-pdf" id="exportPDF"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="btn btn-excel" id="exportExcel"><i class="fas fa-file-excel"></i> Excel</button> -->
+                    <% if (!isDataEmpty) { %>
+                        <button class="btn btn-pdf" id="exportPDF"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button class="btn btn-excel" id="exportExcel"><i class="fas fa-file-excel"></i> Excel</button>
+                    <% } else { %>
+                        <p>No sales data available to download.</p>
+                    <% } %>
                 </div>
             </div>
 
@@ -548,6 +554,14 @@
         const exportPDFBtn = document.getElementById('exportPDF');
         const exportExcelBtn = document.getElementById('exportExcel');
 
+        // Disable buttons if data is empty (initial load)
+        <% if (isDataEmpty) { %>
+            if (exportPDFBtn) exportPDFBtn.disabled = true;
+            if (exportExcelBtn) exportExcelBtn.disabled = true;
+            if (exportPDFBtn) exportPDFBtn.classList.add('btn-disabled');
+            if (exportExcelBtn) exportExcelBtn.classList.add('btn-disabled');
+        <% } %>
+
         // Format number as currency
         function formatCurrency(value) {
             return `₹ ${Number(value).toLocaleString('en-IN')}`;
@@ -584,6 +598,26 @@
             });
         }
 
+        // Update buttons based on data
+        function updateButtons(isDataEmpty) {
+            if (exportPDFBtn) {
+                exportPDFBtn.disabled = isDataEmpty;
+                if (isDataEmpty) {
+                    exportPDFBtn.classList.add('btn-disabled');
+                } else {
+                    exportPDFBtn.classList.remove('btn-disabled');
+                }
+            }
+            if (exportExcelBtn) {
+                exportExcelBtn.disabled = isDataEmpty;
+                if (isDataEmpty) {
+                    exportExcelBtn.classList.add('btn-disabled');
+                } else {
+                    exportExcelBtn.classList.remove('btn-disabled');
+                }
+            }
+        }
+
         // Fetch sales data using Fetch API
         async function fetchSalesData(page = 1) {
             const range = dateRangeSelect.value;
@@ -617,6 +651,7 @@
                 if (data.success) {
                     updateSummary(data.summary);
                     updateTable(data.orders);
+                    updateButtons(data.isDataEmpty); // Update button state
                     window.history.pushState({}, '', `/admin/sales?page=${page}${range ? '&range=' + range : ''}${startDate ? '&startDate=' + startDate : ''}${endDate ? '&endDate=' + endDate : ''}`);
                     Swal.fire('Success', 'Sales data loaded', 'success');
                 } else {

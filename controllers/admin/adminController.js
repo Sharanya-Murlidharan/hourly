@@ -81,7 +81,7 @@ const getChartData = async (req, res) => {
     const orders = await Order
       .find({
         createdOn: { $gte: startDate, $lte: endDate },
-        status: { $nin: ['Canceled', 'Returned'] },
+        status: { $nin: ['Canceled', 'Returned', 'Payment Failed'] },
       })
       .populate({
         path: 'orderedItems.product',
@@ -164,8 +164,10 @@ const getChartData = async (req, res) => {
     orders.forEach((order) => {
       order.orderedItems.forEach((item) => {
         console.log(item.product._id)
+        if (!['Canceled', 'Return Request', 'Returned'].includes(item.itemStatus)) {
         const productId = item.product._id.toString();
         productMap[productId] = (productMap[productId] || 0) + item.quantity;
+        }
       });
     });
 
@@ -227,7 +229,7 @@ const getChartData = async (req, res) => {
     const lastOrders = await Order
       .find({
         createdOn: { $gte: startDate, $lte: endDate },
-        status: { $nin: ['Canceled', 'Returned'] },
+        status: { $nin: ['Canceled', 'Returned', 'Payment Failed'] },
       })
       .populate('user')
       .sort({ createdOn: -1 })
