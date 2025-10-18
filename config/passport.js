@@ -1,6 +1,7 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/userSchema");
+const Wallet = require("../models/walletSchema")
 const env = require("dotenv").config();
 
 passport.use(
@@ -12,7 +13,7 @@ passport.use(
       callbackURL: "http://hourrly.shop/auth/google/callback",
       passReqToCallback: true,
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req,accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
         if (user) {
@@ -20,16 +21,19 @@ passport.use(
         } else {
           let referralCode = null;
           if (req.query.state) {
+
             const stateData = JSON.parse(req.query.state);
             referralCode = stateData.referralCode;
+            
           }
-         
+
 
           user = new User({
             name: profile.displayName,
             email: profile.emails[0].value,
             googleId: profile.id,
           });
+
           const saveUserData = await user.save();
           const newUserWallet = new Wallet({
             userId: saveUserData._id,
@@ -40,7 +44,7 @@ passport.use(
           if (referralCode) {
             // Validate the referral code
             const referrer = await User.findOne({
-              referralCode: user.referralCode,
+              referralCode: referralCode,
               isBlocked: false,
             });
             if (!referrer) {
@@ -52,7 +56,7 @@ passport.use(
             newUserWallet.transactions.push({
               amount: 500,
               type: "credit",
-              description: `Referral bonus for signing up with code ${user.referralCode}`,
+              description: `Referral bonus for signing up with code ${referralCode}`,
               date: new Date(),
             });
             await newUserWallet.save();

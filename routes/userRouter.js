@@ -20,10 +20,8 @@ router.post('/signup',userController.signup)
 router.post("/verifyOtp",userController.verifyOtp)
 router.post("/resendOtp",userController.resendOtp)
 router.get('/auth/google',(req, res, next) => {
-  // Capture referralCode from query
   const referralCode = req.query.referralCode || "";
 
-  // Start Google OAuth, include referralCode in state
   passport.authenticate("google", {
     scope: ["profile", "email"],
     state: JSON.stringify({ referralCode }),
@@ -39,12 +37,9 @@ router.get('/auth/google/callback',
 )
 // homepage
 router.get('/',userAuth,userController.LoadHomepage)
-// router.post('/search',userAuth,userController.searchProducts)
 
 // shopping page
 router.get('/shop',userAuth,userController.loadShoppingPage)
-// router.get('/filterByPrice', userController.filterByPrice)
-// router.post('/search', userController.searchProducts);
 
 //product detail page
 router.get('/productDetails',userAuth,productController.productDetails)
