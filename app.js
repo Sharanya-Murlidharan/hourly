@@ -10,7 +10,7 @@ const adminRouter = require('./routes/adminRouter')
 const passport = require('./config/passport')
 
 db() 
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(session({

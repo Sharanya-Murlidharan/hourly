@@ -63,6 +63,13 @@
         </div>
     </div>
     <script>
+
+         const params = new URLSearchParams(window.location.search);
+  const refCode = params.get("referralCode");
+  if (refCode) {
+    document.getElementById("signform").action = `/signup?referralCode=${refCode}`;
+  }
+
         // Accessing buttons by ID
         const nameid = document.getElementById('name');
         const emailid = document.getElementById('email');

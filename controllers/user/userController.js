@@ -113,8 +113,13 @@ const signup = async (req,res,next) => {
     try {
       
         console.log('Received body:', req.body);
-        const {name,phone,email,password,cpassword,referralCode}= req.body
+        const {name,phone,email,password,cpassword}= req.body
+        console.log(req.query,"jufhuidkj;")
+      const referralCode = req.body?.referralCode || req.query?.referralCode;
+
+        console.log("adl",referralCode)
         console.log(password);
+        
         
         if(password !== cpassword){
             

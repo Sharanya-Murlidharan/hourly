@@ -480,7 +480,7 @@ const createRazorpayOrder = async (req, res, next) => {
       razorpayOrderId: razorpayOrder.id
     });
      req.session.order = order
-    // await order.save();
+     await order.save();
 
     res.json({
       id: razorpayOrder.id,
@@ -501,6 +501,7 @@ const verifyRazorpayPayment = async (req, res, next) => {
     }
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+console.log("jhdfh",req.body)
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
       if (order) {
@@ -515,6 +516,7 @@ const verifyRazorpayPayment = async (req, res, next) => {
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
       .digest("hex");
+console.log("expected")
 
     if (expectedSignature !== razorpay_signature) {
       const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
@@ -524,10 +526,14 @@ const verifyRazorpayPayment = async (req, res, next) => {
       }
       return res.status(400).json({ success: false, error: "Invalid payment signature." });
     }
-
+    console.log("djfhds", razorpay_order_id )
     // Find existing order by razorpayOrderId
     const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    console.log("dhf",order)
+    
     if (!order) {
+      console.log("expected 1")
+
       return res.status(404).json({ success: false, error: "Order not found." });
     }
 
@@ -1280,7 +1286,7 @@ module.exports = {
   cancelProduct,
   returnOrder,
   returnProduct,
-  getWallet,
+  getWallet, 
   getPaymentFail,
   getAvailableCoupons
 };
