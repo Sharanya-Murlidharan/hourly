@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Money to Wallet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    main {
+      padding: 30px 0;
+      min-height: calc(100vh - 150px);
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+    }
+    .payment-section {
+      text-align: center;
+    }
+    .payment-section h2 {
+      font-size: 1.5rem;
+      color: #05445E;
+      margin-bottom: 20px;
+    }
+    .payment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    .payment-form input {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      outline: none;
+    }
+    .payment-form input:focus {
+      border-color: #05445E;
+    }
+    .payment-form button {
+      padding: 10px;
+      background-color: #05445E;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .payment-form button:hover {
+      background-color: #032f43;
+    }
+    .error-message {
+      color: #d32f2f;
+      font-size: 0.9rem;
+      margin-top: -10px;
+      display: none;
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 20px;
+        padding: 15px;
+      }
+      .payment-section h2 {
+        font-size: 1.3rem;
+      }
+      .payment-form {
+        max-width: 100%;
+      }
+    }
+  </style>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+  <%- include('../../views/partials/user/header') %>
+  <main>
+    <div class="container">
+      <div class="payment-section">
+        <h2>Add Money to Wallet</h2>
+        <form id="payment-form" class="payment-form">
+          <input type="number" id="amount" name="amount" placeholder="Enter amount (₹)" min="1" required>
+          <p id="error-message" class="error-message">Please enter a valid amount.</p>
+          <button type="submit">Proceed to Pay</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  <%- include('../../views/partials/user/footer') %>
+  <script>
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const amount = document.getElementById('amount').value;
+      const errorMessage = document.getElementById('error-message');
+
+      if (!amount || amount <= 0) {
+        errorMessage.style.display = 'block';
+        return;
+      }
+      errorMessage.style.display = 'none';
+
+      try {
+        const response = await fetch('/createWalletTopupOrder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: parseFloat(amount) * 100 }) // Convert to paise
+        });
+        const data = await response.json();
+
+        if (!data.id) {
+          alert(data.error || 'Failed to create payment order.');
+          return;
+        }
+
+        const options = {
+          key: '<%= razorpayKeyId %>',
+          amount: data.amount,
+          currency: data.currency,
+          name: 'Wallet Top-up',
+          description: 'Add money to your wallet',
+          order_id: data.id,
+          handler: async function (response) {
+            const verifyResponse = await fetch('/verifyWalletTopup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+            const verifyData = await verifyResponse.json();
+            if (verifyData.success) {
+              window.location.href = verifyData.redirect;
+            } else {
+              alert(verifyData.error || 'Payment verification failed.');
+            }
+          },
+          theme: { color: '#05445E' }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        alert('An error occurred. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -106,6 +106,9 @@ router.post('/return/:id', userAuth,orderController.returnOrder)
 router.post('/return-product/:id', userAuth,orderController.returnProduct);
 // wallet
 router.get('/wallet', userAuth, orderController.getWallet)
+router.get('/addMoney', orderController.getAddMoneyPage);
+router.post('/createWalletTopupOrder', orderController.createWalletTopupOrder);
+router.post('/verifyWalletTopup', orderController.verifyWalletTopup);
 
 // wishlist
 router.get('/wishlist',userAuth,wishlistController.getWishlist)

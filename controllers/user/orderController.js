@@ -1213,6 +1213,109 @@ const getWallet = async (req, res, next) => {
   }
 };
 
+const getAddMoneyPage = async (req, res, next) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.redirect("/login");
+    }
+
+    const user = await User.findById(userId);
+    res.render("addMoney", {
+      user,
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
+};
+
+const createWalletTopupOrder = async (req, res, next) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(401).json({ error: "You are logged out. Please login again." });
+    }
+
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: "Invalid amount." });
+    }
+
+    const options = {
+      amount,
+      currency: "INR",
+      receipt: `wallet_topup_${Date.now()}`
+    };
+
+    const razorpayOrder = await razorpayInstance.orders.create(options);
+    req.session.walletTopup = { amount: amount / 100 }; // Store amount in rupees
+
+    res.json({
+      id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency
+    });
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
+};
+
+const verifyWalletTopup = async (req, res, next) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: "You are logged out. Please login again." });
+    }
+
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, error: "Missing payment details." });
+    }
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, error: "Invalid payment signature." });
+    }
+
+    const amount = req.session.walletTopup?.amount;
+    if (!amount) {
+      return res.status(400).json({ success: false, error: "No top-up amount found in session." });
+    }
+
+    await Wallet.findOneAndUpdate(
+      { userId },
+      {
+        $inc: { balance: amount },
+        $push: {
+          transactions: {
+            amount,
+            type: 'credit',
+            description: `Wallet top-up via Razorpay`,
+            date: new Date()
+          }
+        }
+      },
+      { upsert: true, new: true }
+    );
+
+    delete req.session.walletTopup;
+
+    res.json({ success: true, redirect: "/wallet" });
+  } catch (error) {
+    error.statusCode = 500;
+    next(error);
+  }
+};
+
+
 const getPaymentFail = async (req, res, next) => {
   try {
     const userId = req.session.user;
@@ -1287,6 +1390,9 @@ module.exports = {
   returnOrder,
   returnProduct,
   getWallet, 
+  getAddMoneyPage,
+  createWalletTopupOrder,
+  verifyWalletTopup,
   getPaymentFail,
   getAvailableCoupons
 };
