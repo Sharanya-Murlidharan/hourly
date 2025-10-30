@@ -10,7 +10,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       // This MUST match exactly what's in your Google Console
-      callbackURL: "https://hourrly.shop/auth/google/callback",
+      callbackURL: "http://hourrly.shop/auth/google/callback",
       passReqToCallback: true,
     },
     async (req,accessToken, refreshToken, profile, done) => {
