@@ -75,49 +75,124 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// const getCheckout = async (req, res, next) => {
+//   try {
+//     const userId = req.session.user;
+//     if (!userId) {
+//       return res.redirect("/login");
+//     }
+
+//     const user = await User.findById(userId);
+//     const addressDoc = await Address.findOne({ userId });
+//     const addresses = addressDoc ? addressDoc.address : [];
+//     const cart = await Cart.findOne({ userId }).populate("items.productId");
+//     if (!cart || cart.items.length === 0) {
+//       return res.redirect("/cart");
+//     }
+
+//     const totalBeforeOffer = cart.items.reduce((total, item) => {
+//       return total + (item.price * item.quantity );
+//     }, 0);
+
+//     const totalAfterOffer  = cart.items.reduce((total, item) => {
+//       return total + item.totalPrice
+//     }, 0);
+
+//     const offerDiscount = totalBeforeOffer - totalAfterOffer;
+
+//     const couponDiscount = cart.discount || 0;
+//     const totalPrice = totalAfterOffer - couponDiscount;
+
+//     const isCouponApplied = !!cart.appliedCoupon;
+
+//     res.render("checkout", {
+//       user,
+//       addresses,
+//       items: cart.items,
+//       subtotal:totalBeforeOffer,
+//       offerDiscount,
+//       discount: couponDiscount,
+//       totalPrice,
+//       isCouponApplied,
+//     });
+//   } catch (error) {
+//      error.statusCode = 500;
+//         next(error);
+//   }
+// };
+
 const getCheckout = async (req, res, next) => {
   try {
     const userId = req.session.user;
-    if (!userId) {
-      return res.redirect("/login");
-    }
+    if (!userId) return res.redirect("/login");
 
     const user = await User.findById(userId);
     const addressDoc = await Address.findOne({ userId });
     const addresses = addressDoc ? addressDoc.address : [];
+
     const cart = await Cart.findOne({ userId }).populate("items.productId");
-    if (!cart || cart.items.length === 0) {
-      return res.redirect("/cart");
+    if (!cart || cart.items.length === 0) return res.redirect("/cart");
+
+    // ────── STOCK VALIDATION ──────
+    const outOfStockItems = [];
+
+    for (const item of cart.items) {
+      const product = item.productId;
+
+      // Product missing / blocked / deleted
+      if (!product ||
+          product.isDeleted ||
+          product.isBlocked ||
+          product.status !== "Available") {
+        outOfStockItems.push({
+          name: product?.productName || "Unknown",
+          reason: "Product unavailable"
+        });
+        continue;
+      }
+
+      // Not enough quantity
+      if (product.quantity < item.quantity) {
+        outOfStockItems.push({
+          name: product.productName,
+          reason: `Only ${product.quantity} left (you need ${item.quantity})`
+        });
+      }
     }
 
-    const totalBeforeOffer = cart.items.reduce((total, item) => {
-      return total + (item.price * item.quantity );
-    }, 0);
+    // ────── CALCULATE TOTALS (only if everything is in stock) ──────
+    let subtotal = 0, totalAfterOffer = 0, offerDiscount = 0,
+        couponDiscount = 0, totalPrice = 0, isCouponApplied = false;
 
-    const totalAfterOffer  = cart.items.reduce((total, item) => {
-      return total + item.totalPrice
-    }, 0);
+    if (outOfStockItems.length === 0) {
+      subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+      totalAfterOffer = cart.items.reduce((s, i) => s + i.totalPrice, 0);
+      offerDiscount = subtotal - totalAfterOffer;
+      couponDiscount = cart.discount || 0;
+      totalPrice = totalAfterOffer - couponDiscount;
+      isCouponApplied = !!cart.appliedCoupon;
+    }
 
-    const offerDiscount = totalBeforeOffer - totalAfterOffer;
-
-    const couponDiscount = cart.discount || 0;
-    const totalPrice = totalAfterOffer - couponDiscount;
-
-    const isCouponApplied = !!cart.appliedCoupon;
-
+    // ────── RENDER ──────
     res.render("checkout", {
       user,
       addresses,
       items: cart.items,
-      subtotal:totalBeforeOffer,
+      subtotal,
       offerDiscount,
       discount: couponDiscount,
       totalPrice,
       isCouponApplied,
+      outOfStock: outOfStockItems.length > 0,          // <-- flag for JS
+      outOfStockItems,                                 // <-- list for Swal
+      errorMessage: outOfStockItems.length
+        ? "Some items are out of stock. Please update your cart."
+        : null
     });
+
   } catch (error) {
-     error.statusCode = 500;
-        next(error);
+    error.statusCode = 500;
+    next(error);
   }
 };
 
